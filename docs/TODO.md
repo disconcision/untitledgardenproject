@@ -168,7 +168,7 @@ _Low priority, pick when inspired_
   - Padding/margin inconsistency on menu boxes (unified to 12px all sides)
   - Two-finger scroll event capture (camera wheel handler skips hud-corner elements)
   - Tutorial menu scrolling (max-height 50vh + overflow)
-  - Z-index focus system (click anywhere on panel brings to front)
+  - Z-index focus system (CSS class .panel-focused with z-index 150 !important)
   - CSS cleanup (removed duplicate rules in WorldInspector.css)
 - [x] Workflow documentation improvements
 - [x] Tutorial completion hooks for simulation and panel steps
