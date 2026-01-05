@@ -760,4 +760,68 @@ This checkpoint documents the Center View feature that was included in the origi
 
 ---
 
+## CP-015: Process Documentation Restructure
+
+**Date**: 2026-01-04
+**Seed**: N/A (documentation only)
+
+### What Changed
+
+**Documentation Restructure**:
+
+1. **docs/README.md** — New entry point for agents
+   - Quick start checklist
+   - Documentation map with update triggers
+   - Creator process summary
+   - "What to check when agent finishes" checklist
+
+2. **docs/AGENT-WORKFLOW.md** — Comprehensive agent process
+   - Full workflow in 4 phases (Before/During/After/Report)
+   - Completion report template
+   - Meta-checklist for self-verification
+   - Special cases (parallel work, long-running tasks, discovering bugs)
+   - Quick reference command summary
+
+3. **docs/TODO.md** — Active task tracking
+   - In Progress / Up Next / Backlog structure
+   - Completed section with dates
+   - Instructions for claiming/completing tasks
+   - All tasks migrated from SOURCE.md
+
+4. **docs/transcripts/** — Folder for conversation retention
+   - README explaining why and how to save transcripts
+   - Creator responsibility to export after sessions
+
+**SOURCE.md Updates**:
+
+- Replaced verbose workflow section with pointer to docs/AGENT-WORKFLOW.md
+- Updated creator process to include transcript export
+- Updated repo structure to reflect new doc organization
+- Replaced inline TODO list with pointer to docs/TODO.md
+- Streamlined agent operating instructions
+
+**Git Cleanup**:
+
+- Deleted stale feature branches: `feature/day-night-cycle`, `feature/pie-menu-center-view`
+
+### Why This Matters
+
+This restructure addresses several process gaps:
+
+1. **Context retention**: Transcripts folder preserves conversation context
+2. **Task coordination**: TODO.md enables parallel agent work without conflicts
+3. **Completion verification**: Agents now provide completion reports
+4. **Discoverability**: docs/README.md is the obvious entry point
+5. **Separation of concerns**: Workflow process separate from design vision
+
+### Tour Path
+
+1. **Read docs/README.md** — See the documentation map and quick start
+2. **Read docs/AGENT-WORKFLOW.md** — See the full process and completion report template
+3. **Read docs/TODO.md** — See task tracking with In Progress / Backlog structure
+4. **Check SOURCE.md Section 2** — See streamlined pointer to docs
+5. **Check git branch -a** — Confirm stale branches are cleaned up
+
+---
+
 _Add new checkpoints above this line._

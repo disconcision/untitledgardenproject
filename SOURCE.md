@@ -1,65 +1,21 @@
-# Hanging Garden — Design + Agent Workflow
+# Hanging Garden — Design Document
 
 A browser-based software toy: a dense, tactile, explorable _floating garden_ of algorithmic, multi-scale structures. Plants, soil clumps, stones, and attachments drift in airy space. The underlying data stays close to what you see—the garden _is_ the syntax.
 
 ---
 
-## ⚠️ Agent Workflow Checklist (MANDATORY)
+## ⚠️ Agents: Start Here
 
-**Every agent making changes MUST follow this workflow.** This applies to all feature work, bug fixes, and improvements.
+**Before doing any work, read the docs:**
 
-### Before Starting Work
+```
+1. docs/README.md          ← Entry point, documentation map
+2. docs/AGENT-WORKFLOW.md  ← Mandatory process (git, docs, completion report)
+3. docs/TODO.md            ← Current tasks, claim before starting
+4. SOURCE.md (this file)   ← Vision, architecture, aesthetic (skim if familiar)
+```
 
-1. **Create a feature branch**
-   ```bash
-   git checkout main && git pull
-   git checkout -b feature/<short-descriptive-name>
-   ```
-   - Use descriptive names: `feature/lucide-icons`, `feature/pie-menu`, `fix/panel-alignment`
-   - This creates a record of the work and allows parallel agent work
-
-### During Work
-
-2. **Make focused changes** — 1–3 coherent improvements per session, not scattered edits
-3. **Test in browser** — Verify changes work visually; use Cursor's browser tools
-4. **Check for lint errors** — Run `read_lints` on modified files
-
-### After Completing Work
-
-5. **Update documentation** (if relevant):
-
-   - **SOURCE.md**: Add to Design Decisions Log if you made architectural/tooling choices
-   - **CHECKPOINTS.md**: Add checkpoint entry with description and tour path
-   - **Tutorial steps**: Update if user-facing behavior changed
-
-6. **Commit with clear message**
-
-   ```bash
-   git add -A
-   git commit -m "feat: <what you did>"
-   ```
-
-   - Use conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`
-
-7. **Merge to main**
-   ```bash
-   git checkout main && git pull
-   git merge feature/<branch-name>
-   git push
-   ```
-   - Handle merge conflicts if they arise from parallel agent work
-   - Delete the feature branch after merging: `git branch -d feature/<branch-name>`
-
-### What Triggers Documentation Updates
-
-| Change Type            | Update SOURCE.md?  | Update CHECKPOINTS.md? |
-| ---------------------- | ------------------ | ---------------------- |
-| New dependency/library | ✓ Design Decisions | ✓                      |
-| UI/UX pattern change   | ✓ Design Decisions | ✓                      |
-| Architectural decision | ✓ Design Decisions | ✓                      |
-| Bug fix                | Maybe              | ✓                      |
-| Visual polish only     | No                 | Optional               |
-| Refactoring            | Maybe              | No                     |
+**The full workflow (branching, testing, documentation, completion reports) is in `docs/AGENT-WORKFLOW.md`.**
 
 ---
 
@@ -92,21 +48,25 @@ The garden is not a static illustration. It is an **interactive simulation** tha
 
 The human creator's operating loop:
 
-1. **View the artifact** — Open the garden in browser (ideally Cursor's built-in browser pane)
-2. **Observe and react** — Pan, zoom, interact; notice what feels right or wrong
-3. **Speak feedback** — Audio recording while interacting; stream of consciousness is fine
-4. **Prompt the agent** — Audio transcription goes to the agent panel
-5. **Agent implements** — Changes happen; HMR refreshes the view
-6. **Repeat** — Stay in one environment as much as possible
+1. **Start session** — Tell agent: "Read docs/README.md" (ensures it knows the process)
+2. **View the artifact** — Open the garden in browser (ideally Cursor's built-in browser pane)
+3. **Observe and react** — Pan, zoom, interact; notice what feels right or wrong
+4. **Speak feedback** — Audio recording while interacting; stream of consciousness is fine
+5. **Prompt the agent** — Audio transcription goes to the agent panel
+6. **Agent implements** — Changes happen; HMR refreshes the view
+7. **Review completion report** — Agent provides summary at end (see `docs/AGENT-WORKFLOW.md`)
+8. **Export transcript** — Save conversation to `docs/transcripts/YYYY-MM-DD-topic.md`
 
 **Goal**: Minimize context-switching. The creator should be able to stay in the garden (or one window) and just _talk_. The agent does the implementation work.
 
 **Roles**:
 
-- **Creator**: Vision, feedback, direction, taste. Speaks more than types.
-- **Agent**: Implementation, iteration, documentation, testing. Writes code, updates SOURCE.md, proposes changes.
+- **Creator**: Vision, feedback, direction, taste. Speaks more than types. Exports transcripts.
+- **Agent**: Implementation, iteration, documentation, testing. Writes code, updates docs, provides completion reports.
 
 These roles can flex — the creator might implement, the agent might propose vision — but this is the default posture.
+
+**After significant sessions**: Export the conversation transcript to `docs/transcripts/` for future context. See `docs/transcripts/README.md` for details.
 
 ---
 
@@ -582,42 +542,31 @@ Pick opportunistically:
 
 ## 17. Agent Operating Instructions
 
-### Primary loop
+**Full workflow details are in `docs/AGENT-WORKFLOW.md`.**
 
-1. **Run app**, ensure no console errors
-2. **Make 1–3 coherent improvements** per iteration (not 20 scattered changes)
-3. **Update files**:
-   - `SOURCE.md`: Mark TODOs, add notes
-   - `CHECKPOINTS.md`: Add entry (what changed, seed, tour path)
-   - Tutorial: Ensure "What's New" reflects changes
-4. **Prefer changes that increase**:
-   - Visual cohesion
-   - Interaction clarity
-   - Shallow discoverability
-5. **If experiment looks worse**: Revert quickly. Note what failed and why.
+### Quick Reference
 
-### Checkpointing protocol
+1. **Read docs first**: `docs/README.md` → `docs/AGENT-WORKFLOW.md` → `docs/TODO.md`
+2. **Claim task** in `docs/TODO.md` before starting
+3. **Create feature branch**: `git checkout -b feature/xxx`
+4. **Make 1–3 coherent improvements** (not scattered edits)
+5. **Test in browser**, check lints
+6. **Update docs**: TODO.md (always), CHECKPOINTS.md (if significant)
+7. **Commit, merge, delete branch**
+8. **Provide completion report** to creator
 
-Every checkpoint:
+### Preferences
 
-- `CP-###` (increment)
-- Seed used
-- Short description
-- Tour path: 2–5 actions showing new feature
+- Prefer changes that increase visual cohesion, interaction clarity, shallow discoverability
+- If experiment looks worse: revert quickly, note what failed
+- Keep commits small and atomic for easy bisecting
 
 ### Long autonomous runs
 
-Choose a single theme:
-
-- "Sprout/prune animation polish"
-- "Hover + hit testing"
-- "Semantic zoom lens"
-
-Produce:
-
-- Updated tutorial
-- Short guided tour list
-- 2–3 checkpoints (not 20)
+Choose a single theme and produce:
+- 1–3 checkpoints (not 20)
+- Updated tutorial if relevant
+- Completion report summarizing all changes
 
 ---
 
@@ -706,36 +655,16 @@ Example:
 
 ---
 
-## 20. Initial TODOs
+## 20. Task Tracking
 
-- [x] Scaffold Vite + React + TS _(CP-001)_
-- [x] Reorganize into `core/` (pure logic) and `render/` (React) _(CP-002)_
-- [x] Add Vitest + basic unit tests _(CP-002)_
-- [x] Add CLI scripts for agent use _(CP-002)_
-- [x] Implement camera pan/zoom _(CP-001)_
-- [x] Procedural generator (seeded) for islands + plants _(CP-001)_
-- [x] SVG render stems/leaves + hover/selection _(CP-001)_
-- [x] Click bud → sprout; click leaf → prune _(CP-003)_
-- [x] Tutorial overlay v1 _(CP-001)_
-- [x] Debug toggles: show IDs, hit targets, freeze time, regenerate _(CP-001)_
-- [x] Canvas background gradient + grain _(CP-001)_
-- [x] Create `CHECKPOINTS.md` _(CP-001)_
-- [x] Compound rock formations (glacial erratic aesthetic) _(CP-005)_
-- [x] Bark-like stem thickness (depth gradient) _(CP-005)_
-- [x] Autonomous plant growth simulation _(CP-006)_
-- [x] Cluster abstraction with central glyph _(CP-007)_
-- [ ] Smooth animated camera focus transition
-- [ ] Isometric projection + depth-based z-ordering
-- [ ] Multiple clusters with fog/distance rendering
-- [ ] Background scale layers (mountains, giant trees)
-- [x] World Inspector panel (collapsible tree view) _(CP-008)_
+**Active tasks are tracked in `docs/TODO.md`.**
 
-### Projective UI (future)
+See that file for:
+- What's currently in progress
+- What's up next
+- Full backlog organized by milestone
 
-- [ ] Inline rendering of subtrees within inspector
-- [ ] Situated inspection (pop open inspector anchored to world position)
-- [ ] UI chrome as tree nodes in the projective paradigm
-- [ ] Comparison views (side-by-side worlds, branching)
+The TODO list in SOURCE.md has been migrated there to avoid duplication.
 
 ---
 
@@ -876,41 +805,45 @@ The agent should internalize these not as constraints but as **taste anchors**�
 
 ```
 /
-├── SOURCE.md          # This file — the DNA
-├── docs/              # Wiki-style design docs
-│   ├── CHECKPOINTS.md # Git checkpoint log with tour paths
-│   └── ...            # Additional docs as needed, [[bracket]] links
-├── scripts/           # CLI tools for agent use (Node, no browser)
-│   ├── generate.ts    # Generate world, print summary
-│   ├── validate.ts    # Quick invariant checks
-│   └── inspect.ts     # Inspect specific entities
+├── SOURCE.md              # This file — vision, architecture, aesthetic
+├── docs/                  # All project documentation
+│   ├── README.md          # Entry point for agents — read first!
+│   ├── AGENT-WORKFLOW.md  # Mandatory process (git, docs, completion reports)
+│   ├── TODO.md            # Active task tracking — claim before working
+│   ├── CHECKPOINTS.md     # Tour paths for significant features
+│   └── transcripts/       # Conversation transcripts (creator-maintained)
+│       └── README.md      # How to save transcripts
+├── scripts/               # CLI tools for agent use (Node, no browser)
+│   ├── generate.ts        # Generate world, print summary
+│   ├── validate.ts        # Quick invariant checks
+│   └── inspect.ts         # Inspect specific entities
 ├── src/
-│   ├── core/          # Pure logic (no React/DOM — runs in Node or browser)
-│   │   ├── model.ts   # Types + World
-│   │   ├── update.ts  # Messages + update function
-│   │   ├── generate.ts# Procedural garden generation
+│   ├── core/              # Pure logic (no React/DOM — runs in Node or browser)
+│   │   ├── model.ts       # Types + World
+│   │   ├── update.ts      # Messages + update function
+│   │   ├── generate.ts    # Procedural garden generation
 │   │   └── sim/
-│   │       └── tick.ts# Simulation rules
-│   ├── render/        # React/DOM/SVG (browser only)
-│   │   ├── Canvas.tsx # Background layer (atmosphere)
-│   │   ├── Garden.tsx # SVG world layer
-│   │   └── paths.ts   # Bezier/polyline path utilities (pure, could move to core)
+│   │       └── tick.ts    # Simulation rules
+│   ├── render/            # React/DOM/SVG (browser only)
+│   │   ├── Canvas.tsx     # Background layer (atmosphere)
+│   │   ├── Garden.tsx     # SVG world layer
+│   │   └── paths.ts       # Bezier/polyline path utilities
 │   ├── theme/
-│   │   ├── colors.ts  # Palette constants
-│   │   └── global.css # CSS custom properties
+│   │   ├── colors.ts      # Palette constants
+│   │   └── global.css     # CSS custom properties
 │   ├── ui/
-│   │   ├── HUD.tsx           # Tutorial + Debug corner docks
-│   │   ├── WorldInspector.tsx# Collapsible tree view of world hierarchy
-│   │   └── *.css             # Component styles
+│   │   ├── HUD.tsx        # Tutorial + Debug corner docks
+│   │   ├── WorldInspector.tsx
+│   │   ├── PieMenu.tsx    # Context menu for plant actions
+│   │   ├── TimeConfig.tsx # Day/night cycle controls
+│   │   └── *.css          # Component styles
 │   ├── hooks/
 │   │   └── useCamera.ts
-│   ├── audio/         # Sound hooks (scaffolded)
-│   │   └── events.ts
-│   └── App.tsx        # Main composition
-├── tests/             # Vitest tests
+│   └── App.tsx            # Main composition
+├── tests/                 # Vitest tests
 │   ├── core/
 │   │   ├── generate.test.ts
-│   │   └── update.test.ts
+│   │   └── model.test.ts
 │   └── setup.ts
 ├── index.html
 ├── vite.config.ts
