@@ -12,6 +12,15 @@ _(none currently)_
 
 High-priority tasks ready to be claimed:
 
+### Audio System MVP
+
+- [ ] **Audio engine scaffold**: Create `src/audio/` structure, install Tone.js + Howler.js, AudioEngine class with context lifecycle
+- [ ] **User gesture activation**: Start audio on first interaction (click/pan), add speaker toggle icon to HUD
+- [ ] **Action sounds (synthesized)**: Discrete sounds for sprout, prune, branch, trim — hook into existing AudioEvent system
+- [ ] **Void drone**: Basic airy ambient pad using Tone.js oscillators/filters, always playing at low volume
+
+### Other
+
 - [ ] Smooth animated camera focus transition
 - [ ] Isometric projection + depth-based z-ordering
 - [ ] Multiple clusters with improved fog/distance rendering refinements
@@ -37,7 +46,27 @@ High-priority tasks ready to be claimed:
 - [ ] Multiple plant varieties (grammar-based generation)
 - [ ] Cross-links/vines forming loops
 - [ ] Deeper layered rendering
-- [ ] Sound (optional)
+
+### Audio System — Phase 2 (Proximity & Layers)
+
+See `SOURCE.md` section 25 for full architecture. This builds on MVP audio.
+
+- [ ] **Day/night ambient shift**: Drone harmonic palette changes based on `timeOfDay` (warmer day, cooler night)
+- [ ] **Firefly sounds**: Subtle high-pitched tones when fireflies are visible/glowing at night
+- [ ] **Seed whispers**: Very soft "puff" sounds when seeds spawn or land
+- [ ] **Cluster voice system**: Each cluster gets deterministic (seed-based) harmonic voice/chord
+- [ ] **Proximity mixer**: Fade cluster voices in/out based on camera distance to cluster center
+- [ ] **Zoom-level mixing**: Zoomed out = broader ambient; zoomed in = more discrete detail sounds
+- [ ] **Stereo positioning**: Sounds from entities pan left/right based on screen position
+
+### Audio System — Phase 3 (Generative & Polish)
+
+- [ ] **Island variation**: Islands within a cluster have subtle harmonic variations
+- [ ] **Procedural melodic fragments**: Occasional simple note sequences from flowers/buds
+- [ ] **Temporal layers**: Different music palettes for dawn/noon/dusk/midnight
+- [ ] **Sample assets**: Record/source high-quality samples for action sounds (snip, sprout)
+- [ ] **Audio settings panel**: User control for master volume, layer balance, music on/off
+- [ ] **Entity leitmotifs**: Specific large plants or features get unique musical phrases
 
 ### Projective UI
 

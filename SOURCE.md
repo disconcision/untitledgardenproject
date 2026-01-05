@@ -740,6 +740,11 @@ Agent may decide, but **must document in Design Decisions Log**:
 | 2026-01-05 | Exhaustive switch matching  | Uses `never` type in default case to catch unhandled message types at compile time|
 | 2026-01-05 | Modular update.ts split     | Actions, simulation, tutorial extracted to `core/` submodules; keeps update.ts thin|
 | 2026-01-05 | Git worktree for parallel   | Agents working simultaneously use separate worktrees to avoid cross-contamination |
+| 2026-01-05 | Audio: Tone.js + Howler.js  | Hybrid approach: Tone.js for generative ambient/drones, Howler.js for discrete samples |
+| 2026-01-05 | Proteus-inspired audio      | Entity-driven layered audio; sounds blend based on proximity and camera focus |
+| 2026-01-05 | Audio on first interaction  | No modal; starts on first click/pan; speaker toggle in HUD for mute control |
+| 2026-01-05 | Organic + synth aesthetic   | Audio mixes breathy/organic textures with crystalline/synthetic tones |
+| 2026-01-05 | Sparse void, dense focus    | Audio density increases with zoom level; void is quiet, close-up is richer |
 
 ---
 
@@ -851,6 +856,18 @@ The agent should internalize these not as constraints but as **taste anchors**�
 │   │   └── simulation/    # Simulation tick logic
 │   │       ├── index.ts
 │   │       └── particles.ts # Seeds, fireflies, lifecycle
+│   ├── audio/             # Audio system (browser only, Tone.js + Howler.js)
+│   │   ├── index.ts       # AudioSystem init, re-exports
+│   │   ├── engine.ts      # AudioEngine: context lifecycle, master volume
+│   │   ├── mixer.ts       # LayerMixer: adjusts volumes based on World state
+│   │   ├── ambient/       # Continuous audio layers
+│   │   │   ├── voidDrone.ts
+│   │   │   ├── dayNightShift.ts
+│   │   │   └── clusterVoice.ts
+│   │   └── discrete/      # One-shot sounds
+│   │       ├── actionSounds.ts
+│   │       ├── uiSounds.ts
+│   │       └── particleSounds.ts
 │   ├── update.ts          # Msg type + update dispatcher (thin, delegates to core/)
 │   ├── render/            # React/DOM/SVG (browser only)
 │   │   ├── Canvas.tsx     # Background layer (atmosphere)
@@ -882,6 +899,118 @@ The agent should internalize these not as constraints but as **taste anchors**�
 ├── vitest.config.ts
 └── package.json
 ```
+
+---
+
+## 25. Audio System Architecture
+
+The garden has a Proteus-inspired audio system: sounds and music emerge from what's visible and nearby rather than from composed tracks. The audio should feel as organic as the visuals—a mix of breathy, natural textures and crystalline, synthetic tones.
+
+### Audio References + Vibe
+
+- **Proteus** (Ed Key, David Kanaga): The primary inspiration. Every entity has a musical signature; the "song" emerges from what you're near. Exploration creates composition.
+- **Brian Eno's generative work**: Long-form ambient that evolves slowly, never quite repeating.
+- **Ólafur Arnalds' Stratus**: Generative piano pieces; simple notes, complex emergence.
+- **Wind through trees, distant chimes**: Natural soundscapes with occasional crystalline accents.
+
+### Technical Stack
+
+- **Tone.js**: Generative ambient layers, drones, synthesized sounds. Provides oscillators, filters, effects, transport scheduling.
+- **Howler.js**: Discrete sample playback for action sounds (snip, sprout). Lightweight, handles audio sprites.
+- **Web Audio API**: Underlying browser audio (both libraries use it). Requires user gesture to start.
+
+### Architecture
+
+```
+src/
+├── audio/                          # Audio system (browser only)
+│   ├── index.ts                    # Re-exports, AudioSystem init
+│   ├── engine.ts                   # AudioEngine: context lifecycle, master volume
+│   ├── ambient/                    # Continuous layers (always playing, volume-modulated)
+│   │   ├── index.ts
+│   │   ├── voidDrone.ts            # Base airy ambient (quiet in void)
+│   │   ├── dayNightShift.ts        # Shifts harmonic palette based on timeOfDay
+│   │   └── clusterVoice.ts         # Per-cluster harmonic voice (seed-deterministic)
+│   ├── discrete/                   # One-shot sounds triggered by events
+│   │   ├── index.ts
+│   │   ├── actionSounds.ts         # Sprout, prune, branch, trim
+│   │   ├── uiSounds.ts             # Menu open/close, select (subtle)
+│   │   └── particleSounds.ts       # Firefly buzz, seed whisper
+│   └── mixer.ts                    # LayerMixer: adjusts volumes based on World state
+```
+
+### Existing AudioEvent Hooks
+
+The update system already emits audio events. The audio system just needs to subscribe:
+
+```typescript
+// In update.ts (already exists)
+export type AudioEvent =
+  | { type: "sprout" }
+  | { type: "prune" }
+  | { type: "branch" }
+  | { type: "trim" }
+  | { type: "select" }
+  | { type: "hover" }
+  | { type: "pan" }
+  | { type: "zoom" }
+  | { type: "menuOpen" }
+  | { type: "menuClose" };
+
+export function onAudioEvent(listener: (event: AudioEvent) => void): () => void;
+```
+
+### Layering Model
+
+Audio layers stack based on what's on screen:
+
+| Layer | Content | Volume Driver |
+|-------|---------|---------------|
+| **Base drone** | Airy, minimal, always present | Low constant; slightly louder in void |
+| **Time-of-day** | Harmonic shift (bright day, dark night) | Follows `dayCycle.timeOfDay` |
+| **Cluster voice** | Each cluster has a chord/texture | Proximity to cluster center |
+| **Island variation** | Subtle variations within cluster | When single island dominates view |
+| **Particle sounds** | Firefly twinkles, seed whispers | When particles are visible |
+| **Action sounds** | Sprout blip, snip click, etc. | Triggered by `AudioEvent` |
+
+### Proximity Mixing
+
+The `LayerMixer` continuously reads world state each frame (or on change):
+
+```typescript
+type AudioMixState = {
+  voidness: number;         // 0-1: how much "empty" void is on screen
+  clusterProximities: Map<Id, number>;  // cluster id → 0-1 volume
+  islandFocus: Id | null;   // if one island dominates the view
+  timeOfDay: number;        // 0-1 from dayCycle
+  zoomLevel: number;        // affects detail/density
+};
+```
+
+### Density Philosophy (Open Question)
+
+How dense should the audio be?
+
+- **Sparse/Zen approach**: Mostly silence. Sounds appear only when things happen. Proteus leans this way outside of dense forests.
+- **Continuous bed approach**: Always a gentle hum. Layers add on top. More traditional ambient.
+- **Zoom-adaptive**: Sparse when zoomed out (void view), denser when zoomed in (island detail).
+
+Current direction: **zoom-adaptive**. Void is quiet and sparse. Zooming into an island gradually fills in layers. But this is still being explored.
+
+### User Controls
+
+- **Speaker icon in HUD** (corner dock pattern): Toggle audio on/off
+- **Volume slider** (future): Master volume control
+- **Layer balance** (future): Let users adjust ambient vs discrete sounds
+
+### Sample Assets (Future)
+
+May include recorded samples for:
+- Snip/cut sounds (satisfying scissor click)
+- Sprout sounds (organic unfurling)
+- Wind/breath textures (layered into drones)
+
+For MVP, synthesize all sounds. Samples can be added later for richer texture.
 
 ---
 
