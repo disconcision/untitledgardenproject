@@ -219,16 +219,19 @@ The agent can now:
 ### What Changed
 
 **Model**:
+
 - `Rock` now has `boulders` array (compound structure) and `cracks` array
 - `PlantNode` has `depth` property for bark-like thickness gradient
 - `Boulder` type added with size, rotation, sides, irregularity
 
 **Generation**:
+
 - Rock formations: 2-4 boulders clustered together
 - Plants grow from cracks between boulders or edges
 - More branching, depth-tracked nodes
 
 **Rendering**:
+
 - Each boulder rendered as smooth-edged polygon (7-12 sides)
 - Subtle highlight strokes for 3D glacial feel
 - Stem strokeWidth based on depth (thicker=root, thinner=tips)
@@ -251,6 +254,7 @@ The agent can now:
 ### What Changed
 
 **Simulation**:
+
 - Buds charge slowly over time (~0.02 per tick)
 - Fully charged buds have ~5% chance to auto-sprout per tick
 - Sprouting creates new bud + optional leaf + optional branch
@@ -259,6 +263,7 @@ The agent can now:
 - Leaves more likely at deeper levels
 
 **Depth Tracking**:
+
 - All new nodes track their depth from root
 - Depth affects segment length, branch probability
 - Connects to bark-like stem thickness in renderer
@@ -281,16 +286,19 @@ The agent can now:
 ### What Changed
 
 **Model**:
+
 - Added `Cluster` type with pos, glyphKind, rotation
 - `Island` now has `clusterId` + `localPos` (relative to cluster)
 - `World.clusters` map added
 
 **Generation**:
+
 - `generateCluster` creates clusters (1 main for now)
 - Islands positioned relative to cluster center
 - Glyph kinds: seed, node, sigil
 
 **Rendering**:
+
 - `ClusterGlyphRenderer` renders central glyph
 - Three glyph styles (seed=radiating, node=concentric, sigil=triangle)
 - Island worldPos computed from cluster.pos + island.localPos
@@ -305,9 +313,55 @@ The agent can now:
 ### Architecture
 
 This sets the foundation for:
+
 - Multi-cluster world (distant clusters in fog)
 - Each cluster as an independent grouping
 - Cluster-relative positioning for all entities
+
+---
+
+## CP-008: World Inspector Panel
+
+**Date**: 2026-01-04
+**Seed**: 42
+
+### What Changed
+
+**New Component**: `WorldInspector.tsx`
+
+- Collapsible tree view of the world hierarchy
+- Shows: World → Clusters → Islands → Rocks/Plants → PlantNodes
+- Bidirectional selection sync (click/hover in tree ↔ highlight in world)
+- Bottom-left corner dock (follows HUD pattern)
+- Live state display (e.g., bud charge shown as ⚡)
+
+**CSS**: `WorldInspector.css`
+
+- Tree indentation via CSS variables
+- Hover/selection highlighting with green tints
+- Monospace font for IDs
+- Scrollable content area
+
+**Documentation**: Added Section 6 "Projective UI" to SOURCE.md
+
+- Describes the vision: same structure viewable through different lenses
+- Future directions: inline rendering, situated inspection, UI-as-tree
+
+### Tour Path
+
+1. Click the 🌳 button in bottom-left corner
+2. Expand cluster-1 → island-5 → plant-34
+3. See stems, buds (with charge), leaves
+4. Hover a node in tree → observe highlight
+5. Click a node → selects it (syncs with world)
+
+### Architecture
+
+This is the first step toward **projective UI**:
+
+- The inspector is one "lens" on the world structure
+- The rendered garden is another lens
+- Future: per-node lens switching, inline rendered subtrees
 
 ---
 

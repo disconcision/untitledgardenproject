@@ -1,0 +1,176 @@
+/**
+ * World Inspector styles
+ * 
+ * Collapsible tree view for the world structure.
+ * Uses the same corner dock pattern as HUD panels.
+ */
+
+/* Bottom-left position */
+.hud-bottom-left {
+  bottom: 16px;
+  left: 16px;
+}
+
+/* Bottom-left expands right and up — button anchored to bottom-left */
+.hud-bottom-left .hud-panel-wrapper {
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  transform-origin: bottom left;
+}
+
+/* Inspector-specific panel styling */
+.inspector-panel.open {
+  max-height: 60vh;
+  max-width: 280px;
+}
+
+.inspector-content {
+  max-height: calc(60vh - 44px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.inspector-header {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-ui-border);
+}
+
+.inspector-tree {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* === Tree Node === */
+
+.inspector-node {
+  --indent: 12px;
+}
+
+.inspector-node-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  padding-left: calc(var(--depth, 0) * var(--indent));
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 80ms ease-out;
+}
+
+.inspector-node-row:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.inspector-node-row.hovered {
+  background: rgba(120, 180, 120, 0.15);
+}
+
+.inspector-node-row.selected {
+  background: rgba(80, 140, 80, 0.2);
+}
+
+.inspector-node-row.selected.hovered {
+  background: rgba(80, 140, 80, 0.25);
+}
+
+/* === Toggle Button === */
+
+.inspector-toggle {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 80ms ease-out;
+}
+
+.inspector-toggle:hover {
+  color: var(--color-text-primary);
+}
+
+.inspector-toggle-spacer {
+  width: 14px;
+  flex-shrink: 0;
+}
+
+/* === Label === */
+
+.inspector-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspector-kind {
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+/* Kind-specific colors */
+.inspector-kind {
+  background: var(--color-ui-bg);
+  color: var(--color-text-muted);
+}
+
+.inspector-node-row .inspector-kind[class*="cluster"] {
+  background: rgba(139, 115, 85, 0.2);
+  color: var(--color-brown-bark);
+}
+
+.inspector-node-row .inspector-kind {
+  /* Default */
+}
+
+/* Match kind text for coloring */
+.inspector-kind:is([class]):has(+ :not(.inspector-kind)) {
+  /* Fallback styling handled above */
+}
+
+/* We'll color by the kind text content via data attribute if needed */
+/* For now, simple approach: all kinds get the muted style, 
+   selection/hover provides context */
+
+.inspector-children {
+  /* Children inherit indentation via CSS var */
+}
+
+/* === Scrollbar styling === */
+
+.inspector-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inspector-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.inspector-content::-webkit-scrollbar-thumb {
+  background: var(--color-ui-border);
+  border-radius: 3px;
+}
+
+.inspector-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}

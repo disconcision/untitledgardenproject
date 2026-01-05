@@ -6,16 +6,44 @@
  */
 
 import { useMemo, memo } from "react";
-import { World, Cluster, Island, Rock, PlantNode, Plant, Vec2, addVec2 } from "../model";
+import {
+  World,
+  Cluster,
+  Island,
+  Rock,
+  PlantNode,
+  Plant,
+  Vec2,
+  addVec2,
+} from "../model";
 import { Msg } from "../update";
 import { blobPath, leafPath } from "./paths";
 import "./Garden.css";
 
 // Helper: compute island world position from cluster
-function getIslandWorldPos(island: Island, clusters: Map<string, Cluster>): Vec2 {
+function getIslandWorldPos(
+  island: Island,
+  clusters: Map<string, Cluster>
+): Vec2 {
   const cluster = clusters.get(island.clusterId);
   if (!cluster) return island.localPos;
   return addVec2(cluster.pos, island.localPos);
+}
+
+// Helper: compute cluster distance from origin for fog effect
+function getClusterDistance(cluster: Cluster): number {
+  return Math.sqrt(cluster.pos.x ** 2 + cluster.pos.y ** 2);
+}
+
+// Helper: compute fog opacity based on distance (0 = clear, 1 = invisible)
+function getFogOpacity(distance: number): number {
+  // Main cluster (distance ~0) = fully visible
+  // Distant clusters (distance 600+) = progressively faded
+  const fogStart = 200; // Start fading at this distance
+  const fogEnd = 1200; // Almost invisible at this distance
+  if (distance <= fogStart) return 0;
+  if (distance >= fogEnd) return 0.85;
+  return ((distance - fogStart) / (fogEnd - fogStart)) * 0.85;
 }
 
 type GardenProps = {
@@ -26,25 +54,57 @@ type GardenProps = {
 export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
   const { camera, clusters, entities, plants, hover, selection, debug } = world;
 
-  // Group entities by type
-  const { islands, rocks } = useMemo(() => {
-    const islands: Island[] = [];
-    const rocks: Rock[] = [];
+  // Group entities by cluster for fog rendering
+  const clusterData = useMemo(() => {
+    // Sort clusters by distance (render far ones first, near ones on top)
+    const sortedClusters = Array.from(clusters.values()).sort(
+      (a: Cluster, b: Cluster) => getClusterDistance(b) - getClusterDistance(a)
+    );
 
-    for (const entity of entities.values()) {
-      switch (entity.kind) {
-        case "island":
-          islands.push(entity);
-          break;
-        case "rock":
-          rocks.push(entity);
-          break;
+    return sortedClusters.map((cluster: Cluster) => {
+      const distance = getClusterDistance(cluster);
+      const fogOpacity = getFogOpacity(distance);
+      const isDistant = distance > 200;
+
+      // Get islands for this cluster
+      const clusterIslands: Island[] = [];
+      const clusterRocks: Rock[] = [];
+
+      for (const entity of entities.values()) {
+        if (entity.kind === "island" && entity.clusterId === cluster.id) {
+          clusterIslands.push(entity);
+        } else if (entity.kind === "rock") {
+          // Check if rock's island belongs to this cluster
+          const island = entities.get(entity.islandId) as Island | undefined;
+          if (island && island.clusterId === cluster.id) {
+            clusterRocks.push(entity);
+          }
+        }
       }
-    }
 
-    islands.sort((a: Island, b: Island): number => b.depth - a.depth);
-    return { islands, rocks };
-  }, [entities]);
+      // Sort islands by depth
+      clusterIslands.sort((a: Island, b: Island): number => b.depth - a.depth);
+
+      // Get plants for this cluster
+      const clusterPlants: Plant[] = [];
+      for (const plant of plants.values()) {
+        const island = entities.get(plant.islandId) as Island | undefined;
+        if (island && island.clusterId === cluster.id) {
+          clusterPlants.push(plant);
+        }
+      }
+
+      return {
+        cluster,
+        distance,
+        fogOpacity,
+        isDistant,
+        islands: clusterIslands,
+        rocks: clusterRocks,
+        plants: clusterPlants,
+      };
+    });
+  }, [clusters, entities, plants]);
 
   const transform = `translate(${camera.pan.x}, ${camera.pan.y}) scale(${camera.zoom})`;
 
@@ -93,73 +153,86 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
       </defs>
 
       <g transform={transform}>
-        {/* Cluster glyphs (behind everything) */}
-        {Array.from(clusters.values()).map((cluster: Cluster) => (
-          <ClusterGlyphRenderer
-            key={cluster.id}
-            cluster={cluster}
-            showId={debug.showIds}
-          />
-        ))}
+        {/* Render clusters from far to near (painters algorithm) */}
+        {clusterData.map(
+          ({ cluster, fogOpacity, isDistant, islands, rocks, plants: clusterPlants }) => (
+            <g
+              key={cluster.id}
+              className={isDistant ? "distant-cluster" : "main-cluster"}
+              style={{
+                opacity: 1 - fogOpacity,
+                // Distant clusters get slight blur via CSS
+                filter: isDistant ? `blur(${fogOpacity * 2}px)` : undefined,
+              }}
+            >
+              {/* Cluster glyph */}
+              <ClusterGlyphRenderer
+                cluster={cluster}
+                showId={debug.showIds}
+                isDistant={isDistant}
+              />
 
-        {/* Islands - subtle, small soil patches */}
-        {islands.map((island: Island) => {
-          const worldPos = getIslandWorldPos(island, clusters);
-          return (
-            <IslandRenderer
-              key={island.id}
-              island={island}
-              worldPos={worldPos}
-              isHovered={hover === island.id}
-              isSelected={selection === island.id}
-              showId={debug.showIds}
-              showHitTarget={debug.showHitTargets}
-              dispatch={dispatch}
-            />
-          );
-        })}
+              {/* Islands */}
+              {islands.map((island: Island) => {
+                const worldPos = getIslandWorldPos(island, clusters);
+                return (
+                  <IslandRenderer
+                    key={island.id}
+                    island={island}
+                    worldPos={worldPos}
+                    isHovered={!isDistant && hover === island.id}
+                    isSelected={!isDistant && selection === island.id}
+                    showId={debug.showIds}
+                    showHitTarget={debug.showHitTargets}
+                    dispatch={isDistant ? undefined : dispatch}
+                  />
+                );
+              })}
 
-        {/* Rocks - the primary anchors */}
-        {rocks.map((rock: Rock) => {
-          const island = entities.get(rock.islandId) as Island | undefined;
-          if (!island) return null;
-          const islandWorldPos = getIslandWorldPos(island, clusters);
-          return (
-            <RockRenderer
-              key={rock.id}
-              rock={rock}
-              islandPos={islandWorldPos}
-              isHovered={hover === rock.id}
-              showId={debug.showIds}
-              showHitTarget={debug.showHitTargets}
-              dispatch={dispatch}
-            />
-          );
-        })}
+              {/* Rocks */}
+              {rocks.map((rock: Rock) => {
+                const island = entities.get(rock.islandId) as Island | undefined;
+                if (!island) return null;
+                const islandWorldPos = getIslandWorldPos(island, clusters);
+                return (
+                  <RockRenderer
+                    key={rock.id}
+                    rock={rock}
+                    islandPos={islandWorldPos}
+                    isHovered={!isDistant && hover === rock.id}
+                    showId={debug.showIds}
+                    showHitTarget={debug.showHitTargets}
+                    dispatch={isDistant ? undefined : dispatch}
+                  />
+                );
+              })}
 
-        {/* Plants */}
-        {Array.from(plants.values()).map((plant: Plant) => {
-          const island = entities.get(plant.islandId) as Island | undefined;
-          if (!island) return null;
-          const islandWorldPos = getIslandWorldPos(island, clusters);
+              {/* Plants */}
+              {clusterPlants.map((plant: Plant) => {
+                const island = entities.get(plant.islandId) as Island | undefined;
+                if (!island) return null;
+                const islandWorldPos = getIslandWorldPos(island, clusters);
 
-          const nodes = Array.from(plant.adjacency.keys())
-            .map((id: string) => entities.get(id) as PlantNode | undefined)
-            .filter((n): n is PlantNode => n !== undefined);
+                const nodes = Array.from(plant.adjacency.keys())
+                  .map((id: string) => entities.get(id) as PlantNode | undefined)
+                  .filter((n): n is PlantNode => n !== undefined);
 
-          return (
-            <PlantRenderer
-              key={plant.id}
-              plant={plant}
-              nodes={nodes}
-              islandPos={islandWorldPos}
-              hover={hover}
-              showIds={debug.showIds}
-              showHitTargets={debug.showHitTargets}
-              dispatch={dispatch}
-            />
-          );
-        })}
+                return (
+                  <PlantRenderer
+                    key={plant.id}
+                    plant={plant}
+                    nodes={nodes}
+                    islandPos={islandWorldPos}
+                    hover={isDistant ? null : hover}
+                    showIds={debug.showIds}
+                    showHitTargets={debug.showHitTargets}
+                    dispatch={isDistant ? undefined : dispatch}
+                  />
+                );
+              })}
+            </g>
+          )
+        )}
       </g>
     </svg>
   );
@@ -171,13 +244,18 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
 type ClusterGlyphRendererProps = {
   cluster: Cluster;
   showId: boolean;
+  isDistant: boolean;
 };
 
 const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
   cluster,
   showId,
+  isDistant,
 }: ClusterGlyphRendererProps) {
   const { pos, glyphKind, rotation } = cluster;
+  
+  // Distant glyphs are slightly larger to remain visible through fog
+  const scale = isDistant ? 1.5 : 1;
 
   // Different glyph shapes
   const renderGlyph = () => {
@@ -231,7 +309,13 @@ const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
               strokeWidth={0.5}
               opacity={0.4}
             />
-            <circle cx={0} cy={0} r={2} fill="var(--color-rock-dark)" opacity={0.5} />
+            <circle
+              cx={0}
+              cy={0}
+              r={2}
+              fill="var(--color-rock-dark)"
+              opacity={0.5}
+            />
           </>
         );
       case "sigil":
@@ -245,7 +329,13 @@ const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
               strokeWidth={0.5}
               opacity={0.4}
             />
-            <circle cx={0} cy={0} r={3} fill="var(--color-green-deepForest)" opacity={0.4} />
+            <circle
+              cx={0}
+              cy={0}
+              r={3}
+              fill="var(--color-green-deepForest)"
+              opacity={0.4}
+            />
           </g>
         );
     }
@@ -253,7 +343,7 @@ const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
 
   return (
     <g
-      transform={`translate(${pos.x}, ${pos.y})`}
+      transform={`translate(${pos.x}, ${pos.y}) scale(${scale})`}
       className="cluster-glyph"
       filter="url(#glyph-glow)"
     >
@@ -278,7 +368,7 @@ type IslandRendererProps = {
   isSelected: boolean;
   showId: boolean;
   showHitTarget: boolean;
-  dispatch: (msg: Msg) => void;
+  dispatch?: (msg: Msg) => void; // Optional for distant clusters
 };
 
 const IslandRenderer = memo(function IslandRenderer({
@@ -301,10 +391,12 @@ const IslandRenderer = memo(function IslandRenderer({
       style={{ "--anim-delay": animDelay } as React.CSSProperties}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={island.id}
-      onPointerEnter={() => dispatch({ type: "hover", id: island.id })}
-      onPointerLeave={() => dispatch({ type: "hover", id: null })}
-      onDoubleClick={() =>
-        dispatch({ type: "camera/focus", target: worldPos, zoom: 1.5 })
+      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: island.id }) : undefined}
+      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
+      onDoubleClick={
+        dispatch
+          ? () => dispatch({ type: "camera/focus", target: worldPos, zoom: 1.5 })
+          : undefined
       }
     >
       {/* Soft shadow */}
@@ -360,7 +452,7 @@ type RockRendererProps = {
   isHovered: boolean;
   showId: boolean;
   showHitTarget: boolean;
-  dispatch: (msg: Msg) => void;
+  dispatch?: (msg: Msg) => void; // Optional for distant clusters
 };
 
 // Generate boulder polygon points
@@ -399,8 +491,8 @@ const RockRenderer = memo(function RockRenderer({
       className="rock-group"
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={rock.id}
-      onPointerEnter={() => dispatch({ type: "hover", id: rock.id })}
-      onPointerLeave={() => dispatch({ type: "hover", id: null })}
+      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: rock.id }) : undefined}
+      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
     >
       {/* Render each boulder in the formation */}
       {rock.boulders.map((boulder, idx) => {
@@ -490,7 +582,7 @@ type PlantRendererProps = {
   hover: string | null;
   showIds: boolean;
   showHitTargets: boolean;
-  dispatch: (msg: Msg) => void;
+  dispatch?: (msg: Msg) => void; // Optional for distant clusters
 };
 
 const PlantRenderer = memo(function PlantRenderer({
@@ -571,7 +663,7 @@ type PlantNodeRendererProps = {
   isHovered: boolean;
   showId: boolean;
   showHitTarget: boolean;
-  dispatch: (msg: Msg) => void;
+  dispatch?: (msg: Msg) => void; // Optional for distant clusters
 };
 
 const PlantNodeRenderer = memo(function PlantNodeRenderer({
@@ -584,9 +676,10 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
 }: PlantNodeRendererProps) {
   const worldPos = addVec2(islandPos, node.localPos);
   const isCharged = node.nodeKind === "bud" && (node.charge ?? 0) >= 0.8;
-  const isInteractive = node.nodeKind === "bud" || node.nodeKind === "leaf";
+  const isInteractive = dispatch && (node.nodeKind === "bud" || node.nodeKind === "leaf");
 
   const handleClick = () => {
+    if (!dispatch) return;
     if (node.nodeKind === "bud") {
       dispatch({ type: "sprout", budId: node.id });
     } else if (node.nodeKind === "leaf") {
@@ -603,8 +696,8 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
       className={`plant-node ${isInteractive ? "interactive" : ""}`}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={node.id}
-      onPointerEnter={() => dispatch({ type: "hover", id: node.id })}
-      onPointerLeave={() => dispatch({ type: "hover", id: null })}
+      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: node.id }) : undefined}
+      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
       onClick={isInteractive ? handleClick : undefined}
     >
       {/* Invisible hit target - always present for interactive nodes */}

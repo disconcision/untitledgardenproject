@@ -331,8 +331,8 @@ export function generateWorld(seed: number): World {
   const rng = createRng(seed);
   const world = createInitialWorld(seed);
 
-  // For now: 1 main cluster (later: multiple distant clusters)
-  const clusterCount = 1;
+  // Multiple clusters: 1 main + 2-4 distant
+  const clusterCount = 3 + Math.floor(rng() * 3); // 3-5 clusters total
   const clusters: Cluster[] = [];
 
   for (let c = 0; c < clusterCount; c++) {
@@ -345,15 +345,21 @@ export function generateWorld(seed: number): World {
   const allRocks: { rock: Rock; island: Island; cluster: Cluster }[] = [];
 
   for (const cluster of clusters) {
-    // 3-5 islands per cluster
-    const islandCount = 3 + Math.floor(rng() * 3);
+    // Main cluster (index 0) gets more islands, distant ones get fewer
+    const isMain = clusters.indexOf(cluster) === 0;
+    const islandCount = isMain
+      ? 4 + Math.floor(rng() * 3) // 4-6 islands for main
+      : 2 + Math.floor(rng() * 2); // 2-3 islands for distant
 
     for (let i = 0; i < islandCount; i++) {
       const island = generateIsland(rng, cluster.id, i, islandCount);
       world.entities.set(island.id, island);
 
-      // 1-2 rock formations per island
-      const rockCount = 1 + Math.floor(rng() * 2);
+      // Main cluster gets more rocks, distant ones fewer
+      const rockCount = isMain
+        ? 1 + Math.floor(rng() * 2) // 1-2 rocks
+        : 1; // Just 1 rock for distant
+
       for (let j = 0; j < rockCount; j++) {
         const rock = generateRockFormation(rng, island, j, rockCount);
         world.entities.set(rock.id, rock);
@@ -362,9 +368,12 @@ export function generateWorld(seed: number): World {
     }
   }
 
-  // Most rocks have plants (70%)
-  for (const { rock, island } of allRocks) {
-    if (rng() > 0.3) {
+  // Plants: main cluster gets 70%, distant get 50%
+  for (const { rock, island, cluster } of allRocks) {
+    const isMain = clusters.indexOf(cluster) === 0;
+    const plantChance = isMain ? 0.7 : 0.5;
+
+    if (rng() < plantChance) {
       const { nodes, plant } = generatePlantForRock(rng, rock, island);
       for (const node of nodes) {
         world.entities.set(node.id, node);

@@ -118,7 +118,7 @@ Visually: clusters of soil + rock drift in airy space. Plants grow from anchors.
 
 ---
 
-## 5. Extensibility: Designing for Additive Depth
+## 5b. Extensibility: Designing for Additive Depth
 
 This project is intended to run for a while—many iterations, much agent refinement. The danger is reaching a plateau where new detail requires rewriting old detail. We want **additive extensibility**: rich directions to grow without displacement.
 
@@ -175,7 +175,52 @@ These are places we _know_ we'll want to add depth. Design now to make these add
 
 ---
 
-## 6. MVP (Phase 1): Beautiful Static-ish Garden With Minimal Life
+## 6. Projective UI: Multiple Views of the Same Structure
+
+The garden's hierarchical structure (World → Clusters → Islands → Rocks/Plants → Nodes) can be viewed through different **lenses** or **projections**:
+
+### Current Implementation
+
+**World Inspector** (bottom-left corner dock):
+
+- Collapsible tree view showing the full hierarchy
+- Bidirectional sync: hovering/clicking in tree highlights in world, and vice versa
+- Shows entity kinds, IDs, and live state (e.g., bud charge)
+
+### Vision: Progressive Projective UI
+
+The idea is that any subtree of the world can be viewed as either:
+
+1. **Outliner/text**: Collapsible tree, shows structure, IDs, properties
+2. **Rendered/graphical**: The actual SVG/spatial representation
+
+And these lenses are **switchable per-node**, not just globally:
+
+- Root as outliner, children as rendered
+- Or: Root rendered, but one selected subtree "popped open" as outliner
+- Or: Arbitrary mix at arbitrary depths
+
+This is related to **projectional editing** (JetBrains MPS, Lamdu) — the same AST projected as text, blocks, or diagrams depending on context.
+
+### Future Directions
+
+| Feature                          | Description                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| **Inline rendering in outliner** | Subtrees in the tree view render as miniature graphics                        |
+| **Situated inspection**          | Pop open an outliner view that's spatially anchored to the thing in the world |
+| **UI chrome as tree nodes**      | Menus, config, state all live in the same projective paradigm                 |
+| **Comparison views**             | Side-by-side worlds, timeline/scrubber, "what if" branching                   |
+
+### References
+
+- **Orteil's Nested**: Pure outliner exploring infinite nested structure
+- **Figma/Unity inspectors**: Panel-based, but the pattern of selecting in one view to inspect in another
+- **Observable notebooks**: Live, tinkerable, code-as-interface
+- **Marginalia/annotation**: Inspector appears where the thing is, not in a separate panel
+
+---
+
+## 7. MVP (Phase 1): Beautiful Static-ish Garden With Minimal Life
 
 ### Must ship
 
@@ -207,7 +252,7 @@ These are places we _know_ we'll want to add depth. Design now to make these add
 
 ---
 
-## 7. Data Model
+## 8. Data Model
 
 ### Identity
 
@@ -256,7 +301,7 @@ type World = {
 
 ---
 
-## 8. Rendering (Hybrid Layers)
+## 9. Rendering (Hybrid Layers)
 
 1. **Canvas background**
 
@@ -285,7 +330,7 @@ type World = {
 
 ---
 
-## 9. Interaction Design
+## 10. Interaction Design
 
 ### Camera
 
@@ -312,7 +357,7 @@ type World = {
 
 ---
 
-## 10. Simulation
+## 11. Simulation
 
 ### Phase 1: Trivial but real
 
@@ -331,7 +376,7 @@ Keep simulation **deterministic given seed + action log** when feasible.
 
 ---
 
-## 11. Tutorial / "What's New" System
+## 12. Tutorial / "What's New" System
 
 Required for every revision.
 
@@ -358,7 +403,7 @@ Required for every revision.
 
 ---
 
-## 12. Instrumentation + Feedback
+## 13. Instrumentation + Feedback
 
 ### Dev logging (always-on in dev)
 
@@ -386,7 +431,7 @@ Separate file: `CHECKPOINTS.md`
 
 ---
 
-## 13. Milestones
+## 14. Milestones
 
 ### M1 — MVP Garden
 
@@ -432,7 +477,7 @@ Add one nontrivial exploration mechanic:
 
 ---
 
-## 14. Stretch Directions
+## 15. Stretch Directions
 
 Pick opportunistically:
 
@@ -444,7 +489,7 @@ Pick opportunistically:
 
 ---
 
-## 15. Acceptance Criteria
+## 16. Acceptance Criteria
 
 "Done for now" means:
 
@@ -459,7 +504,7 @@ Pick opportunistically:
 
 ---
 
-## 16. Agent Operating Instructions
+## 17. Agent Operating Instructions
 
 ### Primary loop
 
@@ -500,7 +545,7 @@ Produce:
 
 ---
 
-## 17. Agentic Harness
+## 18. Agentic Harness
 
 The agent (Claude, running in Cursor) benefits from tools beyond just the browser. This section describes infrastructure for tighter agent feedback loops.
 
@@ -541,7 +586,7 @@ src/
 
 ---
 
-## 18. Testing Strategy
+## 19. Testing Strategy
 
 Tests should help the agent iterate robustly without imposing heavy cost on development.
 
@@ -585,7 +630,7 @@ Example:
 
 ---
 
-## 19. Initial TODOs
+## 20. Initial TODOs
 
 - [x] Scaffold Vite + React + TS _(CP-001)_
 - [x] Reorganize into `core/` (pure logic) and `render/` (React) _(CP-002)_
@@ -607,10 +652,18 @@ Example:
 - [ ] Isometric projection + depth-based z-ordering
 - [ ] Multiple clusters with fog/distance rendering
 - [ ] Background scale layers (mountains, giant trees)
+- [x] World Inspector panel (collapsible tree view) _(CP-008)_
+
+### Projective UI (future)
+
+- [ ] Inline rendering of subtrees within inspector
+- [ ] Situated inspection (pop open inspector anchored to world position)
+- [ ] UI chrome as tree nodes in the projective paradigm
+- [ ] Comparison views (side-by-side worlds, branching)
 
 ---
 
-## 20. Open Design Choices
+## 21. Open Design Choices
 
 Agent may decide, but **must document in Design Decisions Log**:
 
@@ -622,35 +675,37 @@ Agent may decide, but **must document in Design Decisions Log**:
 
 ---
 
-## 21. Design Decisions Log
+## 22. Design Decisions Log
 
-| Date       | Decision                    | Rationale                                                                |
-| ---------- | --------------------------- | ------------------------------------------------------------------------ |
-| (init)     | React + TS + Vite           | Mainstream, fast reload, TS for type safety                              |
-| (init)     | SVG + Canvas hybrid         | SVG for crisp paths, Canvas for atmosphere                               |
-| (init)     | MVU-ish architecture        | Clean state, enables undo/replay                                         |
-| 2026-01-04 | Git for checkpointing       | Commits as checkpoints, describe in docs, branches when exploring        |
-| 2026-01-04 | Wiki-style docs folder      | SOURCE.md spawns sub-docs as complexity grows; [[bracket]] links allowed |
-| 2026-01-04 | Bezier splines first        | More organic feel; polylines available as alternative primitive later    |
-| 2026-01-04 | Rich theming infrastructure | CSS variables, color scheme controls; dark mode planned but not default  |
-| 2026-01-04 | Sound hooks from start      | Interaction events structured for easy sound layer addition              |
-| 2026-01-04 | Tutorial from day one       | "What's New" overlay present even in scaffold                            |
-| 2026-01-04 | Garden as editor            | The visual form IS the syntax; direct manipulation of structure          |
-| 2026-01-04 | core/ folder for pure logic | Enables Node CLI tools, testing, agentic harness                         |
-| 2026-01-04 | CLI tools for agent         | Agent can validate hypotheses without browser; tighter loops             |
-| 2026-01-04 | Vitest for testing          | Fast, Vite-native; unit tests for core, light behavioral tests           |
-| 2026-01-04 | Creator process documented  | Human speaks feedback, agent implements; minimize context-switching      |
-| 2026-01-04 | Corner dock UI              | Minimal icons at corners expand to panels; cleaner than fixed panels     |
-| 2026-01-04 | CSS animations for sway     | Ambient motion via CSS, not React state; better performance              |
-| 2026-01-04 | 1s simulation tick          | Slow tick for logic, CSS for visuals; 60fps re-renders eliminated        |
-| 2026-01-04 | Plants grow from rocks      | Rocks are anchors; plants reach into sky, not buried in islands          |
-| 2026-01-04 | CSS vs SVG transform bug    | CSS animation transform overrides SVG transform attr; removed CSS sway   |
-| 2026-01-04 | Recursive branching         | Plants have Y-forks, sub-branches; more buds per plant                   |
-| 2026-01-04 | UI panel expand animation   | Icon in corner, panel expands from it; × replaces icon when open         |
+| Date       | Decision                    | Rationale                                                                 |
+| ---------- | --------------------------- | ------------------------------------------------------------------------- |
+| (init)     | React + TS + Vite           | Mainstream, fast reload, TS for type safety                               |
+| (init)     | SVG + Canvas hybrid         | SVG for crisp paths, Canvas for atmosphere                                |
+| (init)     | MVU-ish architecture        | Clean state, enables undo/replay                                          |
+| 2026-01-04 | Git for checkpointing       | Commits as checkpoints, describe in docs, branches when exploring         |
+| 2026-01-04 | Wiki-style docs folder      | SOURCE.md spawns sub-docs as complexity grows; [[bracket]] links allowed  |
+| 2026-01-04 | Bezier splines first        | More organic feel; polylines available as alternative primitive later     |
+| 2026-01-04 | Rich theming infrastructure | CSS variables, color scheme controls; dark mode planned but not default   |
+| 2026-01-04 | Sound hooks from start      | Interaction events structured for easy sound layer addition               |
+| 2026-01-04 | Tutorial from day one       | "What's New" overlay present even in scaffold                             |
+| 2026-01-04 | Garden as editor            | The visual form IS the syntax; direct manipulation of structure           |
+| 2026-01-04 | core/ folder for pure logic | Enables Node CLI tools, testing, agentic harness                          |
+| 2026-01-04 | CLI tools for agent         | Agent can validate hypotheses without browser; tighter loops              |
+| 2026-01-04 | Vitest for testing          | Fast, Vite-native; unit tests for core, light behavioral tests            |
+| 2026-01-04 | Creator process documented  | Human speaks feedback, agent implements; minimize context-switching       |
+| 2026-01-04 | Corner dock UI              | Minimal icons at corners expand to panels; cleaner than fixed panels      |
+| 2026-01-04 | CSS animations for sway     | Ambient motion via CSS, not React state; better performance               |
+| 2026-01-04 | 1s simulation tick          | Slow tick for logic, CSS for visuals; 60fps re-renders eliminated         |
+| 2026-01-04 | Plants grow from rocks      | Rocks are anchors; plants reach into sky, not buried in islands           |
+| 2026-01-04 | CSS vs SVG transform bug    | CSS animation transform overrides SVG transform attr; removed CSS sway    |
+| 2026-01-04 | Recursive branching         | Plants have Y-forks, sub-branches; more buds per plant                    |
+| 2026-01-04 | UI panel expand animation   | Icon in corner, panel expands from it; × replaces icon when open          |
+| 2026-01-04 | World Inspector panel       | Collapsible tree view of world hierarchy; first step toward projective UI |
+| 2026-01-04 | Projective UI vision        | Same structure viewable as outliner or rendered; per-node lens switching  |
 
 ---
 
-## 22. Aesthetic References + Vibe
+## 23. Aesthetic References + Vibe
 
 The agent should internalize these not as constraints but as **taste anchors**—touchstones to return to when making visual, interactive, or structural decisions. The garden should feel like it belongs in the same universe as these things.
 
@@ -732,7 +787,7 @@ The agent should internalize these not as constraints but as **taste anchors**�
 
 ---
 
-## 23. Repo Structure
+## 24. Repo Structure
 
 ```
 /
@@ -759,8 +814,9 @@ The agent should internalize these not as constraints but as **taste anchors**�
 │   │   ├── colors.ts  # Palette constants
 │   │   └── global.css # CSS custom properties
 │   ├── ui/
-│   │   ├── Tutorial.tsx
-│   │   └── DebugPanel.tsx
+│   │   ├── HUD.tsx           # Tutorial + Debug corner docks
+│   │   ├── WorldInspector.tsx# Collapsible tree view of world hierarchy
+│   │   └── *.css             # Component styles
 │   ├── hooks/
 │   │   └── useCamera.ts
 │   ├── audio/         # Sound hooks (scaffolded)

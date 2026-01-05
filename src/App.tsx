@@ -12,6 +12,7 @@ import { generateWorld } from "./generate";
 import { CanvasBackground } from "./render/Canvas";
 import { Garden } from "./render/Garden";
 import { HUD } from "./ui/HUD";
+import { WorldInspector } from "./ui/WorldInspector";
 import { useCamera } from "./hooks/useCamera";
 
 const INITIAL_SEED = 42;
@@ -63,6 +64,7 @@ export default function App() {
       <CanvasBackground camera={world.camera} />
       <Garden world={world} dispatch={dispatch} />
       <HUD world={world} dispatch={dispatch} onRegenerate={handleRegenerate} />
+      <WorldInspector world={world} dispatch={dispatch} />
     </div>
   );
 }

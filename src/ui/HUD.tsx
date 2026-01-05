@@ -6,9 +6,12 @@
  */
 
 import { useState, memo } from "react";
+import { Compass, Settings, X } from "lucide-react";
 import { World } from "../model";
 import { Msg } from "../update";
 import "./HUD.css";
+
+const ICON_SIZE = 16;
 
 type HUDProps = {
   world: World;
@@ -38,7 +41,11 @@ export const HUD = memo(function HUD({
             onClick={() => dispatch({ type: "tutorial/toggle" })}
             title={tutorial.visible ? "Close" : "Show tutorial"}
           >
-            {tutorial.visible ? "×" : "?"}
+            {tutorial.visible ? (
+              <X size={ICON_SIZE} />
+            ) : (
+              <Compass size={ICON_SIZE} />
+            )}
           </button>
 
           {/* Panel content */}
@@ -75,7 +82,7 @@ export const HUD = memo(function HUD({
             onClick={() => setDebugOpen(!debugOpen)}
             title={debugOpen ? "Close" : "Debug panel"}
           >
-            {debugOpen ? "×" : "⚙"}
+            {debugOpen ? <X size={ICON_SIZE} /> : <Settings size={ICON_SIZE} />}
           </button>
 
           {/* Panel content */}
