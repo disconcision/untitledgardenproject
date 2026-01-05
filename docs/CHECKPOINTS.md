@@ -585,26 +585,27 @@ This is the first step toward **projective UI**:
 
 ---
 
-## CP-012: Center View Action in Pie Menu
+## CP-012: Center View Action Documentation
 
 **Date**: 2026-01-05
 **Seed**: 42
 
 ### What Changed
 
-**Pie Menu Enhancement**:
+**Documentation for existing pie menu feature** (code was in CP-011 but not documented):
 
-1. **New "Center View" action**: Available on stem nodes; centers the camera on the selected node
+The pie menu includes a **"Center View" action** for stem nodes:
 
-   - Uses the Crosshair icon from Lucide
-   - Positioned at the bottom of the pie menu (angle: π/2)
-   - Dispatches `camera/focus` with the node's world position
-   - Automatically closes the menu after action
+- Uses the Crosshair icon from Lucide
+- Positioned at the bottom of the pie menu (angle: π/2)
+- Dispatches `camera/focus` with the node's world position
+- Automatically closes the menu after action
 
-2. **Action layout**:
-   - Trim (Scissors): Upper left (-π \* 0.75)
-   - Branch (GitBranch): Upper right (-π \* 0.25)
-   - Center View (Crosshair): Bottom center (π \* 0.5)
+**Complete action layout**:
+
+- Trim (Scissors): Upper left — removes node and subtree
+- Branch (GitBranch): Upper right — creates new bud from stem
+- Center View (Crosshair): Bottom center — centers camera on node
 
 ### Tour Path
 
@@ -612,9 +613,9 @@ This is the first step toward **projective UI**:
 2. **Click the crosshair icon** (bottom) → Camera centers on that node
 3. **Right-click a different stem** → Center on it to navigate
 
-### Files Changed
+### Notes
 
-- `src/ui/PieMenu.tsx`: Added Crosshair import and centerView action
+This checkpoint documents the Center View feature that was included in the original pie menu implementation (CP-011) but omitted from that checkpoint's documentation.
 
 ---
 
@@ -695,6 +696,62 @@ This is the first step toward **projective UI**:
 - **CSS variables for all colors**: Allows the entire UI (panels, buttons, text) to automatically adapt to day/night mode without per-component logic.
 - **Separate tick rate**: Day cycle updates every 100ms for smooth color transitions, independent of the slower 1s simulation tick.
 - **Golden hour effect**: Sunrise/sunset aren't just linear blends—they add warm orange/pink tints that peak during transition periods.
+
+---
+
+## CP-014: Enhanced Plant Node Hover Effects
+
+**Date**: 2026-01-04
+**Seed**: 42
+
+### What Changed
+
+**Visual hover feedback for all plant node types**:
+
+1. **Stem hover effects**:
+   - Glow circle (`.stem-hover-glow`) appears behind stem on hover
+   - Stem circle grows from 3px → 5px radius
+   - Color shifts from `--color-stem` to `--color-stem-highlight` (earth-tan)
+
+2. **Bud hover effects**:
+   - Enhanced glow circle (larger radius when hovered vs charged)
+   - Bud grows from 5px → 8px radius
+   - Uses `--color-bud-highlight` when hovered
+
+3. **Leaf hover effects**:
+   - Elliptical glow background aligned to leaf angle
+   - Leaf shape grows slightly (16×8 → 18×10)
+   - Brightness filter applied
+
+4. **Flower hover effects**:
+   - Circular glow ring appears on hover
+   - Flower grows from 8px → 10px radius
+   - Uses `--color-flower-highlight`
+
+5. **New CSS color variables**:
+   - `--color-stem-highlight`: earth-tan color for hover
+   - `--color-bud-highlight`: mint-bright for bud hover
+   - `--color-flower-highlight`: coral color for flower hover
+
+**Technical notes**:
+- Hover state is synchronized bidirectionally: hovering in World Inspector highlights in garden, and vice versa
+- All plant nodes in interactive clusters (distance < 200 from camera) respond to hover
+- Distant cluster nodes don't have hover handlers (performance optimization)
+- Uses React's `onPointerEnter`/`onPointerLeave` for pointer device support
+
+### Tour Path
+
+1. **Load the app** — See floating islands with plants
+2. **Hover over a stem** (brown circle) → Stem grows with glow effect
+3. **Hover over a bud** (green circle) → Bud pulses with highlight
+4. **Hover over a leaf** → Leaf brightens with elliptical glow
+5. **Open World Inspector** → Hover tree nodes to highlight corresponding elements in garden
+
+### Files Changed
+
+- `src/render/Garden.tsx`: Added hover glow effects for all plant node types
+- `src/render/Garden.css`: Added transitions for stem-node, hover glow classes
+- `src/theme/global.css`: Added --color-stem-highlight, --color-bud-highlight, --color-flower-highlight
 
 ---
 

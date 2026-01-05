@@ -522,7 +522,7 @@ Separate file: `CHECKPOINTS.md`
 
 ### M2 — Polished Tactility
 
-- [ ] Refined hit testing + hover states
+- [x] Refined hit testing + hover states (CP-010, CP-014: all entities have hover effects)
 - [ ] Smooth transitions: focus, sprout animation, prune collapse
 - [ ] Background particles (canvas)
 - [ ] Debug panel: IDs, hit targets, freeze, regenerate
