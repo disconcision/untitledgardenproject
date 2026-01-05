@@ -62,6 +62,7 @@ _Workstream: Visual | Dependency: None | Parallelizable: Yes_
 - [ ] **Sprout animation**: Animate new branch appearing (scale up, unfurl)
 - [ ] **Prune animation**: Animate subtree removal (fade/collapse before removing)
 - [ ] **Animation timing audit**: Standardize durations (150ms hovers, 300ms growth) per SOURCE.md spec
+- [ ] **Pie menu contract animation fix**: Close animation has flickering/flash instead of smooth inward motion — likely CSS animation conflict or timing issue
 
 
 ### 🎨 Scene Depth & Atmosphere
