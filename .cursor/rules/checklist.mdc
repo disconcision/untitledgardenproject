@@ -6,6 +6,8 @@ alwaysApply: true
 
 # Agent Checklist
 
+See docs/README.md for more basic workflow context.
+
 **Before responding to user, verify:**
 
 ## Git
@@ -17,7 +19,7 @@ alwaysApply: true
 
 ## Docs
 
-- [ ] TODO.md updated (claimed → complete)
+- [ ] docs/TODO.md updated (claimed → complete)
 - [ ] SOURCE.md updated if architectural change
 
 ## Tutorial
@@ -32,5 +34,5 @@ alwaysApply: true
 
 ---
 
-**Start sessions with Plan Mode** (`Shift+Tab`) for complex tasks.
+**User will typically start sessions with Plan Mode** (`Shift+Tab`) for complex tasks.
 Use built-in `todo_write` tool to track subtasks during work.
