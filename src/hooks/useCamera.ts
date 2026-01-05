@@ -22,6 +22,12 @@ export function useCamera({ dispatch, containerRef }: UseCameraOptions) {
       // Only pan on background drag (no target entity)
       if ((e.target as HTMLElement).dataset?.entityId) return
       
+      // Don't close context menu or start panning if clicking inside the pie menu
+      const target = e.target as HTMLElement
+      if (target.closest('.pie-menu, .pie-menu-backdrop')) {
+        return
+      }
+      
       // Close context menu when clicking on background
       dispatch({ type: 'contextMenu/close' })
       

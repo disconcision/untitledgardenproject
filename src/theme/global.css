@@ -63,12 +63,18 @@
   --color-flower-highlight: #e8887f;
   --color-vine: var(--color-green-moss);
 
+  /* === Particles === */
+  --color-firefly-glow: #e8f0a0;
+  --color-firefly-body: #3a3830;
+  --color-firefly-body-lit: #c8d470;
+  --color-firefly-wing: #606858;
+
   /* === UI === */
   --color-text: var(--color-rock-darkest);
   --color-text-muted: var(--color-rock-mid);
   --color-panel-bg: rgba(240, 235, 227, 0.93);
   --color-panel-border: var(--color-earth-sand);
-  
+
   /* UI aliases for consistency */
   --color-text-primary: var(--color-text);
   --color-text-secondary: var(--color-text-muted);

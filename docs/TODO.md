@@ -6,10 +6,6 @@
 
 _Tasks currently being worked on. Include session date or identifier._
 
-<!-- Example:
-- [ ] **[2026-01-05]** Isometric projection + depth-based z-ordering
--->
-
 _(none currently)_
 
 ## Up Next
@@ -63,6 +59,14 @@ High-priority tasks ready to be claimed:
 ## Completed
 
 _Move completed items here with date._
+
+### 2026-01-04
+
+- [x] Particle system: seeds/pollen and fireflies
+  - Particle entity type with floating/landed/rooting states
+  - Seeds spawn from flowers, float with brownian motion + wind, can land and take root
+  - Fireflies spawn at dusk, glow at night, attracted to flowers and buds
+  - Plants can now flower (buds turn into flowers at deeper depths)
 
 ### 2026-01-05
 

@@ -20,7 +20,8 @@ The creator may give you an "unstructured blob" of requests. Your first job is t
 - Consider dependencies between tasks
 
 **Example**: "Fix the hover bug, also add a zoom indicator, and update the tutorial" becomes:
-1. `fix/hover-bug` — Fix the hover bug  
+
+1. `fix/hover-bug` — Fix the hover bug
 2. `feat/zoom-indicator` — Add zoom indicator
 3. `docs/tutorial-update` — Update tutorial
 
@@ -28,12 +29,12 @@ The creator may give you an "unstructured blob" of requests. Your first job is t
 
 For a single conversation with multiple tasks:
 
-| Scenario | Strategy |
-|----------|----------|
-| 2-3 small related fixes | One branch, separate commits per fix |
+| Scenario                    | Strategy                                           |
+| --------------------------- | -------------------------------------------------- |
+| 2-3 small related fixes     | One branch, separate commits per fix               |
 | Multiple unrelated features | Separate branches, merge each before starting next |
-| One coherent feature | One branch, atomic commits |
-| Mix of fixes + feature | Fix branch first, merge, then feature branch |
+| One coherent feature        | One branch, atomic commits                         |
+| Mix of fixes + feature      | Fix branch first, merge, then feature branch       |
 
 **Minimum standard**: One branch per conversation with descriptive commits for each logical change.
 
@@ -144,6 +145,7 @@ Use conventional commits:
 - `chore:` — Maintenance, cleanup
 
 **For multiple fixes in one branch**, commit each separately:
+
 ```bash
 git add <files-for-fix-1> && git commit -m "fix: first issue"
 git add <files-for-fix-2> && git commit -m "fix: second issue"
@@ -329,17 +331,19 @@ const handleToggle = (): void => {
 This is common — the creator often gives a batch of requests. Handle it systematically:
 
 **Option A: One Branch, Multiple Commits** (for related or small fixes)
+
 ```bash
 git checkout -b fix/session-2026-01-05
 # Fix issue 1
 git add <files> && git commit -m "fix: first issue"
-# Fix issue 2  
+# Fix issue 2
 git add <files> && git commit -m "fix: second issue"
 # Merge when all done
 git checkout main && git merge fix/session-2026-01-05
 ```
 
 **Option B: Separate Branches** (for unrelated features)
+
 ```bash
 # Feature 1
 git checkout -b feat/zoom-indicator
@@ -355,6 +359,7 @@ git checkout main && git merge fix/hover-bug && git branch -d fix/hover-bug
 ```
 
 **When to use which:**
+
 - **Option A**: Fixes are small, won't need individual reverts
 - **Option B**: Changes are significant, might need to revert one without the other
 

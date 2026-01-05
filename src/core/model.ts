@@ -60,6 +60,35 @@ export type Rock = {
 
 export type PlantNodeKind = "bud" | "stem" | "leaf" | "flower";
 
+// === Particles ===
+// Free-floating, single-node entities: seeds, pollen, fireflies, etc.
+
+export type ParticleKind = "seed" | "firefly";
+
+export type ParticleState = 
+  | "floating"   // Moving through the air
+  | "landed"     // Resting on a surface
+  | "rooting";   // Seed taking root (becoming a plant)
+
+export type Particle = {
+  kind: "particle";
+  id: Id;
+  particleKind: ParticleKind;
+  state: ParticleState;
+  pos: Vec2;           // World position
+  velocity: Vec2;      // Current velocity
+  // For seeds: which flower/plant spawned it
+  sourceId?: Id;
+  // For fireflies: which entity they're orbiting/attracted to
+  targetId?: Id;
+  // Glow intensity (0-1), used for firefly bioluminescence
+  glow: number;
+  // Age in ticks, for lifecycle management
+  age: number;
+  // Landing target (rock/island id) when landed
+  landedOn?: Id;
+};
+
 export type PlantNode = {
   kind: "plantNode";
   id: Id;
@@ -81,7 +110,7 @@ export type Vine = {
   tension: number;
 };
 
-export type Entity = Island | Rock | PlantNode | Vine;
+export type Entity = Island | Rock | PlantNode | Vine | Particle;
 
 // === Plant Structure ===
 
@@ -329,10 +358,12 @@ export function summarizeWorld(world: World): {
   plantCount: number;
   rockCount: number;
   nodeCount: number;
+  particleCount: number;
 } {
   let islandCount = 0;
   let rockCount = 0;
   let nodeCount = 0;
+  let particleCount = 0;
 
   for (const entity of world.entities.values()) {
     switch (entity.kind) {
@@ -345,6 +376,9 @@ export function summarizeWorld(world: World): {
       case "plantNode":
         nodeCount++;
         break;
+      case "particle":
+        particleCount++;
+        break;
     }
   }
 
@@ -356,6 +390,7 @@ export function summarizeWorld(world: World): {
     plantCount: world.plants.size,
     rockCount,
     nodeCount,
+    particleCount,
   };
 }
 

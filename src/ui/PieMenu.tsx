@@ -125,17 +125,25 @@ export const PieMenu = memo(function PieMenu({
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dispatch({ type: "contextMenu/close" });
+    // Only close if clicking directly on the backdrop, not on a menu item
+    // This prevents accidentally closing when clicks bubble up
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+      e.stopPropagation();
+      dispatch({ type: "contextMenu/close" });
+    }
   };
 
   return (
-    <div
-      className="pie-menu-backdrop"
-      onClick={handleBackdropClick}
-      onContextMenu={handleBackdropClick}
-    >
+    <>
+      {/* Backdrop for catching clicks outside */}
+      <div
+        className="pie-menu-backdrop"
+        onClick={handleBackdropClick}
+        onContextMenu={handleBackdropClick}
+      />
+
+      {/* Menu container with buttons - separate from backdrop to avoid event issues */}
       <div
         className="pie-menu"
         style={{
@@ -172,6 +180,6 @@ export const PieMenu = memo(function PieMenu({
           );
         })}
       </div>
-    </div>
+    </>
   );
 });

@@ -13,6 +13,7 @@ import {
   Rock,
   PlantNode,
   Plant,
+  Particle,
   Vec2,
   addVec2,
 } from "../model";
@@ -106,6 +107,17 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
     });
   }, [clusters, entities, plants]);
 
+  // Collect all particles (rendered globally, not per-cluster)
+  const particles = useMemo(() => {
+    const result: Particle[] = [];
+    for (const entity of entities.values()) {
+      if (entity.kind === "particle") {
+        result.push(entity);
+      }
+    }
+    return result;
+  }, [entities]);
+
   const transform = `translate(${camera.pan.x}, ${camera.pan.y}) scale(${camera.zoom})`;
 
   return (
@@ -145,6 +157,33 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
         {/* Glyph glow */}
         <filter id="glyph-glow" x="-100%" y="-100%" width="300%" height="300%">
           <feGaussianBlur stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        {/* Firefly glow */}
+        <filter id="firefly-glow" x="-200%" y="-200%" width="500%" height="500%">
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feColorMatrix
+            in="blur"
+            type="matrix"
+            values="1 0 0 0 0.2
+                    0 1 0 0 0.4
+                    0 0 0.3 0 0
+                    0 0 0 2 0"
+            result="coloredBlur"
+          />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        {/* Seed shimmer */}
+        <filter id="seed-shimmer" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -248,6 +287,15 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
             </g>
           )
         )}
+
+        {/* Particles (rendered globally, not per-cluster) */}
+        {particles.map((particle: Particle) => (
+          <ParticleRenderer
+            key={particle.id}
+            particle={particle}
+            showId={debug.showIds}
+          />
+        ))}
       </g>
     </svg>
   );
@@ -753,9 +801,9 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
     });
   };
 
-  // Hit target radius - generous for clickability
-  const hitRadius =
-    node.nodeKind === "bud" ? 14 : node.nodeKind === "leaf" ? 16 : 8;
+  // Hit target sizing - buds need larger targets, stems smaller
+  // Leaves use their actual shape as the hit target (no invisible overlay)
+  const hitRadius = node.nodeKind === "bud" ? 14 : 8;
 
   return (
     <g
@@ -773,8 +821,8 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
       onClick={hasPrimaryAction ? handleClick : undefined}
       onContextMenu={isInteractive ? handleContextMenu : undefined}
     >
-      {/* Invisible hit target - always present for interactive nodes */}
-      {isInteractive && (
+      {/* Invisible hit target for buds and stems (not leaves - they use their shape) */}
+      {isInteractive && node.nodeKind !== "leaf" && (
         <circle
           cx={0}
           cy={0}
@@ -817,34 +865,18 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
       )}
 
       {node.nodeKind === "leaf" && (
-        <>
-          {isHovered && (
-            <ellipse
-              cx={Math.cos(node.angle) * 6}
-              cy={Math.sin(node.angle) * 6}
-              rx={14}
-              ry={10}
-              fill="var(--color-leaf-highlight)"
-              opacity={0.35}
-              transform={`rotate(${(node.angle * 180) / Math.PI})`}
-              className="leaf-hover-glow"
-            />
+        <path
+          d={leafPath(
+            { x: 0, y: 0 },
+            node.angle,
+            isHovered ? 18 : 16,
+            isHovered ? 10 : 8
           )}
-          <path
-            d={leafPath(
-              { x: 0, y: 0 },
-              node.angle,
-              isHovered ? 18 : 16,
-              isHovered ? 10 : 8
-            )}
-            fill={
-              isHovered ? "var(--color-leaf-highlight)" : "var(--color-leaf)"
-            }
-            stroke={isHovered ? "var(--color-green-moss)" : "none"}
-            strokeWidth={isHovered ? 1 : 0}
-            className={`leaf ${isHovered ? "hovered" : ""}`}
-          />
-        </>
+          fill={isHovered ? "var(--color-leaf-highlight)" : "var(--color-leaf)"}
+          stroke={isHovered ? "var(--color-green-moss)" : "none"}
+          strokeWidth={isHovered ? 1 : 0}
+          className={`leaf ${isHovered ? "hovered" : ""}`}
+        />
       )}
 
       {node.nodeKind === "stem" && (
@@ -897,7 +929,7 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
         </>
       )}
 
-      {showHitTarget && (
+      {showHitTarget && node.nodeKind !== "leaf" && (
         <circle
           cx={0}
           cy={0}
@@ -922,4 +954,147 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
       )}
     </g>
   );
+});
+
+// === Particle Renderer ===
+// Seeds, fireflies, and other floating particles
+
+type ParticleRendererProps = {
+  particle: Particle;
+  showId: boolean;
+};
+
+const ParticleRenderer = memo(function ParticleRenderer({
+  particle,
+  showId,
+}: ParticleRendererProps) {
+  const { pos, particleKind, state, glow, age } = particle;
+
+  // Don't render particles that are rooting (becoming plants)
+  if (state === "rooting") return null;
+
+  // Landed particles are less visible
+  const opacity = state === "landed" ? 0.4 : 1;
+
+  // Age-based fade out for very old particles
+  const ageFade = age > 2500 ? 1 - (age - 2500) / 500 : 1;
+
+  if (particleKind === "seed") {
+    // Seeds are small, golden/tan colored, with wispy tails
+    const tailAngle = Math.atan2(particle.velocity.y, particle.velocity.x);
+    const tailLength = state === "floating" ? 8 + Math.sin(age * 0.2) * 3 : 0;
+
+    return (
+      <g
+        className="particle seed"
+        transform={`translate(${pos.x}, ${pos.y})`}
+        style={{ opacity: opacity * ageFade }}
+      >
+        {/* Wispy tail (only when floating) */}
+        {state === "floating" && tailLength > 0 && (
+          <line
+            x1={0}
+            y1={0}
+            x2={-Math.cos(tailAngle) * tailLength}
+            y2={-Math.sin(tailAngle) * tailLength}
+            stroke="var(--color-earth-tan)"
+            strokeWidth={0.5}
+            strokeLinecap="round"
+            opacity={0.6}
+          />
+        )}
+
+        {/* Seed body */}
+        <ellipse
+          cx={0}
+          cy={0}
+          rx={2.5}
+          ry={1.5}
+          fill="var(--color-earth-tan)"
+          stroke="var(--color-earth-mid)"
+          strokeWidth={0.3}
+          transform={`rotate(${(tailAngle * 180) / Math.PI})`}
+          filter="url(#seed-shimmer)"
+        />
+
+        {showId && (
+          <text x={0} y={-8} textAnchor="middle" className="debug-label">
+            {particle.id}
+          </text>
+        )}
+      </g>
+    );
+  }
+
+  if (particleKind === "firefly") {
+    // Fireflies are small points that glow at night
+    const glowRadius = 4 + glow * 6;
+    const bodySize = 2;
+    
+    // Pulse animation
+    const pulse = 1 + Math.sin(age * 0.15) * 0.2;
+
+    // Almost invisible when landed during day
+    const fireflyOpacity = state === "landed" && glow < 0.1 ? 0.1 : opacity * ageFade;
+
+    return (
+      <g
+        className="particle firefly"
+        transform={`translate(${pos.x}, ${pos.y})`}
+        style={{ opacity: fireflyOpacity }}
+      >
+        {/* Glow (only when glowing) */}
+        {glow > 0.1 && (
+          <circle
+            cx={0}
+            cy={0}
+            r={glowRadius * pulse}
+            fill="var(--color-firefly-glow)"
+            opacity={glow * 0.6}
+            filter="url(#firefly-glow)"
+          />
+        )}
+
+        {/* Body */}
+        <circle
+          cx={0}
+          cy={0}
+          r={bodySize}
+          fill={glow > 0.1 ? "var(--color-firefly-body-lit)" : "var(--color-firefly-body)"}
+        />
+
+        {/* Wings (only visible when flying) */}
+        {state === "floating" && (
+          <>
+            <ellipse
+              cx={-2}
+              cy={-1}
+              rx={1.5}
+              ry={0.8}
+              fill="var(--color-firefly-wing)"
+              opacity={0.4}
+              transform={`rotate(${Math.sin(age * 0.5) * 20 - 30})`}
+            />
+            <ellipse
+              cx={2}
+              cy={-1}
+              rx={1.5}
+              ry={0.8}
+              fill="var(--color-firefly-wing)"
+              opacity={0.4}
+              transform={`rotate(${-Math.sin(age * 0.5) * 20 + 30})`}
+            />
+          </>
+        )}
+
+        {showId && (
+          <text x={0} y={-12} textAnchor="middle" className="debug-label">
+            {particle.id}
+          </text>
+        )}
+      </g>
+    );
+  }
+
+  return null;
 });

@@ -684,43 +684,47 @@ Agent may decide, but **must document in Design Decisions Log**:
 
 ## 22. Design Decisions Log
 
-| Date       | Decision                    | Rationale                                                                  |
-| ---------- | --------------------------- | -------------------------------------------------------------------------- |
-| (init)     | React + TS + Vite           | Mainstream, fast reload, TS for type safety                                |
-| (init)     | SVG + Canvas hybrid         | SVG for crisp paths, Canvas for atmosphere                                 |
-| (init)     | MVU-ish architecture        | Clean state, enables undo/replay                                           |
-| 2026-01-04 | Git for checkpointing       | Commits as checkpoints, describe in docs, branches when exploring          |
-| 2026-01-04 | Wiki-style docs folder      | SOURCE.md spawns sub-docs as complexity grows; [[bracket]] links allowed   |
-| 2026-01-04 | Bezier splines first        | More organic feel; polylines available as alternative primitive later      |
-| 2026-01-04 | Rich theming infrastructure | CSS variables, color scheme controls; dark mode planned but not default    |
-| 2026-01-04 | Sound hooks from start      | Interaction events structured for easy sound layer addition                |
-| 2026-01-04 | Tutorial from day one       | "What's New" overlay present even in scaffold                              |
-| 2026-01-04 | Garden as editor            | The visual form IS the syntax; direct manipulation of structure            |
-| 2026-01-04 | core/ folder for pure logic | Enables Node CLI tools, testing, agentic harness                           |
-| 2026-01-04 | CLI tools for agent         | Agent can validate hypotheses without browser; tighter loops               |
-| 2026-01-04 | Vitest for testing          | Fast, Vite-native; unit tests for core, light behavioral tests             |
-| 2026-01-04 | Creator process documented  | Human speaks feedback, agent implements; minimize context-switching        |
-| 2026-01-04 | Corner dock UI              | Minimal icons at corners expand to panels; cleaner than fixed panels       |
-| 2026-01-04 | CSS animations for sway     | Ambient motion via CSS, not React state; better performance                |
-| 2026-01-04 | 1s simulation tick          | Slow tick for logic, CSS for visuals; 60fps re-renders eliminated          |
-| 2026-01-04 | Plants grow from rocks      | Rocks are anchors; plants reach into sky, not buried in islands            |
-| 2026-01-04 | CSS vs SVG transform bug    | CSS animation transform overrides SVG transform attr; removed CSS sway     |
-| 2026-01-04 | Recursive branching         | Plants have Y-forks, sub-branches; more buds per plant                     |
-| 2026-01-04 | UI panel expand animation   | Icon in corner, panel expands from it; × replaces icon when open           |
-| 2026-01-04 | World Inspector panel       | Collapsible tree view of world hierarchy; first step toward projective UI  |
-| 2026-01-04 | Projective UI vision        | Same structure viewable as outliner or rendered; per-node lens switching   |
-| 2026-01-05 | Lucide React icons          | Consistent icon library for UI; replaces emoji/text icons; clean, modern   |
-| 2026-01-05 | Corner-anchored close btns  | Close button (×) appears in same position as panel icon for each corner    |
-| 2026-01-05 | Agent workflow checklist    | Mandatory git branching + doc updates for all agent work; enables parallel |
-| 2026-01-05 | OKLCH color interpolation   | Perceptual color space for smooth day/night transitions; no muddy midtones |
-| 2026-01-05 | Day/night cycle system      | Time-based color scheme cycling; configurable day length, pause/scrub UI   |
-| 2026-01-05 | CSS vars for dynamic colors | All colors via custom properties; entire UI adapts to day/night mode       |
-| 2026-01-05 | Pie menu for node actions   | Right-click on plant nodes opens radial menu with trim/branch actions      |
-| 2026-01-05 | Trim action removes subtree | Pruning from any non-root node removes entire subtree below it             |
-| 2026-01-05 | Branch action on stems      | Creates new bud branching from stem; enables player-directed growth        |
-| 2026-01-05 | Unified simulation control  | dayCycle.running is master toggle; pausing time pauses plant growth too    |
+| Date       | Decision                    | Rationale                                                                        |
+| ---------- | --------------------------- | -------------------------------------------------------------------------------- |
+| (init)     | React + TS + Vite           | Mainstream, fast reload, TS for type safety                                      |
+| (init)     | SVG + Canvas hybrid         | SVG for crisp paths, Canvas for atmosphere                                       |
+| (init)     | MVU-ish architecture        | Clean state, enables undo/replay                                                 |
+| 2026-01-04 | Git for checkpointing       | Commits as checkpoints, describe in docs, branches when exploring                |
+| 2026-01-04 | Wiki-style docs folder      | SOURCE.md spawns sub-docs as complexity grows; [[bracket]] links allowed         |
+| 2026-01-04 | Bezier splines first        | More organic feel; polylines available as alternative primitive later            |
+| 2026-01-04 | Rich theming infrastructure | CSS variables, color scheme controls; dark mode planned but not default          |
+| 2026-01-04 | Sound hooks from start      | Interaction events structured for easy sound layer addition                      |
+| 2026-01-04 | Tutorial from day one       | "What's New" overlay present even in scaffold                                    |
+| 2026-01-04 | Garden as editor            | The visual form IS the syntax; direct manipulation of structure                  |
+| 2026-01-04 | core/ folder for pure logic | Enables Node CLI tools, testing, agentic harness                                 |
+| 2026-01-04 | CLI tools for agent         | Agent can validate hypotheses without browser; tighter loops                     |
+| 2026-01-04 | Vitest for testing          | Fast, Vite-native; unit tests for core, light behavioral tests                   |
+| 2026-01-04 | Creator process documented  | Human speaks feedback, agent implements; minimize context-switching              |
+| 2026-01-04 | Corner dock UI              | Minimal icons at corners expand to panels; cleaner than fixed panels             |
+| 2026-01-04 | CSS animations for sway     | Ambient motion via CSS, not React state; better performance                      |
+| 2026-01-04 | 1s simulation tick          | Slow tick for logic, CSS for visuals; 60fps re-renders eliminated                |
+| 2026-01-04 | Plants grow from rocks      | Rocks are anchors; plants reach into sky, not buried in islands                  |
+| 2026-01-04 | CSS vs SVG transform bug    | CSS animation transform overrides SVG transform attr; removed CSS sway           |
+| 2026-01-04 | Recursive branching         | Plants have Y-forks, sub-branches; more buds per plant                           |
+| 2026-01-04 | UI panel expand animation   | Icon in corner, panel expands from it; × replaces icon when open                 |
+| 2026-01-04 | World Inspector panel       | Collapsible tree view of world hierarchy; first step toward projective UI        |
+| 2026-01-04 | Projective UI vision        | Same structure viewable as outliner or rendered; per-node lens switching         |
+| 2026-01-05 | Lucide React icons          | Consistent icon library for UI; replaces emoji/text icons; clean, modern         |
+| 2026-01-05 | Corner-anchored close btns  | Close button (×) appears in same position as panel icon for each corner          |
+| 2026-01-05 | Agent workflow checklist    | Mandatory git branching + doc updates for all agent work; enables parallel       |
+| 2026-01-05 | OKLCH color interpolation   | Perceptual color space for smooth day/night transitions; no muddy midtones       |
+| 2026-01-05 | Day/night cycle system      | Time-based color scheme cycling; configurable day length, pause/scrub UI         |
+| 2026-01-05 | CSS vars for dynamic colors | All colors via custom properties; entire UI adapts to day/night mode             |
+| 2026-01-05 | Pie menu for node actions   | Right-click on plant nodes opens radial menu with trim/branch actions            |
+| 2026-01-05 | Trim action removes subtree | Pruning from any non-root node removes entire subtree below it                   |
+| 2026-01-05 | Branch action on stems      | Creates new bud branching from stem; enables player-directed growth              |
+| 2026-01-05 | Unified simulation control  | dayCycle.running is master toggle; pausing time pauses plant growth too          |
 | 2026-01-05 | Hierarchical tutorial       | Collapsible sections; new features highlighted; serves as both guide + changelog |
-| 2026-01-05 | Consistent corner dock UI   | All four corner panels use same HUD pattern; icon→panel expansion          |
+| 2026-01-05 | Consistent corner dock UI   | All four corner panels use same HUD pattern; icon→panel expansion                |
+| 2026-01-04 | Particle entity type        | Free-floating entities: seeds, fireflies; separate from plant/rock hierarchy     |
+| 2026-01-04 | Seeds from flowers          | Flowers release seeds that float (brownian + wind), can land and root into plants|
+| 2026-01-04 | Firefly day-night behavior  | Fireflies spawn at dusk, glow/fly at night, attracted to lights, land during day |
+| 2026-01-04 | Buds become flowers         | Deep buds have chance to flower instead of continuing growth; terminal nodes     |
 
 ---
 

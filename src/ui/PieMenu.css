@@ -17,9 +17,10 @@
 }
 
 .pie-menu {
-  position: absolute;
+  position: fixed;
   transform: translate(-50%, -50%);
-  pointer-events: none;
+  /* Higher z-index than backdrop to ensure buttons are clickable */
+  z-index: 1001;
   /* Animate in */
   animation: pie-menu-appear 0.15s ease-out;
 }
@@ -51,6 +52,8 @@
   position: absolute;
   transform: translate(-50%, -50%);
   pointer-events: auto;
+  /* Ensure buttons are above the backdrop in stacking order */
+  z-index: 1001;
 
   display: flex;
   align-items: center;
