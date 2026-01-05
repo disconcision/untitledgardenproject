@@ -136,8 +136,7 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
     <>
       {/* Top-left: Tutorial */}
       <div
-        className="hud-corner hud-top-left"
-        style={{ zIndex: focusedPanel === "tutorial" ? 101 : 100 }}
+        className={`hud-corner hud-top-left ${focusedPanel === "tutorial" ? "panel-focused" : ""}`}
         onClick={(): void => dispatch({ type: "panel/openTutorial" })}
       >
         <div className={`hud-panel-wrapper tutorial-panel ${tutorial.visible ? "open" : ""}`}>
@@ -180,8 +179,7 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
 
       {/* Top-right: Debug */}
       <div
-        className="hud-corner hud-top-right"
-        style={{ zIndex: focusedPanel === "debug" ? 101 : 100 }}
+        className={`hud-corner hud-top-right ${focusedPanel === "debug" ? "panel-focused" : ""}`}
         onClick={(): void => dispatch({ type: "panel/openDebug" })}
       >
         <div className={`hud-panel-wrapper ${debugOpen ? "open" : ""}`}>

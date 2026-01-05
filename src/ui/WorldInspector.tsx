@@ -378,8 +378,7 @@ export const WorldInspector = memo(function WorldInspector({
 
   return (
     <div
-      className="hud-corner hud-bottom-left"
-      style={{ zIndex: world.focusedPanel === "inspector" ? 101 : 100 }}
+      className={`hud-corner hud-bottom-left ${world.focusedPanel === "inspector" ? "panel-focused" : ""}`}
       onClick={(): void => dispatch({ type: "panel/openInspector" })}
     >
       <div className={`hud-panel-wrapper inspector-panel ${open ? "open" : ""}`}>

@@ -77,8 +77,7 @@ export const TimeConfig = memo(function TimeConfig({ world, dispatch }: TimeConf
 
   return (
     <div
-      className="hud-corner hud-bottom-right"
-      style={{ zIndex: world.focusedPanel === "time" ? 101 : 100 }}
+      className={`hud-corner hud-bottom-right ${world.focusedPanel === "time" ? "panel-focused" : ""}`}
       onClick={(): void => dispatch({ type: "panel/openTime" })}
     >
       <div className={`hud-panel-wrapper time-panel ${isOpen ? "open" : ""}`}>
