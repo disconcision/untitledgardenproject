@@ -739,7 +739,6 @@ Agent may decide, but **must document in Design Decisions Log**:
 | 2026-01-05 | type over interface         | Consistent with discriminated unions; all types use `type` keyword                |
 | 2026-01-05 | Exhaustive switch matching  | Uses `never` type in default case to catch unhandled message types at compile time|
 | 2026-01-05 | Modular update.ts split     | Actions, simulation, tutorial extracted to `core/` submodules; keeps update.ts thin|
-| 2026-01-05 | Git worktree for parallel   | Agents working simultaneously use separate worktrees to avoid cross-contamination |
 | 2026-01-05 | Audio: Tone.js + Howler.js  | Hybrid approach: Tone.js for generative ambient/drones, Howler.js for discrete samples |
 | 2026-01-05 | Proteus-inspired audio      | Entity-driven layered audio; sounds blend based on proximity and camera focus |
 | 2026-01-05 | Audio on first interaction  | No modal; starts on first click/pan; speaker toggle in HUD for mute control |

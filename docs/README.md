@@ -31,9 +31,7 @@ git branch -d feature/<branch-name>
 # 6. PROVIDE completion report to creator
 ```
 
-**Why?** Multiple agents work in parallel. Without branches, agents collide and overwrite each other's work.
-
-**For parallel agents**: Use git worktrees to isolate work (see `AGENT-WORKFLOW.md` section on worktrees).
+**Why?** Branches keep a clean git history and allow easy reverts if something goes wrong.
 
 ---
 
@@ -50,7 +48,6 @@ git branch -d feature/<branch-name>
 
 ### Why This Matters
 
-- Multiple agents may work on this project in parallel
 - Proper git hygiene prevents conflicts and enables clean reverts
 - The creator needs a comprehensible commit history
 - **Skipping the workflow creates problems for everyone**
