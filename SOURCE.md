@@ -594,7 +594,7 @@ Example:
 - [x] Implement camera pan/zoom _(CP-001)_
 - [x] Procedural generator (seeded) for islands + plants _(CP-001)_
 - [x] SVG render stems/leaves + hover/selection _(CP-001)_
-- [ ] Click bud → sprout; click leaf → prune _(events wired, logic TODO)_
+- [x] Click bud → sprout; click leaf → prune _(CP-003)_
 - [x] Tutorial overlay v1 _(CP-001)_
 - [x] Debug toggles: show IDs, hit targets, freeze time, regenerate _(CP-001)_
 - [x] Canvas background gradient + grain _(CP-001)_
@@ -632,6 +632,10 @@ Agent may decide, but **must document in Design Decisions Log**:
 | 2026-01-04 | CLI tools for agent         | Agent can validate hypotheses without browser; tighter loops             |
 | 2026-01-04 | Vitest for testing          | Fast, Vite-native; unit tests for core, light behavioral tests           |
 | 2026-01-04 | Creator process documented  | Human speaks feedback, agent implements; minimize context-switching      |
+| 2026-01-04 | Corner dock UI              | Minimal icons at corners expand to panels; cleaner than fixed panels     |
+| 2026-01-04 | CSS animations for sway     | Ambient motion via CSS, not React state; better performance              |
+| 2026-01-04 | 1s simulation tick          | Slow tick for logic, CSS for visuals; 60fps re-renders eliminated        |
+| 2026-01-04 | Plants grow from rocks      | Rocks are anchors; plants reach into sky, not buried in islands          |
 
 ---
 
