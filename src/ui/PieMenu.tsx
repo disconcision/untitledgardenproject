@@ -119,7 +119,7 @@ export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) 
     return null;
   }
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = (e: React.MouseEvent): void => {
     // Only close if clicking directly on the backdrop, not on a menu item
     // This prevents accidentally closing when clicks bubble up
     if (e.target === e.currentTarget) {
@@ -149,7 +149,7 @@ export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) 
         {/* Central indicator dot */}
         <div className="pie-menu-center" />
 
-        {/* Action items arranged in circle */}
+        {/* Action items arranged in circle - animate radially from center */}
         {enabledActions.map((action: PieMenuAction) => {
           const x = Math.cos(action.angle) * MENU_RADIUS;
           const y = Math.sin(action.angle) * MENU_RADIUS;
@@ -158,12 +158,15 @@ export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) 
             <button
               key={action.id}
               className="pie-menu-item"
-              style={{
-                left: x,
-                top: y,
-                width: ITEM_SIZE,
-                height: ITEM_SIZE,
-              }}
+              style={
+                {
+                  // CSS custom properties for radial expand animation
+                  "--final-x": `${x}px`,
+                  "--final-y": `${y}px`,
+                  width: ITEM_SIZE,
+                  height: ITEM_SIZE,
+                } as React.CSSProperties
+              }
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 action.onAction();

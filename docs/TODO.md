@@ -164,6 +164,13 @@ _Low priority, pick when inspired_
 
 ### 2026-01-05
 
+- [x] Pie menu radial expand animation:
+  - Menu items start at center node and animate radially outward with spin
+  - 120ms cubic-bezier animation with staggered delays (25ms between items)
+  - Creates spatial connection between menu and clicked node
+- [x] Pie menu night mode contrast:
+  - Icons now use `--color-text` instead of `--color-rock-dark`
+  - Automatically adapts to light/dark based on time of day
 - [x] Visual polish batch - hover/render consistency:
   - Removed dash stroke from rock highlight edges (now subtle solid)
   - Added all missing CSS variables for entity hover states (rock, leaf, flower, bud, stem)
