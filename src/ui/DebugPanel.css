@@ -1,0 +1,106 @@
+/**
+ * Debug Panel Styles
+ */
+
+.debug-panel {
+  position: fixed;
+  bottom: var(--space-lg);
+  left: var(--space-lg);
+  width: 200px;
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.debug-header {
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid var(--color-panel-border);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.debug-section {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-panel-border);
+}
+
+.debug-section:last-child {
+  border-bottom: none;
+}
+
+.debug-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  padding: 2px 0;
+  color: var(--color-text);
+}
+
+.debug-toggle input {
+  margin: 0;
+}
+
+.debug-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.debug-label {
+  color: var(--color-text-muted);
+}
+
+.debug-input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--color-panel-border);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  background: white;
+}
+
+.debug-button {
+  width: 100%;
+  padding: 6px 12px;
+  border: 1px solid var(--color-panel-border);
+  border-radius: 4px;
+  background: white;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.debug-button:hover {
+  background: var(--color-green-pale);
+  border-color: var(--color-green-fresh);
+}
+
+.debug-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.debug-stat {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+}
+
+.debug-stat span:last-child {
+  color: var(--color-text);
+}
+

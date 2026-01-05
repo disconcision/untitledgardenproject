@@ -1,0 +1,153 @@
+/**
+ * Tutorial Panel Styles
+ */
+
+.tutorial-panel {
+  position: fixed;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  width: 280px;
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-sans);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.tutorial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-panel-border);
+}
+
+.tutorial-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.tutorial-close {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-fast) ease;
+}
+
+.tutorial-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+}
+
+.tutorial-progress {
+  height: 3px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.tutorial-progress-bar {
+  height: 100%;
+  background: var(--color-green-fresh);
+  transition: width var(--duration-normal) var(--easing-out);
+}
+
+.tutorial-steps {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-sm) 0;
+}
+
+.tutorial-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 13px;
+  color: var(--color-text);
+  transition: opacity var(--duration-fast) ease;
+}
+
+.tutorial-step.completed {
+  opacity: 0.6;
+}
+
+.tutorial-step.completed .tutorial-step-text {
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text-muted);
+}
+
+.tutorial-step-number {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-green-pale);
+  color: var(--color-green-deep);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tutorial-step.completed .tutorial-step-number {
+  background: var(--color-green-fresh);
+  color: white;
+}
+
+.tutorial-step-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.tutorial-step-check {
+  color: var(--color-green-fresh);
+  font-weight: bold;
+}
+
+.tutorial-footer {
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--color-panel-border);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* Reopen button */
+.tutorial-reopen {
+  position: fixed;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-panel-border);
+  background: var(--color-panel-bg);
+  color: var(--color-text-muted);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) ease;
+  z-index: 100;
+}
+
+.tutorial-reopen:hover {
+  background: var(--color-green-pale);
+  color: var(--color-green-deep);
+  border-color: var(--color-green-fresh);
+}
+
