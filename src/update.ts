@@ -60,6 +60,7 @@ export type Msg =
   | { type: "panel/openInspector" }
   | { type: "panel/openDebug" }
   | { type: "panel/openTime" }
+  | { type: "panel/openTutorial" }
 
   // Day Cycle
   | { type: "dayCycle/setTime"; timeOfDay: number }
@@ -191,17 +192,28 @@ export function update(msg: Msg, world: World): World {
     case "panel/openInspector":
       return {
         ...world,
+        focusedPanel: "inspector",
         tutorial: completeTutorialStep(world.tutorial, "inspector"),
       };
 
     case "panel/openDebug":
       return {
         ...world,
+        focusedPanel: "debug",
         tutorial: completeTutorialStep(world.tutorial, "debug"),
       };
 
     case "panel/openTime":
-      return world;
+      return {
+        ...world,
+        focusedPanel: "time",
+      };
+
+    case "panel/openTutorial":
+      return {
+        ...world,
+        focusedPanel: "tutorial",
+      };
 
     // === Day Cycle ===
     case "dayCycle/setTime":

@@ -377,7 +377,10 @@ export const WorldInspector = memo(function WorldInspector({
   const { selection, hover } = world;
 
   return (
-    <div className="hud-corner hud-bottom-left">
+    <div
+      className="hud-corner hud-bottom-left"
+      style={{ zIndex: world.focusedPanel === "inspector" ? 101 : 100 }}
+    >
       <div className={`hud-panel-wrapper inspector-panel ${open ? "open" : ""}`}>
         <button
           className="hud-corner-btn"
@@ -387,7 +390,10 @@ export const WorldInspector = memo(function WorldInspector({
           {open ? <X size={ICON_SIZE} /> : <TreeDeciduous size={ICON_SIZE} />}
         </button>
 
-        <div className="hud-panel-content inspector-content">
+        <div
+          className="hud-panel-content inspector-content"
+          onWheel={(e: React.WheelEvent<HTMLDivElement>): void => e.stopPropagation()}
+        >
           <div className="inspector-tree">
             {Array.from(tree.clusters.values()).map((cluster: Cluster, clusterIndex: number) => {
               const glyph = getClusterGlyph(clusterIndex);

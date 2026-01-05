@@ -89,7 +89,15 @@ const TutorialSectionView = memo(function TutorialSectionView({
 
 export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps) {
   const [debugOpen, setDebugOpen] = useState(false);
-  const { tutorial, debug, seed, camera } = world;
+  const { tutorial, debug, seed, camera, focusedPanel } = world;
+
+  const handleTutorialToggle = useCallback((): void => {
+    const willOpen = !tutorial.visible;
+    dispatch({ type: "tutorial/toggle" });
+    if (willOpen) {
+      dispatch({ type: "panel/openTutorial" });
+    }
+  }, [tutorial.visible, dispatch]);
 
   const handleDebugToggle = useCallback((): void => {
     const willOpen = !debugOpen;
@@ -127,12 +135,15 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
   return (
     <>
       {/* Top-left: Tutorial */}
-      <div className="hud-corner hud-top-left">
+      <div
+        className="hud-corner hud-top-left"
+        style={{ zIndex: focusedPanel === "tutorial" ? 101 : 100 }}
+      >
         <div className={`hud-panel-wrapper tutorial-panel ${tutorial.visible ? "open" : ""}`}>
           {/* Icon/Close button - always in corner position */}
           <button
             className="hud-corner-btn"
-            onClick={() => dispatch({ type: "tutorial/toggle" })}
+            onClick={handleTutorialToggle}
             title={tutorial.visible ? "Close" : "Show tutorial"}
           >
             {tutorial.visible ? <X size={ICON_SIZE} /> : <Compass size={ICON_SIZE} />}
@@ -146,7 +157,10 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
                 style={{ width: `${(completedCount / totalCount) * 100}%` }}
               />
             </div>
-            <div className="tutorial-sections">
+            <div
+              className="tutorial-sections"
+              onWheel={(e: React.WheelEvent<HTMLDivElement>): void => e.stopPropagation()}
+            >
               {tutorial.sections.map((section) => (
                 <TutorialSectionView
                   key={section.id}
@@ -164,7 +178,10 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
       </div>
 
       {/* Top-right: Debug */}
-      <div className="hud-corner hud-top-right">
+      <div
+        className="hud-corner hud-top-right"
+        style={{ zIndex: focusedPanel === "debug" ? 101 : 100 }}
+      >
         <div className={`hud-panel-wrapper ${debugOpen ? "open" : ""}`}>
           {/* Icon/Close button - always in corner position */}
           <button

@@ -171,6 +171,10 @@ export type ContextMenu = {
   worldPos: Vec2;
 } | null;
 
+// === UI State ===
+
+export type PanelId = "tutorial" | "debug" | "inspector" | "time";
+
 // === World State ===
 
 export type World = {
@@ -195,6 +199,8 @@ export type World = {
     showHitTargets: boolean;
     freezeTime: boolean;
   };
+  // Track which panel is on top (last focused)
+  focusedPanel: PanelId | null;
   seed: number;
 };
 
@@ -348,6 +354,7 @@ export function createInitialWorld(seed: number): World {
       showHitTargets: false,
       freezeTime: false,
     },
+    focusedPanel: null,
     seed,
   };
 }

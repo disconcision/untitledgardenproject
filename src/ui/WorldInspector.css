@@ -3,20 +3,8 @@
  * 
  * Collapsible tree view for the world structure.
  * Uses the same corner dock pattern as HUD panels.
+ * Position rules (.hud-bottom-left) are in HUD.css.
  */
-
-/* Bottom-left position */
-.hud-bottom-left {
-  bottom: 16px;
-  left: 16px;
-}
-
-/* Bottom-left expands right and up — button anchored to bottom-left */
-.hud-bottom-left .hud-panel-wrapper {
-  flex-direction: column-reverse;
-  align-items: flex-start;
-  transform-origin: bottom left;
-}
 
 /* Inspector-specific panel styling */
 .inspector-panel.open {

@@ -63,12 +63,6 @@ _Workstream: Visual | Dependency: None | Parallelizable: Yes_
 - [ ] **Prune animation**: Animate subtree removal (fade/collapse before removing)
 - [ ] **Animation timing audit**: Standardize durations (150ms hovers, 300ms growth) per SOURCE.md spec
 
-### 🐛 UI Bug Fixes
-_Workstream: UI | Dependency: None | Parallelizable: Yes_
-
-- [ ] **Two-finger scroll event capture**: When hovering over scrollable menus (WorldInspector, Tutorial), two-finger scroll zooms the canvas instead of scrolling the menu
-- [ ] **Padding/margin inconsistency on menu boxes**: Time box has no top padding; audit and unify spacing across all corner dock panels
-
 ### 🎨 Scene Depth & Atmosphere
 _Workstream: Visual | Dependency: None | Parallelizable: Yes_
 
@@ -145,8 +139,6 @@ _Dependency: Basic UI stability | Parallelizable: Yes_
 ### 🖥️ UI Improvements
 _Dependency: None | Parallelizable: Yes_
 
-- [ ] **Tutorial menu scrolling**: Add scroll behavior when content exceeds threshold
-- [ ] **Z-index focus system**: Clicking overlapping menus brings to front
 - [ ] **Smart menu space sharing**: Adjust menu positions to avoid overlap
 
 ### 🛠️ Infrastructure & Meta Features
@@ -171,6 +163,12 @@ _Low priority, pick when inspired_
 
 ### 2026-01-05
 
+- [x] UI Panel Fixes batch:
+  - Padding/margin inconsistency on menu boxes (unified to 12px all sides)
+  - Two-finger scroll event capture (wheel events stopped on scrollable panels)
+  - Tutorial menu scrolling (max-height 50vh + overflow)
+  - Z-index focus system (clicking panel brings to front)
+  - CSS cleanup (removed duplicate rules in WorldInspector.css)
 - [x] Workflow documentation improvements
 - [x] Tutorial completion hooks for simulation and panel steps
 - [x] Unified simulation model: day cycle pause pauses plant growth
