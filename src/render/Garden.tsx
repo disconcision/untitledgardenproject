@@ -227,6 +227,23 @@ type RockRendererProps = {
   dispatch: (msg: Msg) => void;
 };
 
+// Generate boulder polygon points
+function boulderPoints(
+  size: number,
+  rotation: number,
+  sides: number,
+  irregularity: number
+): string {
+  return Array.from({ length: sides }, (_: unknown, i: number): string => {
+    const angle = rotation + (i / sides) * Math.PI * 2;
+    // Smooth but varied edges - glacial erratic feel
+    const wave1 = Math.sin(i * 2.3 + rotation * 5) * irregularity;
+    const wave2 = Math.cos(i * 3.7 + rotation * 3) * irregularity * 0.5;
+    const r = size * (0.85 + wave1 + wave2);
+    return `${Math.cos(angle) * r},${Math.sin(angle) * r}`;
+  }).join(" ");
+}
+
 const RockRenderer = memo(function RockRenderer({
   rock,
   islandPos,
@@ -237,53 +254,75 @@ const RockRenderer = memo(function RockRenderer({
 }: RockRendererProps) {
   const worldPos = addVec2(islandPos, rock.localPos);
 
-  // More complex polygon (8-10 sides) for interesting silhouette
-  const numSides = 8 + Math.floor((rock.rotation * 10) % 3);
-  const points: string = Array.from(
-    { length: numSides },
-    (_: unknown, i: number): string => {
-      const baseAngle = rock.rotation + (i / numSides) * Math.PI * 2;
-      // Vary radius more for angular, faceted look
-      const variance =
-        Math.sin(i * 3.7 + rock.size) * 0.35 + Math.cos(i * 2.1) * 0.15;
-      const r = rock.size * (0.6 + variance);
-      return `${Math.cos(baseAngle) * r},${Math.sin(baseAngle) * r}`;
-    }
-  ).join(" ");
-
-  const animDelay = `${(rock.localPos.x * 0.002) % 1}s`;
+  // Find the largest boulder for hit target sizing
+  const mainBoulder = rock.boulders[0];
+  const hitRadius = mainBoulder ? mainBoulder.size * 1.2 : 30;
 
   return (
     <g
       className="rock-group"
-      style={{ "--anim-delay": animDelay } as React.CSSProperties}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={rock.id}
       onPointerEnter={() => dispatch({ type: "hover", id: rock.id })}
       onPointerLeave={() => dispatch({ type: "hover", id: null })}
     >
-      {/* Shadow */}
-      <polygon
-        points={points}
-        fill="rgba(40, 40, 40, 0.15)"
-        transform="translate(1, 2)"
-        style={{ filter: "blur(2px)" }}
-      />
+      {/* Render each boulder in the formation */}
+      {rock.boulders.map((boulder, idx) => {
+        const points = boulderPoints(
+          boulder.size,
+          boulder.rotation,
+          boulder.sides,
+          boulder.irregularity
+        );
 
-      {/* Rock body */}
-      <polygon
-        points={points}
-        fill={isHovered ? "var(--color-rock-light)" : "var(--color-rock-mid)"}
-        stroke="var(--color-rock-dark)"
-        strokeWidth={0.5}
-        className="rock-shape"
-      />
+        return (
+          <g
+            key={idx}
+            transform={`translate(${boulder.localPos.x}, ${boulder.localPos.y})`}
+          >
+            {/* Boulder shadow */}
+            <polygon
+              points={points}
+              fill="rgba(30, 30, 35, 0.12)"
+              transform="translate(2, 3)"
+              style={{ filter: "blur(3px)" }}
+            />
+
+            {/* Boulder body - monolithic, glacial feel */}
+            <polygon
+              points={points}
+              fill={
+                isHovered
+                  ? "var(--color-rock-light)"
+                  : idx === 0
+                    ? "var(--color-rock-mid)"
+                    : "var(--color-rock-dark)"
+              }
+              stroke="var(--color-rock-darkest)"
+              strokeWidth={0.3}
+              strokeLinejoin="round"
+              className="rock-shape"
+            />
+
+            {/* Subtle highlight on top edge */}
+            <polygon
+              points={points}
+              fill="none"
+              stroke="var(--color-rock-pale)"
+              strokeWidth={0.5}
+              strokeDasharray={`${boulder.size * 0.3} ${boulder.size * 1.5}`}
+              strokeDashoffset={boulder.rotation * 10}
+              opacity={0.3}
+            />
+          </g>
+        );
+      })}
 
       {showHitTarget && (
         <circle
           cx={0}
           cy={0}
-          r={rock.size}
+          r={hitRadius}
           fill="none"
           stroke="red"
           strokeWidth={1}
@@ -293,12 +332,7 @@ const RockRenderer = memo(function RockRenderer({
       )}
 
       {showId && (
-        <text
-          x={0}
-          y={-rock.size - 4}
-          textAnchor="middle"
-          className="debug-label"
-        >
+        <text x={0} y={-hitRadius - 4} textAnchor="middle" className="debug-label">
           {rock.id}
         </text>
       )}
@@ -333,7 +367,7 @@ const PlantRenderer = memo(function PlantRenderer({
 
   return (
     <g className="plant-group">
-      {/* Stems */}
+      {/* Stems with bark-like thickness gradient */}
       {Array.from(plant.adjacency.entries()).map(
         ([parentId, childIds]: [string, string[]]) => {
           const parent = nodeMap.get(parentId);
@@ -346,8 +380,15 @@ const PlantRenderer = memo(function PlantRenderer({
             const p1 = addVec2(islandPos, parent.localPos);
             const p2 = addVec2(islandPos, child.localPos);
 
+            // Bezier curve for organic feel
             const midX = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.12;
             const midY = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.12;
+
+            // Bark-like thickness: thicker near root (low depth), thinner outward
+            const parentDepth = parent.depth ?? 0;
+            const childDepth = child.depth ?? parentDepth + 1;
+            const avgDepth = (parentDepth + childDepth) / 2;
+            const strokeWidth = Math.max(1, 4 - avgDepth * 0.6);
 
             return (
               <path
@@ -355,7 +396,7 @@ const PlantRenderer = memo(function PlantRenderer({
                 d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
                 fill="none"
                 stroke="var(--color-stem)"
-                strokeWidth={2.5}
+                strokeWidth={strokeWidth}
                 strokeLinecap="round"
                 className="stem-path"
               />

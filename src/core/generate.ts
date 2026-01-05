@@ -1,14 +1,15 @@
 /**
  * Hanging Garden — Procedural Generation (Core)
  *
- * Seeded generation. Rocks as primary anchors.
- * Plants emerge FROM rocks, growing outward into sky.
+ * Compound rock formations as anchors.
+ * Plants emerge from cracks and edges, with bark-like thickness.
  */
 
 import {
   World,
   Island,
   Rock,
+  Boulder,
   PlantNode,
   Plant,
   Vec2,
@@ -18,9 +19,6 @@ import {
   createInitialWorld,
   addVec2,
   scaleVec2,
-  normalizeVec2,
-  subVec2,
-  lenVec2,
 } from "./model";
 
 // === Seeded Random ===
@@ -52,59 +50,97 @@ function generateBlobShape(
 }
 
 // === Island Generation ===
-// Positioned to all be visible in initial viewport
+// Smaller, more interstitial - dirt between rocks
 
 function generateIsland(
   rng: () => number,
   index: number,
   totalIslands: number
 ): Island {
-  // Tight cluster - all islands visible in initial viewport
-  const spreadRadius = 150 + totalIslands * 20;
+  const spreadRadius = 160 + totalIslands * 25;
   const angle = (index / totalIslands) * Math.PI * 2 + (rng() - 0.5) * 0.4;
   const distance = spreadRadius * (0.5 + rng() * 0.4);
 
-  // Visible soil patches - bigger so they're clearly visible
-  const radius = 40 + rng() * 30;
+  // Smaller soil patches - interstitial between rocks
+  const radius = 25 + rng() * 20;
 
   return {
     kind: "island",
     id: genId("island"),
     pos: vec2(Math.cos(angle) * distance, Math.sin(angle) * distance),
     radius,
-    shape: generateBlobShape(rng, radius, 0.2 + rng() * 0.15),
+    shape: generateBlobShape(rng, radius, 0.25 + rng() * 0.2),
     depth: 0.8 + rng() * 0.4,
   };
 }
 
-// === Rock Generation ===
-// Positioned around island edge
+// === Rock Formation Generation ===
+// Compound structure: multiple boulders clustered together
 
-function generateRocksForIsland(rng: () => number, island: Island): Rock[] {
-  const count = 2 + Math.floor(rng() * 2); // 2-3 rocks
-  const rocks: Rock[] = [];
+function generateRockFormation(
+  rng: () => number,
+  island: Island,
+  index: number,
+  count: number
+): Rock {
+  const angle = (index / count) * Math.PI * 2 + rng() * 0.5;
+  const dist = island.radius * (0.3 + rng() * 0.5);
 
-  for (let i = 0; i < count; i++) {
-    const angle = (i / count) * Math.PI * 2 + rng() * 0.5;
-    // Rocks overlap island edge
-    const dist = island.radius * (0.5 + rng() * 0.3);
+  // Main boulder size
+  const mainSize = 30 + rng() * 30;
 
-    rocks.push({
-      kind: "rock",
-      id: genId("rock"),
-      islandId: island.id,
-      localPos: vec2(Math.cos(angle) * dist, Math.sin(angle) * dist),
-      // Bigger rocks: 25-50px
-      size: 25 + rng() * 25,
+  // Generate 2-4 boulders in this formation
+  const boulderCount = 2 + Math.floor(rng() * 3);
+  const boulders: Boulder[] = [];
+
+  // Primary large boulder
+  boulders.push({
+    localPos: vec2(0, 0),
+    size: mainSize,
+    rotation: rng() * Math.PI * 2,
+    sides: 8 + Math.floor(rng() * 5),
+    irregularity: 0.1 + rng() * 0.15,
+  });
+
+  // Secondary boulders clustered around
+  for (let i = 1; i < boulderCount; i++) {
+    const subAngle = rng() * Math.PI * 2;
+    const subDist = mainSize * (0.5 + rng() * 0.4);
+    const subSize = mainSize * (0.3 + rng() * 0.4);
+
+    boulders.push({
+      localPos: vec2(Math.cos(subAngle) * subDist, Math.sin(subAngle) * subDist),
+      size: subSize,
       rotation: rng() * Math.PI * 2,
+      sides: 6 + Math.floor(rng() * 5),
+      irregularity: 0.15 + rng() * 0.2,
     });
   }
 
-  return rocks;
+  // Generate cracks between boulders where plants can grow
+  const cracks: Vec2[] = [];
+  for (let i = 0; i < boulderCount - 1; i++) {
+    const b1 = boulders[i];
+    const b2 = boulders[(i + 1) % boulderCount];
+    const crackPos = vec2(
+      (b1.localPos.x + b2.localPos.x) / 2 + (rng() - 0.5) * 10,
+      (b1.localPos.y + b2.localPos.y) / 2 + (rng() - 0.5) * 10
+    );
+    cracks.push(crackPos);
+  }
+
+  return {
+    kind: "rock",
+    id: genId("rock"),
+    islandId: island.id,
+    localPos: vec2(Math.cos(angle) * dist, Math.sin(angle) * dist),
+    boulders,
+    cracks,
+  };
 }
 
 // === Plant Generation ===
-// Plants grow FROM rocks, with branching
+// Plants grow from rock cracks/edges with depth-tracked thickness
 
 function generatePlantForRock(
   rng: () => number,
@@ -115,22 +151,27 @@ function generatePlantForRock(
   const nodes: PlantNode[] = [];
   const adjacency = new Map<string, string[]>();
 
-  // Direction from island center toward rock (outward)
-  const outwardDir = normalizeVec2(rock.localPos);
-  const outwardAngle =
-    lenVec2(rock.localPos) > 5
-      ? Math.atan2(outwardDir.y, outwardDir.x)
-      : -Math.PI / 2 + (rng() - 0.5) * 1.0;
+  // Choose growth point: crack or rock edge
+  let rootPos: Vec2;
+  if (rock.cracks.length > 0 && rng() > 0.3) {
+    // Grow from a crack
+    const crack = rock.cracks[Math.floor(rng() * rock.cracks.length)];
+    rootPos = addVec2(rock.localPos, crack);
+  } else {
+    // Grow from main boulder edge
+    const mainBoulder = rock.boulders[0];
+    const outwardAngle = rng() * Math.PI * 2;
+    rootPos = addVec2(
+      rock.localPos,
+      addVec2(
+        mainBoulder.localPos,
+        scaleVec2(vec2(Math.cos(outwardAngle), Math.sin(outwardAngle)), mainBoulder.size * 0.7)
+      )
+    );
+  }
 
-  // Root position: AT the rock edge (visually emerging from it)
-  const rootPos = addVec2(
-    rock.localPos,
-    scaleVec2(vec2(Math.cos(outwardAngle), Math.sin(outwardAngle)), rock.size * 0.5)
-  );
-
-  // Growth direction: mix of outward and upward
-  const baseAngle = outwardAngle * 0.3 + (-Math.PI / 2) * 0.7;
-  const growAngle = baseAngle + (rng() - 0.5) * 0.5;
+  // Growth direction: mostly upward with some variation
+  const growAngle = -Math.PI / 2 + (rng() - 0.5) * 0.8;
 
   const rootId = genId("node");
   nodes.push({
@@ -140,10 +181,11 @@ function generatePlantForRock(
     nodeKind: "stem",
     localPos: rootPos,
     angle: growAngle,
+    depth: 0, // Root is depth 0
   });
   adjacency.set(rootId, []);
 
-  // Recursive branching function
+  // Recursive branching with depth tracking
   function growBranch(
     parentId: string,
     startPos: Vec2,
@@ -153,8 +195,9 @@ function generatePlantForRock(
   ): void {
     if (depth > maxDepth) return;
 
-    const segmentLength = 18 + rng() * 14;
-    const angleVariation = (rng() - 0.5) * 0.4;
+    // Segment length decreases with depth
+    const segmentLength = (22 - depth * 3) + rng() * 12;
+    const angleVariation = (rng() - 0.5) * 0.5;
     const newAngle = startAngle + angleVariation;
 
     const newPos = addVec2(
@@ -173,6 +216,7 @@ function generatePlantForRock(
       localPos: newPos,
       angle: newAngle,
       charge: isTerminal ? 0.5 + rng() * 0.5 : undefined,
+      depth: depth + 1,
     });
 
     adjacency.get(parentId)!.push(newId);
@@ -182,19 +226,20 @@ function generatePlantForRock(
       // Continue main branch
       growBranch(newId, newPos, newAngle, depth + 1, maxDepth);
 
-      // Maybe add a side branch
-      if (depth >= 1 && rng() > 0.4) {
+      // Maybe add side branches (more likely at lower depths)
+      const branchChance = 0.6 - depth * 0.1;
+      if (rng() < branchChance) {
         const branchSide = rng() > 0.5 ? 1 : -1;
-        const branchAngle = newAngle + branchSide * (0.5 + rng() * 0.4);
+        const branchAngle = newAngle + branchSide * (0.6 + rng() * 0.5);
         const branchId = genId("node");
-        const branchLength = 12 + rng() * 10;
+        const branchLength = 10 + rng() * 10;
         const branchPos = addVec2(
           newPos,
           scaleVec2(vec2(Math.cos(branchAngle), Math.sin(branchAngle)), branchLength)
         );
 
-        // Side branch can be leaf or short sub-branch
-        const isLeaf = rng() > 0.3;
+        // Side branches are leaves or continue as stems
+        const isLeaf = rng() > 0.4;
 
         nodes.push({
           kind: "plantNode",
@@ -203,16 +248,17 @@ function generatePlantForRock(
           nodeKind: isLeaf ? "leaf" : "stem",
           localPos: branchPos,
           angle: branchAngle,
+          depth: depth + 2,
         });
 
         adjacency.get(newId)!.push(branchId);
         adjacency.set(branchId, []);
 
-        // If it's a stem, maybe continue it to a bud
-        if (!isLeaf && rng() > 0.5) {
-          const subBudId = genId("node");
-          const subLength = 10 + rng() * 8;
-          const subAngle = branchAngle + (rng() - 0.5) * 0.3;
+        // Sub-branches can continue to buds
+        if (!isLeaf && rng() > 0.4) {
+          const subId = genId("node");
+          const subLength = 8 + rng() * 8;
+          const subAngle = branchAngle + (rng() - 0.5) * 0.4;
           const subPos = addVec2(
             branchPos,
             scaleVec2(vec2(Math.cos(subAngle), Math.sin(subAngle)), subLength)
@@ -220,23 +266,24 @@ function generatePlantForRock(
 
           nodes.push({
             kind: "plantNode",
-            id: subBudId,
+            id: subId,
             plantId,
             nodeKind: "bud",
             localPos: subPos,
             angle: subAngle,
             charge: 0.3 + rng() * 0.5,
+            depth: depth + 3,
           });
 
-          adjacency.get(branchId)!.push(subBudId);
-          adjacency.set(subBudId, []);
+          adjacency.get(branchId)!.push(subId);
+          adjacency.set(subId, []);
         }
       }
     }
   }
 
-  // Start growing from root
-  const mainBranchDepth = 2 + Math.floor(rng() * 2); // 2-3 segments
+  // Main branch depth varies
+  const mainBranchDepth = 2 + Math.floor(rng() * 3); // 2-4 segments
   growBranch(rootId, rootPos, growAngle, 0, mainBranchDepth);
 
   return {
@@ -257,7 +304,7 @@ export function generateWorld(seed: number): World {
   const rng = createRng(seed);
   const world = createInitialWorld(seed);
 
-  // 3-5 islands, all visible in initial viewport
+  // 3-5 island clusters
   const islandCount = 3 + Math.floor(rng() * 3);
   const islands: Island[] = [];
   const allRocks: { rock: Rock; island: Island }[] = [];
@@ -267,16 +314,18 @@ export function generateWorld(seed: number): World {
     islands.push(island);
     world.entities.set(island.id, island);
 
-    const rocks = generateRocksForIsland(rng, island);
-    for (const rock of rocks) {
+    // 1-2 rock formations per island
+    const rockCount = 1 + Math.floor(rng() * 2);
+    for (let j = 0; j < rockCount; j++) {
+      const rock = generateRockFormation(rng, island, j, rockCount);
       world.entities.set(rock.id, rock);
       allRocks.push({ rock, island });
     }
   }
 
-  // 50% of rocks have a plant
+  // Most rocks have plants (70%)
   for (const { rock, island } of allRocks) {
-    if (rng() > 0.5) {
+    if (rng() > 0.3) {
       const { nodes, plant } = generatePlantForRock(rng, rock, island);
       for (const node of nodes) {
         world.entities.set(node.id, node);

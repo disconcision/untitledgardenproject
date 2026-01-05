@@ -73,8 +73,8 @@ export const tokens = {
   selectionGlow: `${palette.green.fresh}66`, // 40% opacity
   
   // Entity defaults
-  island: palette.earth.mid,
-  islandShadow: palette.earth.loam,
+  island: palette.earth.tan, // Lighter, less dominant
+  islandShadow: palette.earth.mid,
   rock: palette.rock.mid,
   rockShadow: palette.rock.dark,
   stem: palette.earth.dark,

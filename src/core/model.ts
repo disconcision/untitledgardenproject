@@ -25,13 +25,24 @@ export type Island = {
   depth: number;
 };
 
+// A boulder is a single stone within a rock formation
+export type Boulder = {
+  localPos: Vec2; // relative to rock formation center
+  size: number;
+  rotation: number;
+  sides: number; // polygon complexity
+  irregularity: number; // how jagged (0 = smooth, 1 = very irregular)
+};
+
+// A rock formation is a compound structure of multiple boulders
 export type Rock = {
   kind: "rock";
   id: Id;
   islandId: Id;
-  localPos: Vec2;
-  size: number;
-  rotation: number;
+  localPos: Vec2; // formation center, relative to island
+  boulders: Boulder[]; // compound structure
+  // Cracks/seams where dirt accumulates and plants can grow
+  cracks: Vec2[];
 };
 
 export type PlantNodeKind = "bud" | "stem" | "leaf" | "flower";
@@ -44,6 +55,9 @@ export type PlantNode = {
   localPos: Vec2;
   angle: number;
   charge?: number;
+  // Depth in plant tree (0 = root, increases outward)
+  // Used for bark-like thickness gradient
+  depth: number;
 };
 
 export type Vine = {
