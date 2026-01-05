@@ -47,7 +47,7 @@
   border: 1px solid var(--color-panel-border);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  
+
   /* Hidden by default */
   opacity: 0;
   visibility: hidden;
@@ -134,19 +134,19 @@
   border-radius: 4px;
   background: linear-gradient(
     to right,
-    #1a1f2a 0%,         /* Midnight - deep blue */
-    #2a3040 10%,        /* Late night */
-    #4a3a50 18%,        /* Pre-dawn purple */
-    #d4726a 22%,        /* Dawn pink */
-    #ffb060 26%,        /* Sunrise gold */
-    #e8eff1 35%,        /* Morning */
-    #d8e2e5 50%,        /* Noon */
-    #e8eff1 65%,        /* Afternoon */
-    #ffb060 74%,        /* Sunset gold */
-    #d4726a 78%,        /* Dusk pink */
-    #4a3a50 82%,        /* Twilight purple */
-    #2a3040 90%,        /* Evening */
-    #1a1f2a 100%        /* Midnight */
+    #1a1f2a 0%,
+    /* Midnight - deep blue */ #2a3040 10%,
+    /* Late night */ #4a3a50 18%,
+    /* Pre-dawn purple */ #d4726a 22%,
+    /* Dawn pink */ #ffb060 26%,
+    /* Sunrise gold */ #e8eff1 35%,
+    /* Morning */ #d8e2e5 50%,
+    /* Noon */ #e8eff1 65%,
+    /* Afternoon */ #ffb060 74%,
+    /* Sunset gold */ #d4726a 78%,
+    /* Dusk pink */ #4a3a50 82%,
+    /* Twilight purple */ #2a3040 90%,
+    /* Evening */ #1a1f2a 100% /* Midnight */
   );
   pointer-events: none;
 }
@@ -266,4 +266,3 @@
   background: var(--color-selection-glow);
   border-color: var(--color-selection);
 }
-

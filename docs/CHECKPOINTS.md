@@ -628,11 +628,13 @@ This is the first step toward **projective UI**:
 **Day/Night Cycle System**:
 
 1. **Time of day simulation**: World now tracks `dayCycle` state with:
+
    - `timeOfDay`: 0-1 value (0=midnight, 0.25=sunrise, 0.5=noon, 0.75=sunset)
    - `dayLengthMs`: Configurable cycle length (default 3 minutes)
    - `running`: Play/pause toggle for time advancement
 
 2. **OKLCH Color Space**: New `src/theme/oklch.ts` module:
+
    - RGB ↔ OKLCH conversion functions
    - Perceptual color interpolation (smoother than RGB)
    - Hue interpolation via shortest path around the color wheel
@@ -640,12 +642,14 @@ This is the first step toward **projective UI**:
    - Golden hour factor for sunrise/sunset warmth
 
 3. **Dynamic Color Schemes**: New `src/theme/dayNightScheme.ts`:
+
    - Full day and night color palettes
    - All colors interpolated in OKLCH space
    - Golden hour warmth applied to sky during sunrise/sunset
    - Colors applied to CSS custom properties for dynamic theming
 
 4. **Canvas Background Updates**:
+
    - Reads CSS custom properties for sky gradient colors
    - Background transitions smoothly between day (light blue-gray) and night (deep blue-gray)
    - Particles slightly more visible at night
@@ -659,6 +663,7 @@ This is the first step toward **projective UI**:
    - Panel adapts to light/dark mode automatically
 
 **Model Changes**:
+
 - Added `DayCycle` type to core model
 - Added `dayCycle/setTime`, `dayCycle/setDayLength`, `dayCycle/toggleRunning`, `dayCycle/tick` messages
 

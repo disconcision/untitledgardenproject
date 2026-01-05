@@ -80,7 +80,10 @@ export default function App() {
       onPointerMove={camera.handlePointerMove}
       onPointerUp={camera.handlePointerUp}
     >
-      <CanvasBackground camera={world.camera} timeOfDay={world.dayCycle.timeOfDay} />
+      <CanvasBackground
+        camera={world.camera}
+        timeOfDay={world.dayCycle.timeOfDay}
+      />
       <Garden world={world} dispatch={dispatch} />
       <HUD world={world} dispatch={dispatch} onRegenerate={handleRegenerate} />
       <WorldInspector world={world} dispatch={dispatch} />

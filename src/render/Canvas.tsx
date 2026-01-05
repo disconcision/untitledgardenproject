@@ -20,7 +20,7 @@ type CanvasBackgroundProps = {
 function getCSSColor(property: string): string {
   const root = document.documentElement;
   const computed = getComputedStyle(root);
-  return computed.getPropertyValue(property).trim() || '#e8eff1';
+  return computed.getPropertyValue(property).trim() || "#e8eff1";
 }
 
 type Particle = {
@@ -41,10 +41,10 @@ export const CanvasBackground = memo(function CanvasBackground({
   const frameRef = useRef<number>(0);
   const cameraRef = useRef(camera);
   const colorsRef = useRef({
-    bgWarm: '#f5f2ec',
-    bgPale: '#e8eff1',
-    bgDeep: '#d0dce0',
-    particleColor: 'rgba(160, 170, 165, 0.1)',
+    bgWarm: "#f5f2ec",
+    bgPale: "#e8eff1",
+    bgDeep: "#d0dce0",
+    particleColor: "rgba(160, 170, 165, 0.1)",
   });
 
   // Update camera ref without re-render
@@ -55,10 +55,12 @@ export const CanvasBackground = memo(function CanvasBackground({
   // Update colors when time of day changes
   useEffect(() => {
     colorsRef.current = {
-      bgWarm: getCSSColor('--bg-warm'),
-      bgPale: getCSSColor('--bg-pale'),
-      bgDeep: getCSSColor('--bg-deep'),
-      particleColor: `rgba(160, 170, 165, ${timeOfDay !== undefined && timeOfDay < 0.2 ? 0.15 : 0.1})`,
+      bgWarm: getCSSColor("--bg-warm"),
+      bgPale: getCSSColor("--bg-pale"),
+      bgDeep: getCSSColor("--bg-deep"),
+      particleColor: `rgba(160, 170, 165, ${
+        timeOfDay !== undefined && timeOfDay < 0.2 ? 0.15 : 0.1
+      })`,
     };
   }, [timeOfDay]);
 
@@ -132,7 +134,9 @@ export const CanvasBackground = memo(function CanvasBackground({
         ctx.beginPath();
         ctx.arc(screenX, screenY, p.size * cam.zoom, 0, Math.PI * 2);
         // Particles slightly brighter at night
-        const particleAlpha = colorsRef.current.particleColor.includes('0.15') ? p.alpha * 1.5 : p.alpha;
+        const particleAlpha = colorsRef.current.particleColor.includes("0.15")
+          ? p.alpha * 1.5
+          : p.alpha;
         ctx.fillStyle = `rgba(160, 170, 165, ${particleAlpha})`;
         ctx.fill();
       }
