@@ -164,6 +164,19 @@ _Low priority, pick when inspired_
 
 ### 2026-01-05
 
+- [x] Visual polish batch - hover/render consistency:
+  - Removed dash stroke from rock highlight edges (now subtle solid)
+  - Added all missing CSS variables for entity hover states (rock, leaf, flower, bud, stem)
+  - Rock shape algorithm rewritten: mostly-convex base + localized detail (crevices/protuberances)
+  - Documented procedural shape generation principles in SOURCE.md (avoid uniform noise)
+  - Flowers now orient based on branch angle (point away from stem with fan-spread petals)
+  - Systematized hover effects: all entities use `--color-selection` outline ring + brightness(1.1) filter
+- [x] Rock shape algorithm rewrite:
+  - Replaced uniform spiky polygon with realistic boulder generation
+  - Base shape: 5-7 major vertices forming mostly-convex boulder silhouette
+  - Localized detail: 1-2 edges subdivided with crevices or protuberances
+  - Long smooth edges preserved (like real weathered rock faces)
+  - Deterministic via seeded random for consistent regeneration
 - [x] UI Panel Fixes batch:
   - Padding/margin inconsistency on menu boxes (unified to 12px all sides)
   - Two-finger scroll event capture (camera wheel handler skips hud-corner elements)

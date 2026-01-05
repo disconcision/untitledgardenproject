@@ -90,9 +90,18 @@
 /* === Island Highlight === */
 
 .island-highlighted {
-  filter: brightness(1.1);
-  stroke: var(--color-green-moss) !important;
-  stroke-width: 2px !important;
+  filter: brightness(1.08);
+  stroke: var(--color-selection) !important;
+  stroke-width: 1.5px !important;
+}
+
+/* === Rock Hover === */
+
+.rock-body {
+  transition:
+    filter 100ms ease-out,
+    stroke 100ms ease-out,
+    stroke-width 100ms ease-out;
 }
 
 /* === Cluster Glyph === */

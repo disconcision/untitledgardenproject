@@ -186,15 +186,29 @@ function BudGlyph({ node, isHovered, isCharged }: BudGlyphProps): JSX.Element {
 
   return (
     <>
-      {(isCharged || isHovered) && (
+      {/* Hover ring - consistent with other entities */}
+      {isHovered && !isCharged && (
+        <circle
+          cx={0}
+          cy={0}
+          r={glowRadius + 5}
+          fill="none"
+          stroke="var(--color-selection)"
+          strokeWidth={1.5}
+          opacity={0.6}
+          className="bud-hover-ring"
+        />
+      )}
+      {/* Charged glow - pulsing animation */}
+      {isCharged && (
         <circle
           cx={0}
           cy={0}
           r={glowRadius + 4}
           fill="none"
-          stroke="var(--color-bud-glow)"
+          stroke={isHovered ? "var(--color-selection)" : "var(--color-bud-glow)"}
           strokeWidth={2}
-          opacity={isCharged ? 0.7 : 0.4}
+          opacity={isHovered ? 0.8 : 0.6}
           className="bud-glow"
         />
       )}
@@ -203,9 +217,10 @@ function BudGlyph({ node, isHovered, isCharged }: BudGlyphProps): JSX.Element {
         cy={0}
         r={glowRadius}
         fill={isCharged ? "var(--color-bud-charged)" : "var(--color-bud)"}
-        stroke="var(--color-bud-dark)"
-        strokeWidth={0.5}
+        stroke={isHovered ? "var(--color-selection)" : "var(--color-bud-dark)"}
+        strokeWidth={isHovered ? 1 : 0.5}
         className={isHovered ? "bud-hovered" : ""}
+        style={isHovered ? { filter: "brightness(1.1)" } : undefined}
       />
       {isCharged && (
         <circle cx={-1.5} cy={-1.5} r={2} fill="var(--color-bud-highlight)" opacity={0.6} />
@@ -220,14 +235,29 @@ type StemGlyphProps = {
 
 function StemGlyph({ isHovered }: StemGlyphProps): JSX.Element {
   return (
-    <circle
-      cx={0}
-      cy={0}
-      r={3}
-      fill="var(--color-stem)"
-      stroke={isHovered ? "var(--color-bud-glow)" : "var(--color-stem-dark)"}
-      strokeWidth={isHovered ? 1.5 : 0.5}
-    />
+    <>
+      {isHovered && (
+        <circle
+          cx={0}
+          cy={0}
+          r={7}
+          fill="none"
+          stroke="var(--color-selection)"
+          strokeWidth={1.5}
+          opacity={0.6}
+          className="stem-hover-glow"
+        />
+      )}
+      <circle
+        cx={0}
+        cy={0}
+        r={3}
+        fill="var(--color-stem)"
+        stroke={isHovered ? "var(--color-selection)" : "var(--color-stem-dark)"}
+        strokeWidth={isHovered ? 1 : 0.5}
+        style={isHovered ? { filter: "brightness(1.15)" } : undefined}
+      />
+    </>
   );
 }
 
@@ -253,12 +283,26 @@ function LeafGlyph({ node, isHovered }: LeafGlyphProps): JSX.Element {
 
   return (
     <g transform={`rotate(${rotationDeg})`}>
+      {/* Hover ring - consistent with other entities */}
+      {isHovered && (
+        <circle
+          cx={0}
+          cy={-leafSize * 0.5}
+          r={leafSize * 0.7}
+          fill="none"
+          stroke="var(--color-selection)"
+          strokeWidth={1.5}
+          opacity={0.5}
+          className="leaf-hover-glow"
+        />
+      )}
       <path
         d={leafPathData}
         fill={isHovered ? "var(--color-leaf-hover)" : "var(--color-leaf)"}
-        stroke="var(--color-leaf-dark)"
-        strokeWidth={0.4}
+        stroke={isHovered ? "var(--color-selection)" : "var(--color-leaf-dark)"}
+        strokeWidth={isHovered ? 0.8 : 0.4}
         className="leaf-shape"
+        style={isHovered ? { filter: "brightness(1.1)" } : undefined}
       />
     </g>
   );
@@ -272,50 +316,73 @@ type FlowerGlyphProps = {
 function FlowerGlyph({ node, isHovered }: FlowerGlyphProps): JSX.Element {
   const flowerSize = 8;
   const petalCount = 5;
-  const glowIntensity = isHovered ? 0.8 : 0.5;
+
+  // Orient flower to face outward from the branch (in direction of node.angle)
+  // The node.angle is the growth direction, so flower "faces" that way
+  const baseAngle = node.angle ?? 0;
+  const rotationDeg = (baseAngle * 180) / Math.PI + 90; // +90 to face outward
 
   return (
-    <>
-      {/* Soft glow */}
+    <g transform={`rotate(${rotationDeg})`}>
+      {/* Hover ring - consistent with other entities */}
+      {isHovered && (
+        <circle
+          cx={0}
+          cy={0}
+          r={flowerSize + 6}
+          fill="none"
+          stroke="var(--color-selection)"
+          strokeWidth={1.5}
+          opacity={0.6}
+          className="flower-hover-glow"
+        />
+      )}
+
+      {/* Soft ambient glow */}
       <circle
         cx={0}
         cy={0}
         r={flowerSize + 4}
         fill="var(--color-flower-glow)"
-        opacity={glowIntensity * 0.4}
+        opacity={isHovered ? 0.5 : 0.3}
         filter="url(#flower-glow)"
       />
 
-      {/* Petals */}
+      {/* Petals arranged radially but with asymmetry toward the facing direction */}
       {Array.from({ length: petalCount }).map((_, i: number) => {
-        const angle = (i / petalCount) * Math.PI * 2 + (node.angle ?? 0);
-        const petalX = Math.cos(angle) * flowerSize * 0.6;
-        const petalY = Math.sin(angle) * flowerSize * 0.6;
+        // Spread petals in a fan facing outward, biased toward the growth direction
+        const spreadAngle = Math.PI * 0.8; // ~145 degree spread
+        const startAngle = -spreadAngle / 2 - Math.PI / 2;
+        const angle = startAngle + (i / (petalCount - 1)) * spreadAngle;
+        const petalDist = flowerSize * 0.5;
+        const petalX = Math.cos(angle) * petalDist;
+        const petalY = Math.sin(angle) * petalDist;
 
         return (
           <ellipse
             key={i}
             cx={petalX}
             cy={petalY}
-            rx={flowerSize * 0.5}
-            ry={flowerSize * 0.3}
+            rx={flowerSize * 0.45}
+            ry={flowerSize * 0.25}
             fill={isHovered ? "var(--color-flower-petal-hover)" : "var(--color-flower-petal)"}
-            stroke="var(--color-flower-petal-dark)"
-            strokeWidth={0.3}
-            transform={`rotate(${(angle * 180) / Math.PI})`}
+            stroke={isHovered ? "var(--color-selection)" : "var(--color-flower-petal-dark)"}
+            strokeWidth={isHovered ? 0.5 : 0.3}
+            transform={`rotate(${(angle * 180) / Math.PI}, ${petalX}, ${petalY})`}
+            style={isHovered ? { filter: "brightness(1.1)" } : undefined}
           />
         );
       })}
 
-      {/* Center */}
+      {/* Center - slightly offset toward stem */}
       <circle
         cx={0}
-        cy={0}
-        r={flowerSize * 0.35}
+        cy={flowerSize * 0.15}
+        r={flowerSize * 0.3}
         fill="var(--color-flower-center)"
-        stroke="var(--color-flower-center-dark)"
-        strokeWidth={0.5}
+        stroke={isHovered ? "var(--color-selection)" : "var(--color-flower-center-dark)"}
+        strokeWidth={isHovered ? 0.8 : 0.5}
       />
-    </>
+    </g>
   );
 }

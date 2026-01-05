@@ -117,12 +117,14 @@ function generateRockFormation(
   const boulders: Boulder[] = [];
 
   // Primary large boulder
+  // The boulderPoints algorithm creates a mostly-convex base shape
+  // with localized detail areas (crevices/protuberances) based on irregularity
   boulders.push({
     localPos: vec2(0, 0),
     size: mainSize,
     rotation: rng() * Math.PI * 2,
-    sides: 8 + Math.floor(rng() * 5),
-    irregularity: 0.1 + rng() * 0.15,
+    sides: 6, // Base vertex count (algorithm may add detail vertices)
+    irregularity: 0.3 + rng() * 0.4, // Controls how many detail areas and how dramatic
   });
 
   // Secondary boulders clustered around
@@ -131,12 +133,15 @@ function generateRockFormation(
     const subDist = mainSize * (0.5 + rng() * 0.4);
     const subSize = mainSize * (0.3 + rng() * 0.4);
 
+    // Varied detail levels for visual interest
+    const hasMoreDetail = rng() > 0.5;
+
     boulders.push({
       localPos: vec2(Math.cos(subAngle) * subDist, Math.sin(subAngle) * subDist),
       size: subSize,
       rotation: rng() * Math.PI * 2,
-      sides: 6 + Math.floor(rng() * 5),
-      irregularity: 0.15 + rng() * 0.2,
+      sides: 6,
+      irregularity: hasMoreDetail ? 0.4 + rng() * 0.3 : 0.15 + rng() * 0.2,
     });
   }
 

@@ -315,17 +315,38 @@ export function applySchemeToDOM(scheme: ColorScheme): void {
   root.style.setProperty("--color-island", scheme.earthMid);
   root.style.setProperty("--color-island-shadow", scheme.earthLoam);
   root.style.setProperty("--color-rock", scheme.rockMid);
+  root.style.setProperty("--color-rock-hover", scheme.rockPale);
   root.style.setProperty("--color-stem", scheme.earthDark);
+  root.style.setProperty("--color-stem-dark", scheme.earthLoam);
   root.style.setProperty("--color-stem-highlight", scheme.earthTan);
   root.style.setProperty("--color-leaf", scheme.greenFern);
+  root.style.setProperty("--color-leaf-dark", scheme.greenMoss);
+  root.style.setProperty("--color-leaf-hover", scheme.greenFresh);
   root.style.setProperty("--color-leaf-highlight", scheme.greenFresh);
   root.style.setProperty("--color-bud", scheme.greenLichen);
+  root.style.setProperty("--color-bud-dark", scheme.greenMoss);
+  root.style.setProperty("--color-bud-glow", scheme.greenPale);
   root.style.setProperty("--color-bud-highlight", scheme.greenBright);
   root.style.setProperty("--color-bud-charged", scheme.accentGold);
   root.style.setProperty("--color-flower", scheme.accentCoral);
   root.style.setProperty(
     "--color-flower-highlight",
     lerpHexOklch(scheme.accentCoral, "#ffffff", 0.2)
+  );
+  root.style.setProperty("--color-flower-petal", scheme.accentCoral);
+  root.style.setProperty(
+    "--color-flower-petal-hover",
+    lerpHexOklch(scheme.accentCoral, "#ffffff", 0.15)
+  );
+  root.style.setProperty("--color-flower-petal-dark", scheme.accentBerry);
+  root.style.setProperty("--color-flower-center", scheme.accentGold);
+  root.style.setProperty(
+    "--color-flower-center-dark",
+    lerpHexOklch(scheme.accentGold, "#000000", 0.3)
+  );
+  root.style.setProperty(
+    "--color-flower-glow",
+    `${scheme.accentCoral}4d` // 30% opacity
   );
   root.style.setProperty("--color-vine", scheme.greenMoss);
 }

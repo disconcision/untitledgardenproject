@@ -52,15 +52,27 @@
   --color-island: var(--color-earth-mid);
   --color-island-shadow: var(--color-earth-loam);
   --color-rock: var(--color-rock-mid);
+  --color-rock-hover: var(--color-rock-pale);
   --color-stem: var(--color-earth-dark);
+  --color-stem-dark: var(--color-earth-loam);
   --color-stem-highlight: var(--color-earth-tan);
   --color-leaf: var(--color-green-fern);
+  --color-leaf-dark: var(--color-green-moss);
+  --color-leaf-hover: var(--color-green-fresh);
   --color-leaf-highlight: var(--color-green-fresh);
   --color-bud: var(--color-green-lichen);
+  --color-bud-dark: var(--color-green-moss);
+  --color-bud-glow: var(--color-green-pale);
   --color-bud-highlight: var(--color-green-bright);
   --color-bud-charged: var(--color-accent-gold);
   --color-flower: var(--color-accent-coral);
   --color-flower-highlight: #e8887f;
+  --color-flower-petal: var(--color-accent-coral);
+  --color-flower-petal-hover: #e8887f;
+  --color-flower-petal-dark: var(--color-accent-berry);
+  --color-flower-center: var(--color-accent-gold);
+  --color-flower-center-dark: #a08040;
+  --color-flower-glow: rgba(212, 114, 106, 0.3);
   --color-vine: var(--color-green-moss);
 
   /* === Particles === */

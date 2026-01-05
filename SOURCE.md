@@ -669,6 +669,7 @@ Agent may decide, but **must document in Design Decisions Log**:
 | 2026-01-05 | Audio on first interaction  | No modal; starts on first click/pan; speaker toggle in HUD for mute control |
 | 2026-01-05 | Organic + synth aesthetic   | Audio mixes breathy/organic textures with crystalline/synthetic tones |
 | 2026-01-05 | Sparse void, dense focus    | Audio density increases with zoom level; void is quiet, close-up is richer |
+| 2026-01-05 | Localized detail in shapes  | Rocks use mostly-convex base + selective subdivision; avoids spiky uniform noise |
 
 ---
 
@@ -683,6 +684,42 @@ The agent should internalize these not as constraints but as **taste anchors**�
 - **Nervous System**: Generative jewelry/objects—cellular, reaction-diffusion, voronoi
 - **Jared Tarbell** (complexification.net): Substrate, Bubble Chamber—accretive, crystalline growth
 - **Casey Reas**: Process-driven, systemic, but still warm
+
+### Procedural Shape Generation Principles
+
+When generating organic shapes procedurally (rocks, islands, terrain, etc.), avoid uniform randomness that creates "AI slop" — spiky, noisy shapes that don't read as natural. Instead:
+
+**Base shape first, detail second**:
+1. Start with a simple, mostly-convex silhouette (5-7 major vertices for rocks)
+2. Keep most edges long and smooth — these define the recognizable form
+3. Select specific areas (1-2 edges, not all) for localized detail
+4. Subdivide selected areas with crevices (inward dips) or protuberances (outward bumps)
+
+**Why this works**:
+- Real rocks, islands, and organic forms have _dominant structure_ with _localized variation_
+- Uniform noise applied everywhere creates spiky stars, not boulders
+- The eye reads the long edges as "the shape" and the detailed areas as "texture"
+- Variation in _where_ detail appears matters more than how much detail exists
+
+**Implementation pattern (as in Rock.tsx)**:
+```typescript
+// 1. Build base shape with few major vertices
+const baseVertices = generateConvexBase(5 + random() * 2);
+
+// 2. Select 1-2 edges for detail (not all)
+const detailEdges = selectRandomEdges(baseVertices, 1 + random());
+
+// 3. Subdivide only selected edges
+for (edge of edges) {
+  if (detailEdges.has(edge)) {
+    addDetailPoints(edge, isCrevice: random() > 0.5);
+  } else {
+    keepAsLongEdge(edge);  // Preserve smooth silhouette
+  }
+}
+```
+
+**Generalize this pattern to other shapes**: islands, terrain features, clouds, etc. The key insight is _selective complexity_ rather than _uniform noise_.
 
 ### Architecture & Spatial Design
 
