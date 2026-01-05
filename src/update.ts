@@ -345,12 +345,7 @@ function handleBranch(world: World, nodeId: Id): World {
 
 // === Context Menu Handlers ===
 
-function handleContextMenuOpen(
-  world: World,
-  nodeId: Id,
-  screenPos: Vec2,
-  worldPos: Vec2
-): World {
+function handleContextMenuOpen(world: World, nodeId: Id, screenPos: Vec2, worldPos: Vec2): World {
   emitAudioEvent({ type: "menuOpen" });
   return {
     ...world,

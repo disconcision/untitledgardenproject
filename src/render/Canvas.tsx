@@ -125,12 +125,7 @@ export const CanvasBackground = memo(function CanvasBackground({
       const screenX = centerX + (p.x + cam.pan.x) * cam.zoom;
       const screenY = centerY + (p.y + cam.pan.y) * cam.zoom;
 
-      if (
-        screenX > -20 &&
-        screenX < width + 20 &&
-        screenY > -20 &&
-        screenY < height + 20
-      ) {
+      if (screenX > -20 && screenX < width + 20 && screenY > -20 && screenY < height + 20) {
         ctx.beginPath();
         ctx.arc(screenX, screenY, p.size * cam.zoom, 0, Math.PI * 2);
         // Particles slightly brighter at night

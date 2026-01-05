@@ -54,11 +54,7 @@ function generateBlobShape(
 // === Cluster Generation ===
 // Central glyph with orbiting islands/rocks
 
-function generateCluster(
-  rng: () => number,
-  index: number,
-  totalClusters: number
-): Cluster {
+function generateCluster(rng: () => number, index: number, totalClusters: number): Cluster {
   // For now, main cluster at center, others positioned outward
   const spreadRadius = index === 0 ? 0 : 600 + totalClusters * 100;
   const angle = index === 0 ? 0 : (index / totalClusters) * Math.PI * 2 + (rng() - 0.5) * 0.3;
@@ -223,7 +219,7 @@ function generatePlantForRock(
     if (depth > maxDepth) return;
 
     // Segment length decreases with depth
-    const segmentLength = (22 - depth * 3) + rng() * 12;
+    const segmentLength = 22 - depth * 3 + rng() * 12;
     const angleVariation = (rng() - 0.5) * 0.5;
     const newAngle = startAngle + angleVariation;
 

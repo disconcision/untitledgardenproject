@@ -272,4 +272,3 @@ describe("branchFromNode", () => {
     expect(result).toBeNull();
   });
 });
-

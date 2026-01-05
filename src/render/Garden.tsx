@@ -6,26 +6,13 @@
  */
 
 import { useMemo, memo } from "react";
-import {
-  World,
-  Cluster,
-  Island,
-  Rock,
-  PlantNode,
-  Plant,
-  Particle,
-  Vec2,
-  addVec2,
-} from "../model";
+import { World, Cluster, Island, Rock, PlantNode, Plant, Particle, Vec2, addVec2 } from "../model";
 import { Msg } from "../update";
 import { blobPath, leafPath } from "./paths";
 import "./Garden.css";
 
 // Helper: compute island world position from cluster
-function getIslandWorldPos(
-  island: Island,
-  clusters: Map<string, Cluster>
-): Vec2 {
+function getIslandWorldPos(island: Island, clusters: Map<string, Cluster>): Vec2 {
   const cluster = clusters.get(island.clusterId);
   if (!cluster) return island.localPos;
   return addVec2(cluster.pos, island.localPos);
@@ -133,12 +120,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
           <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
           <feOffset in="blur" dx="0" dy="3" result="offsetBlur" />
           <feFlood floodColor="#3a3a3a" floodOpacity="0.15" result="color" />
-          <feComposite
-            in="color"
-            in2="offsetBlur"
-            operator="in"
-            result="shadow"
-          />
+          <feComposite in="color" in2="offsetBlur" operator="in" result="shadow" />
           <feMerge>
             <feMergeNode in="shadow" />
             <feMergeNode in="SourceGraphic" />
@@ -164,13 +146,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
         </filter>
 
         {/* Firefly glow */}
-        <filter
-          id="firefly-glow"
-          x="-200%"
-          y="-200%"
-          width="500%"
-          height="500%"
-        >
+        <filter id="firefly-glow" x="-200%" y="-200%" width="500%" height="500%">
           <feGaussianBlur stdDeviation="8" result="blur" />
           <feColorMatrix
             in="blur"
@@ -200,14 +176,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
       <g transform={transform}>
         {/* Render clusters from far to near (painters algorithm) */}
         {clusterData.map(
-          ({
-            cluster,
-            fogOpacity,
-            isDistant,
-            islands,
-            rocks,
-            plants: clusterPlants,
-          }) => (
+          ({ cluster, fogOpacity, isDistant, islands, rocks, plants: clusterPlants }) => (
             <g
               key={cluster.id}
               className={isDistant ? "distant-cluster" : "main-cluster"}
@@ -245,9 +214,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
 
               {/* Rocks */}
               {rocks.map((rock: Rock) => {
-                const island = entities.get(rock.islandId) as
-                  | Island
-                  | undefined;
+                const island = entities.get(rock.islandId) as Island | undefined;
                 if (!island) return null;
                 const islandWorldPos = getIslandWorldPos(island, clusters);
                 return (
@@ -265,16 +232,12 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
 
               {/* Plants */}
               {clusterPlants.map((plant: Plant) => {
-                const island = entities.get(plant.islandId) as
-                  | Island
-                  | undefined;
+                const island = entities.get(plant.islandId) as Island | undefined;
                 if (!island) return null;
                 const islandWorldPos = getIslandWorldPos(island, clusters);
 
                 const nodes = Array.from(plant.adjacency.keys())
-                  .map(
-                    (id: string) => entities.get(id) as PlantNode | undefined
-                  )
+                  .map((id: string) => entities.get(id) as PlantNode | undefined)
                   .filter((n): n is PlantNode => n !== undefined);
 
                 return (
@@ -296,11 +259,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
 
         {/* Particles (rendered globally, not per-cluster) */}
         {particles.map((particle: Particle) => (
-          <ParticleRenderer
-            key={particle.id}
-            particle={particle}
-            showId={debug.showIds}
-          />
+          <ParticleRenderer key={particle.id} particle={particle} showId={debug.showIds} />
         ))}
       </g>
     </svg>
@@ -382,13 +341,7 @@ const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
               strokeWidth={0.5}
               opacity={0.4}
             />
-            <circle
-              cx={0}
-              cy={0}
-              r={2}
-              fill="var(--color-rock-dark)"
-              opacity={0.5}
-            />
+            <circle cx={0} cy={0} r={2} fill="var(--color-rock-dark)" opacity={0.5} />
           </>
         );
       case "sigil":
@@ -402,13 +355,7 @@ const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
               strokeWidth={0.5}
               opacity={0.4}
             />
-            <circle
-              cx={0}
-              cy={0}
-              r={3}
-              fill="var(--color-green-deepForest)"
-              opacity={0.4}
-            />
+            <circle cx={0} cy={0} r={3} fill="var(--color-green-deepForest)" opacity={0.4} />
           </g>
         );
     }
@@ -420,12 +367,8 @@ const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
       className={`cluster-glyph ${isHovered ? "hovered" : ""}`}
       filter="url(#glyph-glow)"
       data-entity-id={cluster.id}
-      onPointerEnter={
-        dispatch ? () => dispatch({ type: "hover", id: cluster.id }) : undefined
-      }
-      onPointerLeave={
-        dispatch ? () => dispatch({ type: "hover", id: null }) : undefined
-      }
+      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: cluster.id }) : undefined}
+      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
     >
       {/* Hover indicator ring */}
       {isHovered && (
@@ -484,17 +427,10 @@ const IslandRenderer = memo(function IslandRenderer({
       style={{ "--anim-delay": animDelay } as React.CSSProperties}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={island.id}
-      onPointerEnter={
-        dispatch ? () => dispatch({ type: "hover", id: island.id }) : undefined
-      }
-      onPointerLeave={
-        dispatch ? () => dispatch({ type: "hover", id: null }) : undefined
-      }
+      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: island.id }) : undefined}
+      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
       onDoubleClick={
-        dispatch
-          ? () =>
-              dispatch({ type: "camera/focus", target: worldPos, zoom: 1.5 })
-          : undefined
+        dispatch ? () => dispatch({ type: "camera/focus", target: worldPos, zoom: 1.5 }) : undefined
       }
     >
       {/* Soft shadow */}
@@ -528,12 +464,7 @@ const IslandRenderer = memo(function IslandRenderer({
       )}
 
       {showId && (
-        <text
-          x={0}
-          y={-island.radius - 8}
-          textAnchor="middle"
-          className="debug-label"
-        >
+        <text x={0} y={-island.radius - 8} textAnchor="middle" className="debug-label">
           {island.id}
         </text>
       )}
@@ -589,12 +520,8 @@ const RockRenderer = memo(function RockRenderer({
       className="rock-group"
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={rock.id}
-      onPointerEnter={
-        dispatch ? () => dispatch({ type: "hover", id: rock.id }) : undefined
-      }
-      onPointerLeave={
-        dispatch ? () => dispatch({ type: "hover", id: null }) : undefined
-      }
+      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: rock.id }) : undefined}
+      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
     >
       {/* Render each boulder in the formation */}
       {rock.boulders.map((boulder, idx) => {
@@ -606,10 +533,7 @@ const RockRenderer = memo(function RockRenderer({
         );
 
         return (
-          <g
-            key={idx}
-            transform={`translate(${boulder.localPos.x}, ${boulder.localPos.y})`}
-          >
+          <g key={idx} transform={`translate(${boulder.localPos.x}, ${boulder.localPos.y})`}>
             {/* Boulder shadow */}
             <polygon
               points={points}
@@ -625,8 +549,8 @@ const RockRenderer = memo(function RockRenderer({
                 isHovered
                   ? "var(--color-rock-light)"
                   : idx === 0
-                  ? "var(--color-rock-mid)"
-                  : "var(--color-rock-dark)"
+                    ? "var(--color-rock-mid)"
+                    : "var(--color-rock-dark)"
               }
               stroke="var(--color-rock-darkest)"
               strokeWidth={0.3}
@@ -662,12 +586,7 @@ const RockRenderer = memo(function RockRenderer({
       )}
 
       {showId && (
-        <text
-          x={0}
-          y={-hitRadius - 4}
-          textAnchor="middle"
-          className="debug-label"
-        >
+        <text x={0} y={-hitRadius - 4} textAnchor="middle" className="debug-label">
           {rock.id}
         </text>
       )}
@@ -696,49 +615,45 @@ const PlantRenderer = memo(function PlantRenderer({
   showHitTargets,
   dispatch,
 }: PlantRendererProps) {
-  const nodeMap = new Map(
-    nodes.map((n: PlantNode): [string, PlantNode] => [n.id, n])
-  );
+  const nodeMap = new Map(nodes.map((n: PlantNode): [string, PlantNode] => [n.id, n]));
 
   return (
     <g className="plant-group">
       {/* Stems with bark-like thickness gradient */}
-      {Array.from(plant.adjacency.entries()).map(
-        ([parentId, childIds]: [string, string[]]) => {
-          const parent = nodeMap.get(parentId);
-          if (!parent) return null;
+      {Array.from(plant.adjacency.entries()).map(([parentId, childIds]: [string, string[]]) => {
+        const parent = nodeMap.get(parentId);
+        if (!parent) return null;
 
-          return childIds.map((childId: string) => {
-            const child = nodeMap.get(childId);
-            if (!child) return null;
+        return childIds.map((childId: string) => {
+          const child = nodeMap.get(childId);
+          if (!child) return null;
 
-            const p1 = addVec2(islandPos, parent.localPos);
-            const p2 = addVec2(islandPos, child.localPos);
+          const p1 = addVec2(islandPos, parent.localPos);
+          const p2 = addVec2(islandPos, child.localPos);
 
-            // Bezier curve for organic feel
-            const midX = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.12;
-            const midY = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.12;
+          // Bezier curve for organic feel
+          const midX = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.12;
+          const midY = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.12;
 
-            // Bark-like thickness: thicker near root (low depth), thinner outward
-            const parentDepth = parent.depth ?? 0;
-            const childDepth = child.depth ?? parentDepth + 1;
-            const avgDepth = (parentDepth + childDepth) / 2;
-            const strokeWidth = Math.max(1, 4 - avgDepth * 0.6);
+          // Bark-like thickness: thicker near root (low depth), thinner outward
+          const parentDepth = parent.depth ?? 0;
+          const childDepth = child.depth ?? parentDepth + 1;
+          const avgDepth = (parentDepth + childDepth) / 2;
+          const strokeWidth = Math.max(1, 4 - avgDepth * 0.6);
 
-            return (
-              <path
-                key={`stem-${parentId}-${childId}`}
-                d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
-                fill="none"
-                stroke="var(--color-stem)"
-                strokeWidth={strokeWidth}
-                strokeLinecap="round"
-                className="stem-path"
-              />
-            );
-          });
-        }
-      )}
+          return (
+            <path
+              key={`stem-${parentId}-${childId}`}
+              d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
+              fill="none"
+              stroke="var(--color-stem)"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              className="stem-path"
+            />
+          );
+        });
+      })}
 
       {/* Nodes */}
       {nodes.map((node: PlantNode) => (
@@ -818,24 +733,14 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
       }`}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={node.id}
-      onPointerEnter={
-        dispatch ? () => dispatch({ type: "hover", id: node.id }) : undefined
-      }
-      onPointerLeave={
-        dispatch ? () => dispatch({ type: "hover", id: null }) : undefined
-      }
+      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: node.id }) : undefined}
+      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
       onClick={hasPrimaryAction ? handleClick : undefined}
       onContextMenu={isInteractive ? handleContextMenu : undefined}
     >
       {/* Invisible hit target for buds and stems (not leaves - they use their shape) */}
       {isInteractive && node.nodeKind !== "leaf" && (
-        <circle
-          cx={0}
-          cy={0}
-          r={hitRadius}
-          fill="transparent"
-          className="hit-target"
-        />
+        <circle cx={0} cy={0} r={hitRadius} fill="transparent" className="hit-target" />
       )}
 
       {node.nodeKind === "bud" && (
@@ -845,11 +750,7 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
               cx={0}
               cy={0}
               r={isHovered ? 14 : 10}
-              fill={
-                isHovered
-                  ? "var(--color-bud-highlight)"
-                  : "var(--color-bud-charged)"
-              }
+              fill={isHovered ? "var(--color-bud-highlight)" : "var(--color-bud-charged)"}
               opacity={isHovered ? 0.4 : 0.3}
               className="bud-glow"
             />
@@ -862,8 +763,8 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
               isHovered
                 ? "var(--color-bud-highlight)"
                 : isCharged
-                ? "var(--color-bud-charged)"
-                : "var(--color-bud)"
+                  ? "var(--color-bud-charged)"
+                  : "var(--color-bud)"
             }
             className={`bud ${isHovered ? "hovered" : ""}`}
           />
@@ -872,12 +773,7 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
 
       {node.nodeKind === "leaf" && (
         <path
-          d={leafPath(
-            { x: 0, y: 0 },
-            node.angle,
-            isHovered ? 18 : 16,
-            isHovered ? 10 : 8
-          )}
+          d={leafPath({ x: 0, y: 0 }, node.angle, isHovered ? 18 : 16, isHovered ? 10 : 8)}
           fill={isHovered ? "var(--color-leaf-highlight)" : "var(--color-leaf)"}
           stroke={isHovered ? "var(--color-green-moss)" : "none"}
           strokeWidth={isHovered ? 1 : 0}
@@ -901,9 +797,7 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
             cx={0}
             cy={0}
             r={isHovered ? 5 : 3}
-            fill={
-              isHovered ? "var(--color-stem-highlight)" : "var(--color-stem)"
-            }
+            fill={isHovered ? "var(--color-stem-highlight)" : "var(--color-stem)"}
             className={`stem-node ${isHovered ? "hovered" : ""}`}
           />
         </>
@@ -925,11 +819,7 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
             cx={0}
             cy={0}
             r={isHovered ? 10 : 8}
-            fill={
-              isHovered
-                ? "var(--color-flower-highlight)"
-                : "var(--color-flower)"
-            }
+            fill={isHovered ? "var(--color-flower-highlight)" : "var(--color-flower)"}
             className={`flower ${isHovered ? "hovered" : ""}`}
           />
         </>
@@ -949,12 +839,7 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
       )}
 
       {showId && (
-        <text
-          x={0}
-          y={-hitRadius - 4}
-          textAnchor="middle"
-          className="debug-label"
-        >
+        <text x={0} y={-hitRadius - 4} textAnchor="middle" className="debug-label">
           {node.id}
         </text>
       )}
@@ -1008,9 +893,7 @@ const ParticleRenderer = memo(function ParticleRenderer({
           <g transform={`rotate(${rotationDeg})`}>
             {/* Primary tail strand */}
             <path
-              d={`M 0 0 Q ${-tailLength * 0.4} ${
-                -tailLength * 0.2
-              } ${0} ${-tailLength}`}
+              d={`M 0 0 Q ${-tailLength * 0.4} ${-tailLength * 0.2} ${0} ${-tailLength}`}
               stroke="var(--color-earth-tan)"
               strokeWidth={0.8}
               strokeLinecap="round"
@@ -1062,8 +945,7 @@ const ParticleRenderer = memo(function ParticleRenderer({
     const pulse = 1 + Math.sin(age * 0.12) * 0.15;
 
     // Almost invisible when landed during day
-    const fireflyOpacity =
-      state === "landed" && glow < 0.1 ? 0.08 : opacity * ageFade;
+    const fireflyOpacity = state === "landed" && glow < 0.1 ? 0.08 : opacity * ageFade;
 
     return (
       <g

@@ -47,4 +47,3 @@ function main(): void {
 }
 
 main();
-

@@ -65,18 +65,18 @@ export type PlantNodeKind = "bud" | "stem" | "leaf" | "flower";
 
 export type ParticleKind = "seed" | "firefly";
 
-export type ParticleState = 
-  | "floating"   // Moving through the air
-  | "landed"     // Resting on a surface
-  | "rooting";   // Seed taking root (becoming a plant)
+export type ParticleState =
+  | "floating" // Moving through the air
+  | "landed" // Resting on a surface
+  | "rooting"; // Seed taking root (becoming a plant)
 
 export type Particle = {
   kind: "particle";
   id: Id;
   particleKind: ParticleKind;
   state: ParticleState;
-  pos: Vec2;           // World position
-  velocity: Vec2;      // Current velocity
+  pos: Vec2; // World position
+  velocity: Vec2; // Current velocity
   // Rotation angle for visual orientation
   rotation: number;
   // Angular velocity for smooth rotation
@@ -397,4 +397,3 @@ export function summarizeWorld(world: World): {
     particleCount,
   };
 }
-

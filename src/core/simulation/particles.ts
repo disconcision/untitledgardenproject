@@ -80,11 +80,7 @@ export function tickParticlesFast(world: World, dtMs: number): World {
 /**
  * Fast tick for seed particles — smooth floating movement with wind.
  */
-function tickSeedFast(
-  particle: Particle,
-  dt: number,
-  landingSpots: LandingSpot[]
-): Particle {
+function tickSeedFast(particle: Particle, dt: number, landingSpots: LandingSpot[]): Particle {
   const updated = { ...particle, age: particle.age + 1 };
 
   if (particle.state !== "floating") {
@@ -575,4 +571,3 @@ function createPlantFromSeed(
     },
   };
 }
-

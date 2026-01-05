@@ -3,4 +3,3 @@
  */
 
 export { sproutBud, pruneNode, branchFromNode } from "./plant";
-

@@ -37,7 +37,10 @@
 .leaf,
 .flower,
 .stem-node {
-  transition: fill 100ms ease-out, r 100ms ease-out, filter 100ms ease-out;
+  transition:
+    fill 100ms ease-out,
+    r 100ms ease-out,
+    filter 100ms ease-out;
 }
 
 .bud.hovered,

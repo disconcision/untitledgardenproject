@@ -8,4 +8,3 @@ export {
   tickFlowerSeeds,
   tickFireflySpawning,
 } from "./particles";
-

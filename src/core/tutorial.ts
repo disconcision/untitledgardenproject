@@ -41,4 +41,3 @@ export function completeTutorialStep(
 
   return tutorial; // Step not found
 }
-

@@ -27,17 +27,7 @@ import {
   Sprout,
   Leaf as LeafIcon,
 } from "lucide-react";
-import {
-  World,
-  Cluster,
-  Plant,
-  Id,
-  Island,
-  Rock,
-  PlantNode,
-  Vec2,
-  addVec2,
-} from "../core/model";
+import { World, Cluster, Plant, Id, Island, Rock, PlantNode, Vec2, addVec2 } from "../core/model";
 import { Msg } from "../update";
 import "./WorldInspector.css";
 
@@ -51,9 +41,7 @@ function getEntityWorldPos(id: Id, world: World): Vec2 | null {
     // Check if it's a plant (use root node position)
     const plant = world.plants.get(id);
     if (plant) {
-      const rootNode = world.entities.get(plant.rootId) as
-        | PlantNode
-        | undefined;
+      const rootNode = world.entities.get(plant.rootId) as PlantNode | undefined;
       if (rootNode) {
         const island = world.entities.get(plant.islandId) as Island | undefined;
         if (island) {
@@ -219,10 +207,7 @@ const TreeNode = memo(function TreeNode({
   }, [onHover]);
 
   return (
-    <div
-      className="inspector-node"
-      style={{ "--depth": depth } as React.CSSProperties}
-    >
+    <div className="inspector-node" style={{ "--depth": depth } as React.CSSProperties}>
       <div
         className={`inspector-node-row ${isSelected ? "selected" : ""} ${
           isHovered ? "hovered" : ""
@@ -244,9 +229,7 @@ const TreeNode = memo(function TreeNode({
           {label}
         </span>
       </div>
-      {expanded && hasChildren && (
-        <div className="inspector-children">{children}</div>
-      )}
+      {expanded && hasChildren && <div className="inspector-children">{children}</div>}
     </div>
   );
 });
@@ -328,9 +311,7 @@ const PlantNodeTree = memo(function PlantNodeTree({
     <TreeNode
       key={node.id}
       id={node.id}
-      label={`${node.nodeKind}${
-        node.charge ? ` ⚡${node.charge.toFixed(0)}` : ""
-      }`}
+      label={`${node.nodeKind}${node.charge ? ` ⚡${node.charge.toFixed(0)}` : ""}`}
       icon={getNodeKindIcon(node.nodeKind)}
       depth={depth}
       isSelected={selection === node.id}
@@ -397,9 +378,7 @@ export const WorldInspector = memo(function WorldInspector({
 
   return (
     <div className="hud-corner hud-bottom-left">
-      <div
-        className={`hud-panel-wrapper inspector-panel ${open ? "open" : ""}`}
-      >
+      <div className={`hud-panel-wrapper inspector-panel ${open ? "open" : ""}`}>
         <button
           className="hud-corner-btn"
           onClick={handleToggle}
@@ -410,88 +389,80 @@ export const WorldInspector = memo(function WorldInspector({
 
         <div className="hud-panel-content inspector-content">
           <div className="inspector-tree">
-            {Array.from(tree.clusters.values()).map(
-              (cluster: Cluster, clusterIndex: number) => {
-                const glyph = getClusterGlyph(clusterIndex);
-                const ClusterIcon = glyph.icon;
-                return (
-                  <TreeNode
-                    key={cluster.id}
-                    id={cluster.id}
-                    label={cluster.id}
-                    icon={<ClusterIcon size={GLYPH_SIZE} />}
-                    depth={0}
-                    isSelected={selection === cluster.id}
-                    isHovered={hover === cluster.id}
-                    onSelect={handleSelect}
-                    onHover={handleHover}
-                    defaultExpanded={true}
-                  >
-                    {(tree.islandsByCluster.get(cluster.id) || []).map(
-                      (island: Island) => (
+            {Array.from(tree.clusters.values()).map((cluster: Cluster, clusterIndex: number) => {
+              const glyph = getClusterGlyph(clusterIndex);
+              const ClusterIcon = glyph.icon;
+              return (
+                <TreeNode
+                  key={cluster.id}
+                  id={cluster.id}
+                  label={cluster.id}
+                  icon={<ClusterIcon size={GLYPH_SIZE} />}
+                  depth={0}
+                  isSelected={selection === cluster.id}
+                  isHovered={hover === cluster.id}
+                  onSelect={handleSelect}
+                  onHover={handleHover}
+                  defaultExpanded={true}
+                >
+                  {(tree.islandsByCluster.get(cluster.id) || []).map((island: Island) => (
+                    <TreeNode
+                      key={island.id}
+                      id={island.id}
+                      label={island.id}
+                      icon={<Mountain size={GLYPH_SIZE} />}
+                      depth={1}
+                      isSelected={selection === island.id}
+                      isHovered={hover === island.id}
+                      onSelect={handleSelect}
+                      onHover={handleHover}
+                    >
+                      {/* Rocks */}
+                      {(tree.rocksByIsland.get(island.id) || []).map((rock: Rock) => (
                         <TreeNode
-                          key={island.id}
-                          id={island.id}
-                          label={island.id}
-                          icon={<Mountain size={GLYPH_SIZE} />}
-                          depth={1}
-                          isSelected={selection === island.id}
-                          isHovered={hover === island.id}
+                          key={rock.id}
+                          id={rock.id}
+                          label={rock.id}
+                          icon={<Gem size={GLYPH_SIZE} />}
+                          depth={2}
+                          isSelected={selection === rock.id}
+                          isHovered={hover === rock.id}
                           onSelect={handleSelect}
                           onHover={handleHover}
+                        />
+                      ))}
+                      {/* Plants - render as proper tree structure */}
+                      {(tree.plantsByIsland.get(island.id) || []).map((plant: Plant) => (
+                        <TreeNode
+                          key={plant.id}
+                          id={plant.id}
+                          label={plant.id}
+                          icon={<TreeDeciduous size={GLYPH_SIZE} />}
+                          depth={2}
+                          isSelected={selection === plant.id}
+                          isHovered={hover === plant.id}
+                          onSelect={handleSelect}
+                          onHover={handleHover}
+                          defaultExpanded={true}
                         >
-                          {/* Rocks */}
-                          {(tree.rocksByIsland.get(island.id) || []).map(
-                            (rock: Rock) => (
-                              <TreeNode
-                                key={rock.id}
-                                id={rock.id}
-                                label={rock.id}
-                                icon={<Gem size={GLYPH_SIZE} />}
-                                depth={2}
-                                isSelected={selection === rock.id}
-                                isHovered={hover === rock.id}
-                                onSelect={handleSelect}
-                                onHover={handleHover}
-                              />
-                            )
-                          )}
-                          {/* Plants - render as proper tree structure */}
-                          {(tree.plantsByIsland.get(island.id) || []).map(
-                            (plant: Plant) => (
-                              <TreeNode
-                                key={plant.id}
-                                id={plant.id}
-                                label={plant.id}
-                                icon={<TreeDeciduous size={GLYPH_SIZE} />}
-                                depth={2}
-                                isSelected={selection === plant.id}
-                                isHovered={hover === plant.id}
-                                onSelect={handleSelect}
-                                onHover={handleHover}
-                                defaultExpanded={true}
-                              >
-                                {/* Render plant nodes as a tree from root */}
-                                <PlantNodeTree
-                                  nodeId={plant.rootId}
-                                  plant={plant}
-                                  entities={world.entities}
-                                  depth={3}
-                                  selection={selection}
-                                  hover={hover}
-                                  onSelect={handleSelect}
-                                  onHover={handleHover}
-                                />
-                              </TreeNode>
-                            )
-                          )}
+                          {/* Render plant nodes as a tree from root */}
+                          <PlantNodeTree
+                            nodeId={plant.rootId}
+                            plant={plant}
+                            entities={world.entities}
+                            depth={3}
+                            selection={selection}
+                            hover={hover}
+                            onSelect={handleSelect}
+                            onHover={handleHover}
+                          />
                         </TreeNode>
-                      )
-                    )}
-                  </TreeNode>
-                );
-              }
-            )}
+                      ))}
+                    </TreeNode>
+                  ))}
+                </TreeNode>
+              );
+            })}
           </div>
         </div>
       </div>

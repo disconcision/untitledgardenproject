@@ -6,16 +6,7 @@
  */
 
 import { memo, useState } from "react";
-import {
-  Clock,
-  Play,
-  Pause,
-  X,
-  Sun,
-  Moon,
-  Sunrise,
-  Sunset,
-} from "lucide-react";
+import { Clock, Play, Pause, X, Sun, Moon, Sunrise, Sunset } from "lucide-react";
 import { World } from "../model";
 import { Msg } from "../update";
 import { formatTimeOfDay, getDayPhase } from "../theme/oklch";
@@ -36,11 +27,7 @@ const DAY_LENGTH_PRESETS = [
   { label: "5 min", value: 300000 },
 ];
 
-function PhaseIcon({
-  phase,
-}: {
-  phase: "night" | "dawn" | "day" | "dusk";
-}): JSX.Element {
+function PhaseIcon({ phase }: { phase: "night" | "dawn" | "day" | "dusk" }): JSX.Element {
   switch (phase) {
     case "night":
       return <Moon size={14} />;
@@ -53,10 +40,7 @@ function PhaseIcon({
   }
 }
 
-export const TimeConfig = memo(function TimeConfig({
-  world,
-  dispatch,
-}: TimeConfigProps) {
+export const TimeConfig = memo(function TimeConfig({ world, dispatch }: TimeConfigProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { dayCycle } = world;
   const phase = getDayPhase(dayCycle.timeOfDay);
@@ -114,9 +98,7 @@ export const TimeConfig = memo(function TimeConfig({
             <button
               className="time-play-pause"
               onClick={toggleRunning}
-              title={
-                dayCycle.running ? "Pause simulation" : "Resume simulation"
-              }
+              title={dayCycle.running ? "Pause simulation" : "Resume simulation"}
             >
               {dayCycle.running ? <Pause size={14} /> : <Play size={14} />}
             </button>
@@ -153,9 +135,7 @@ export const TimeConfig = memo(function TimeConfig({
               {DAY_LENGTH_PRESETS.map((preset) => (
                 <button
                   key={preset.value}
-                  className={`preset-btn ${
-                    dayCycle.dayLengthMs === preset.value ? "active" : ""
-                  }`}
+                  className={`preset-btn ${dayCycle.dayLengthMs === preset.value ? "active" : ""}`}
                   onClick={() => handleDayLengthChange(preset.value)}
                 >
                   {preset.label}
@@ -166,32 +146,16 @@ export const TimeConfig = memo(function TimeConfig({
 
           {/* Quick jump buttons */}
           <div className="time-jumps">
-            <button
-              onClick={() =>
-                dispatch({ type: "dayCycle/setTime", timeOfDay: 0 })
-              }
-            >
+            <button onClick={() => dispatch({ type: "dayCycle/setTime", timeOfDay: 0 })}>
               <Moon size={12} /> Midnight
             </button>
-            <button
-              onClick={() =>
-                dispatch({ type: "dayCycle/setTime", timeOfDay: 0.25 })
-              }
-            >
+            <button onClick={() => dispatch({ type: "dayCycle/setTime", timeOfDay: 0.25 })}>
               <Sunrise size={12} /> Sunrise
             </button>
-            <button
-              onClick={() =>
-                dispatch({ type: "dayCycle/setTime", timeOfDay: 0.5 })
-              }
-            >
+            <button onClick={() => dispatch({ type: "dayCycle/setTime", timeOfDay: 0.5 })}>
               <Sun size={12} /> Noon
             </button>
-            <button
-              onClick={() =>
-                dispatch({ type: "dayCycle/setTime", timeOfDay: 0.75 })
-              }
-            >
+            <button onClick={() => dispatch({ type: "dayCycle/setTime", timeOfDay: 0.75 })}>
               <Sunset size={12} /> Sunset
             </button>
           </div>

@@ -5,16 +5,7 @@
  * Each function takes a World and returns a modified World or null on failure.
  */
 
-import {
-  World,
-  Id,
-  vec2,
-  addVec2,
-  scaleVec2,
-  genId,
-  PlantNode,
-  Plant,
-} from "../model";
+import { World, Id, vec2, addVec2, scaleVec2, genId, PlantNode, Plant } from "../model";
 
 /**
  * Sprout a bud into a stem, creating new growth.
@@ -293,12 +284,7 @@ function collectDescendants(plant: Plant, nodeId: Id): Set<Id> {
 /**
  * Find the best angle for a new branch, maximizing distance from existing children.
  */
-function findBestBranchAngle(
-  world: World,
-  plant: Plant,
-  nodeId: Id,
-  parentAngle: number
-): number {
+function findBestBranchAngle(world: World, plant: Plant, nodeId: Id, parentAngle: number): number {
   const existingChildren = plant.adjacency.get(nodeId) || [];
   const childAngles: number[] = [];
 
@@ -361,4 +347,3 @@ function findBestBranchAngle(
   // Add small random offset
   return bestAngle + (Math.random() - 0.5) * 0.2;
 }
-

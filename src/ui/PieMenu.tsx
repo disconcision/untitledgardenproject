@@ -31,10 +31,7 @@ type PieMenuProps = {
   dispatch: (msg: Msg) => void;
 };
 
-export const PieMenu = memo(function PieMenu({
-  world,
-  dispatch,
-}: PieMenuProps) {
+export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) {
   const { contextMenu, entities, plants } = world;
 
   // Close on escape or click outside
@@ -115,9 +112,7 @@ export const PieMenu = memo(function PieMenu({
   ];
 
   // Filter to only enabled actions
-  const enabledActions = actions.filter(
-    (a: PieMenuAction): boolean => a.enabled
-  );
+  const enabledActions = actions.filter((a: PieMenuAction): boolean => a.enabled);
 
   // If no actions available, don't show menu
   if (enabledActions.length === 0) {
