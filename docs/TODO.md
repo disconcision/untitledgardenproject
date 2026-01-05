@@ -67,6 +67,11 @@ _Move completed items here with date._
   - Seeds spawn from flowers, float with brownian motion + wind, can land and take root
   - Fireflies spawn at dusk, glow at night, attracted to flowers and buds
   - Plants can now flower (buds turn into flowers at deeper depths)
+- [x] Particle movement smoothness improvements
+  - Fast particle tick (50ms) for continuous smooth movement
+  - Seeds use sinusoidal wind patterns with rotation tracking
+  - Curved seed tails with secondary wisps
+  - Brighter firefly glow with layered effects
 
 ### 2026-01-05
 
