@@ -77,13 +77,17 @@ export type Particle = {
   state: ParticleState;
   pos: Vec2;           // World position
   velocity: Vec2;      // Current velocity
+  // Rotation angle for visual orientation
+  rotation: number;
+  // Angular velocity for smooth rotation
+  angularVelocity: number;
   // For seeds: which flower/plant spawned it
   sourceId?: Id;
   // For fireflies: which entity they're orbiting/attracted to
   targetId?: Id;
   // Glow intensity (0-1), used for firefly bioluminescence
   glow: number;
-  // Age in ticks, for lifecycle management
+  // Age in frames (fast tick), for lifecycle management
   age: number;
   // Landing target (rock/island id) when landed
   landedOn?: Id;

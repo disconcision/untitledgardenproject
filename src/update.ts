@@ -13,8 +13,6 @@ import {
   addVec2,
   subVec2,
   scaleVec2,
-  lenVec2,
-  normalizeVec2,
   genId,
   PlantNode,
   Plant,
@@ -68,7 +66,10 @@ export type Msg =
   | { type: "dayCycle/setTime"; timeOfDay: number }
   | { type: "dayCycle/setDayLength"; dayLengthMs: number }
   | { type: "dayCycle/toggleRunning" }
-  | { type: "dayCycle/tick"; dtMs: number };
+  | { type: "dayCycle/tick"; dtMs: number }
+  
+  // Particles (fast tick for smooth movement)
+  | { type: "particle/tick"; dtMs: number };
 
 // === Audio Event Hooks ===
 
@@ -299,14 +300,14 @@ export function update(msg: Msg, world: World): World {
         }
       }
 
-      // === Particle Simulation ===
-      result = tickParticles(result);
-
-      // === Flower spawning seeds ===
+      // === Flower spawning seeds (slow tick) ===
       result = tickFlowerSeeds(result);
 
-      // === Spawn fireflies at night ===
+      // === Spawn fireflies at dusk (slow tick) ===
       result = tickFireflySpawning(result);
+
+      // === Particle lifecycle (slow tick: rooting, cleanup) ===
+      result = tickParticleLifecycle(result);
 
       return {
         ...result,
@@ -431,6 +432,11 @@ export function update(msg: Msg, world: World): World {
           timeOfDay: newTimeOfDay,
         },
       };
+    }
+
+    // === Particle Fast Tick (smooth movement) ===
+    case "particle/tick": {
+      return tickParticlesFast(world, msg.dtMs);
     }
 
     default:
@@ -781,25 +787,25 @@ function branchFromNode(world: World, nodeId: Id): World | null {
   };
 }
 
-// === Particle Simulation ===
+// === Particle Simulation (Fast Tick - 50ms) ===
+// Handles smooth movement, rotation, and glow updates
 
-function tickParticles(world: World): World {
+function tickParticlesFast(world: World, dtMs: number): World {
   const newEntities = new Map(world.entities);
   let entitiesChanged = false;
-  const particlesToRemove: Id[] = [];
-  const plantsToAdd: { nodes: PlantNode[]; plant: Plant }[] = [];
-
-  // Get time of day for firefly behavior (0.25 = sunrise, 0.75 = sunset)
+  
+  // Time scale factor (50ms = 0.05)
+  const dt = dtMs / 1000;
+  
+  // Get time of day for firefly behavior
   const timeOfDay = world.dayCycle.timeOfDay;
   const isNight = timeOfDay < 0.25 || timeOfDay > 0.75;
   const isDusk = timeOfDay > 0.7 && timeOfDay < 0.8;
-  const isDawn = timeOfDay > 0.2 && timeOfDay < 0.3;
 
   // Find glowing entities for firefly attraction
   const glowingEntities: { id: Id; pos: Vec2; glow: number }[] = [];
   for (const entity of world.entities.values()) {
     if (entity.kind === "plantNode" && entity.nodeKind === "flower") {
-      // Find island position for this flower
       const plant = world.plants.get(entity.plantId);
       if (plant) {
         const island = world.entities.get(plant.islandId) as Island | undefined;
@@ -808,12 +814,12 @@ function tickParticles(world: World): World {
           if (cluster) {
             const islandWorldPos = addVec2(cluster.pos, island.localPos);
             const flowerWorldPos = addVec2(islandWorldPos, entity.localPos);
-            glowingEntities.push({ id: entity.id, pos: flowerWorldPos, glow: 0.6 });
+            glowingEntities.push({ id: entity.id, pos: flowerWorldPos, glow: 0.8 });
           }
         }
       }
     }
-    // Charged buds also glow slightly
+    // Charged buds also glow
     if (entity.kind === "plantNode" && entity.nodeKind === "bud" && (entity.charge ?? 0) > 0.7) {
       const plant = world.plants.get(entity.plantId);
       if (plant) {
@@ -823,14 +829,14 @@ function tickParticles(world: World): World {
           if (cluster) {
             const islandWorldPos = addVec2(cluster.pos, island.localPos);
             const budWorldPos = addVec2(islandWorldPos, entity.localPos);
-            glowingEntities.push({ id: entity.id, pos: budWorldPos, glow: (entity.charge ?? 0) * 0.4 });
+            glowingEntities.push({ id: entity.id, pos: budWorldPos, glow: (entity.charge ?? 0) * 0.5 });
           }
         }
       }
     }
   }
 
-  // Find potential landing spots for seeds and fireflies
+  // Find landing spots
   const landingSpots: { id: Id; pos: Vec2; kind: "rock" | "island" }[] = [];
   for (const entity of world.entities.values()) {
     if (entity.kind === "rock") {
@@ -857,24 +863,278 @@ function tickParticles(world: World): World {
     if (entity.kind !== "particle") continue;
 
     const particle = entity as Particle;
-    let updated = { ...particle };
-    updated.age = particle.age + 1;
-
-    // Age out old particles
-    if (updated.age > 3000) { // ~50 seconds at 60 ticks
-      particlesToRemove.push(id);
-      continue;
-    }
+    let updated: Particle;
+    
+    // Increment age in fast ticks (20 per second at 50ms)
+    const ageIncrement = 1;
 
     if (particle.particleKind === "seed") {
-      updated = tickSeed(updated, landingSpots, plantsToAdd, world);
-    } else if (particle.particleKind === "firefly") {
-      updated = tickFirefly(updated, isNight, isDusk, isDawn, glowingEntities, landingSpots);
+      updated = tickSeedFast(particle, dt, ageIncrement, landingSpots);
+    } else {
+      updated = tickFireflyFast(particle, dt, ageIncrement, isNight, isDusk, glowingEntities, landingSpots);
     }
 
     if (updated !== particle) {
       newEntities.set(id, updated);
       entitiesChanged = true;
+    }
+  }
+
+  if (!entitiesChanged) return world;
+  return { ...world, entities: newEntities };
+}
+
+// Fast tick for seed particles - smooth floating movement
+function tickSeedFast(
+  particle: Particle,
+  dt: number,
+  ageIncrement: number,
+  landingSpots: { id: Id; pos: Vec2; kind: "rock" | "island" }[]
+): Particle {
+  let updated = { ...particle, age: particle.age + ageIncrement };
+  
+  if (particle.state !== "floating") {
+    return updated;
+  }
+
+  // Continuous wind based on world time (smooth sinusoidal)
+  const time = particle.age * 0.05; // Slow oscillation
+  const windX = Math.sin(time * 0.7) * 8 + Math.sin(time * 1.3) * 4;
+  const windY = Math.cos(time * 0.5) * 3 + Math.sin(time * 0.9) * 2;
+  
+  // Brownian noise (per-particle variation using position as seed)
+  const noisePhase = particle.pos.x * 0.01 + particle.pos.y * 0.01;
+  const brownianX = Math.sin(time * 3 + noisePhase) * 2;
+  const brownianY = Math.cos(time * 2.7 + noisePhase * 1.3) * 1.5;
+  
+  // Gravity (gentle downward drift)
+  const gravity = 1;
+
+  // Update velocity with smooth forces
+  const targetVelX = windX + brownianX;
+  const targetVelY = windY + brownianY + gravity;
+  
+  // Smooth velocity interpolation (inertia)
+  const velLerp = 0.02; // Slower interpolation = smoother movement
+  const newVelX = particle.velocity.x + (targetVelX - particle.velocity.x) * velLerp;
+  const newVelY = particle.velocity.y + (targetVelY - particle.velocity.y) * velLerp;
+  
+  // Cap speed
+  const speed = Math.sqrt(newVelX * newVelX + newVelY * newVelY);
+  const maxSpeed = 15;
+  const cappedVelX = speed > maxSpeed ? (newVelX / speed) * maxSpeed : newVelX;
+  const cappedVelY = speed > maxSpeed ? (newVelY / speed) * maxSpeed : newVelY;
+  
+  // Update position (dt scales the movement)
+  const newPos = vec2(
+    particle.pos.x + cappedVelX * dt,
+    particle.pos.y + cappedVelY * dt
+  );
+
+  // Update rotation based on movement and wind
+  // The tail should trail behind, so rotation follows velocity direction
+  const targetRotation = Math.atan2(cappedVelY, cappedVelX) + Math.PI / 2; // Point tail in direction of travel
+  const rotLerp = 0.08; // Smooth rotation interpolation
+  
+  // Interpolate rotation (handling angle wrapping)
+  let rotDiff = targetRotation - particle.rotation;
+  while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+  while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+  
+  const newRotation = particle.rotation + rotDiff * rotLerp;
+  
+  // Add some wobble to angular velocity
+  const wobble = Math.sin(time * 4 + noisePhase * 2) * 0.02;
+  const newAngularVel = particle.angularVelocity * 0.95 + wobble;
+
+  // Check for landing (with probability per fast tick)
+  for (const spot of landingSpots) {
+    const dx = newPos.x - spot.pos.x;
+    const dy = newPos.y - spot.pos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const landingRadius = spot.kind === "rock" ? 40 : 60;
+    
+    if (distance < landingRadius && Math.random() < 0.001) {
+      return {
+        ...updated,
+        state: "landed",
+        pos: spot.pos,
+        velocity: vec2(0, 0),
+        landedOn: spot.id,
+        rotation: newRotation,
+        angularVelocity: 0,
+      };
+    }
+  }
+
+  return {
+    ...updated,
+    pos: newPos,
+    velocity: vec2(cappedVelX, cappedVelY),
+    rotation: newRotation,
+    angularVelocity: newAngularVel,
+  };
+}
+
+// Fast tick for firefly particles - smooth flying and glowing
+function tickFireflyFast(
+  particle: Particle,
+  dt: number,
+  ageIncrement: number,
+  isNight: boolean,
+  isDusk: boolean,
+  glowingEntities: { id: Id; pos: Vec2; glow: number }[],
+  landingSpots: { id: Id; pos: Vec2; kind: "rock" | "island" }[]
+): Particle {
+  let updated = { ...particle, age: particle.age + ageIncrement };
+  
+  // Update glow (smooth pulsing at night)
+  const time = particle.age * 0.05;
+  let targetGlow = 0;
+  if (isNight && particle.state === "floating") {
+    // Bright pulsing glow at night when flying
+    targetGlow = 0.7 + Math.sin(time * 2.5) * 0.3;
+  } else if (isDusk && particle.state === "floating") {
+    targetGlow = 0.3 + Math.sin(time * 2) * 0.2;
+  }
+  const newGlow = particle.glow + (targetGlow - particle.glow) * 0.1;
+
+  if (particle.state === "landed") {
+    // At night/dusk, fireflies may take off
+    if ((isNight || isDusk) && Math.random() < 0.002) {
+      return {
+        ...updated,
+        state: "floating",
+        velocity: vec2((Math.random() - 0.5) * 5, -Math.random() * 3),
+        glow: 0.3,
+        rotation: Math.random() * Math.PI * 2,
+        angularVelocity: 0,
+      };
+    }
+    return { ...updated, glow: newGlow };
+  }
+
+  // Flying behavior
+  if (particle.state === "floating") {
+    // During day, try to land
+    if (!isNight && !isDusk && Math.random() < 0.002) {
+      for (const spot of landingSpots) {
+        const dx = particle.pos.x - spot.pos.x;
+        const dy = particle.pos.y - spot.pos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 150) {
+          return {
+            ...updated,
+            state: "landed",
+            pos: spot.pos,
+            velocity: vec2(0, 0),
+            landedOn: spot.id,
+            glow: 0,
+            rotation: 0,
+            angularVelocity: 0,
+          };
+        }
+      }
+    }
+
+    // Movement - attracted to glowing things at night
+    let targetX = 0;
+    let targetY = 0;
+    
+    if (isNight && glowingEntities.length > 0) {
+      // Find nearest glowing entity
+      let nearestGlow: { pos: Vec2 } | null = null;
+      let nearestDist = Infinity;
+      
+      for (const glow of glowingEntities) {
+        const dx = particle.pos.x - glow.pos.x;
+        const dy = particle.pos.y - glow.pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < nearestDist && dist < 200) {
+          nearestDist = dist;
+          nearestGlow = glow;
+        }
+      }
+      
+      if (nearestGlow && nearestDist > 30) {
+        // Orbit around the glow source
+        const dx = nearestGlow.pos.x - particle.pos.x;
+        const dy = nearestGlow.pos.y - particle.pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        // Perpendicular + slight inward pull
+        const orbitSpeed = 20;
+        targetX = (dy / dist) * orbitSpeed + (dx / dist) * 3;
+        targetY = (-dx / dist) * orbitSpeed + (dy / dist) * 3;
+      }
+    }
+    
+    // Random wandering
+    const wanderPhase = particle.pos.x * 0.02 + particle.pos.y * 0.02;
+    targetX += Math.sin(time * 3 + wanderPhase) * 8;
+    targetY += Math.cos(time * 2.5 + wanderPhase) * 6;
+
+    // Smooth velocity update
+    const velLerp = 0.05;
+    const newVelX = particle.velocity.x + (targetX - particle.velocity.x) * velLerp;
+    const newVelY = particle.velocity.y + (targetY - particle.velocity.y) * velLerp;
+    
+    // Cap speed
+    const speed = Math.sqrt(newVelX * newVelX + newVelY * newVelY);
+    const maxSpeed = 25;
+    const cappedVelX = speed > maxSpeed ? (newVelX / speed) * maxSpeed : newVelX;
+    const cappedVelY = speed > maxSpeed ? (newVelY / speed) * maxSpeed : newVelY;
+    
+    const newPos = vec2(
+      particle.pos.x + cappedVelX * dt,
+      particle.pos.y + cappedVelY * dt
+    );
+
+    return {
+      ...updated,
+      pos: newPos,
+      velocity: vec2(cappedVelX, cappedVelY),
+      glow: newGlow,
+    };
+  }
+
+  return { ...updated, glow: newGlow };
+}
+
+// === Particle Lifecycle (Slow Tick - 1s) ===
+// Handles rooting decisions and cleanup
+
+function tickParticleLifecycle(world: World): World {
+  const newEntities = new Map(world.entities);
+  let entitiesChanged = false;
+  const particlesToRemove: Id[] = [];
+  const plantsToAdd: { nodes: PlantNode[]; plant: Plant }[] = [];
+
+  for (const [id, entity] of newEntities) {
+    if (entity.kind !== "particle") continue;
+
+    const particle = entity as Particle;
+
+    // Age out old particles (age is in fast ticks, 20/sec, so 3000 = ~2.5 min)
+    if (particle.age > 3000) {
+      particlesToRemove.push(id);
+      continue;
+    }
+
+    // Seeds can take root when landed
+    if (particle.particleKind === "seed" && particle.state === "landed") {
+      // After landing for ~25 seconds, chance to root
+      if (particle.age > 500 && Math.random() < 0.02) {
+        const landedEntity = particle.landedOn ? world.entities.get(particle.landedOn) : null;
+        
+        if (landedEntity && (landedEntity.kind === "rock" || landedEntity.kind === "island")) {
+          const newPlant = createPlantFromSeed(particle, landedEntity, world);
+          if (newPlant) {
+            plantsToAdd.push(newPlant);
+            particlesToRemove.push(id);
+          }
+        }
+      }
     }
   }
 
@@ -905,73 +1165,6 @@ function tickParticles(world: World): World {
   return result;
 }
 
-function tickSeed(
-  particle: Particle,
-  landingSpots: { id: Id; pos: Vec2; kind: "rock" | "island" }[],
-  plantsToAdd: { nodes: PlantNode[]; plant: Plant }[],
-  world: World
-): Particle {
-  if (particle.state === "floating") {
-    // Brownian motion + gentle downward drift + wind
-    const windX = Math.sin(particle.age * 0.02) * 0.15;
-    const windY = Math.cos(particle.age * 0.03) * 0.1;
-    const brownianX = (Math.random() - 0.5) * 0.4;
-    const brownianY = (Math.random() - 0.5) * 0.4;
-    const gravity = 0.02; // Very gentle downward drift
-
-    const newVelocity = vec2(
-      particle.velocity.x * 0.98 + brownianX + windX,
-      particle.velocity.y * 0.98 + brownianY + windY + gravity
-    );
-
-    // Limit max speed
-    const speed = lenVec2(newVelocity);
-    const cappedVelocity = speed > 2 ? scaleVec2(normalizeVec2(newVelocity), 2) : newVelocity;
-
-    const newPos = addVec2(particle.pos, cappedVelocity);
-
-    // Check for landing on rocks/islands
-    for (const spot of landingSpots) {
-      const distance = lenVec2(subVec2(newPos, spot.pos));
-      const landingRadius = spot.kind === "rock" ? 40 : 60;
-      
-      if (distance < landingRadius && Math.random() < 0.02) {
-        // Land on this spot
-        return {
-          ...particle,
-          state: "landed",
-          pos: spot.pos,
-          velocity: vec2(0, 0),
-          landedOn: spot.id,
-        };
-      }
-    }
-
-    return {
-      ...particle,
-      pos: newPos,
-      velocity: cappedVelocity,
-    };
-  } else if (particle.state === "landed") {
-    // Seeds may take root after landing for a while
-    if (particle.age > 500 && Math.random() < 0.005) {
-      // Find the rock/island we landed on
-      const landedEntity = particle.landedOn ? world.entities.get(particle.landedOn) : null;
-      
-      if (landedEntity && (landedEntity.kind === "rock" || landedEntity.kind === "island")) {
-        // Create a new plant from this seed
-        const newPlant = createPlantFromSeed(particle, landedEntity, world);
-        if (newPlant) {
-          plantsToAdd.push(newPlant);
-          return { ...particle, state: "rooting" };
-        }
-      }
-    }
-    return particle;
-  }
-  
-  return particle;
-}
 
 function createPlantFromSeed(
   particle: Particle,
@@ -1040,135 +1233,6 @@ function createPlantFromSeed(
   };
 }
 
-function tickFirefly(
-  particle: Particle,
-  isNight: boolean,
-  isDusk: boolean,
-  _isDawn: boolean,
-  glowingEntities: { id: Id; pos: Vec2; glow: number }[],
-  landingSpots: { id: Id; pos: Vec2; kind: "rock" | "island" }[]
-): Particle {
-  if (particle.state === "floating") {
-    // Fireflies during day should land
-    if (!isNight && !isDusk && Math.random() < 0.05) {
-      // Find a nearby landing spot
-      for (const spot of landingSpots) {
-        const distance = lenVec2(subVec2(particle.pos, spot.pos));
-        if (distance < 150) {
-          return {
-            ...particle,
-            state: "landed",
-            pos: spot.pos,
-            velocity: vec2(0, 0),
-            landedOn: spot.id,
-            glow: 0,
-          };
-        }
-      }
-    }
-
-    // Flying behavior - attracted to lights at night
-    let targetForce = vec2(0, 0);
-    
-    if (isNight && glowingEntities.length > 0) {
-      // Find nearest glowing entity
-      let nearestGlow: { id: Id; pos: Vec2; glow: number } | null = null;
-      let nearestDist = Infinity;
-      
-      for (const glow of glowingEntities) {
-        const dist = lenVec2(subVec2(particle.pos, glow.pos));
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearestGlow = glow;
-        }
-      }
-      
-      if (nearestGlow && nearestDist < 200) {
-        const toLight = subVec2(nearestGlow.pos, particle.pos);
-        const normalized = normalizeVec2(toLight);
-        
-        if (nearestDist > 30) {
-          // Move toward light
-          targetForce = scaleVec2(normalized, 0.08);
-        } else {
-          // Orbit around light
-          const orbitAngle = Math.atan2(toLight.y, toLight.x) + Math.PI / 2;
-          targetForce = vec2(
-            Math.cos(orbitAngle) * 0.1,
-            Math.sin(orbitAngle) * 0.1
-          );
-          
-          // Sometimes land near light
-          if (Math.random() < 0.01) {
-            return {
-              ...particle,
-              state: "landed",
-              pos: addVec2(nearestGlow.pos, vec2((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20)),
-              velocity: vec2(0, 0),
-              targetId: nearestGlow.id,
-              glow: 0.8,
-            };
-          }
-        }
-      }
-    }
-
-    // Random movement (more erratic than seeds)
-    const randomX = (Math.random() - 0.5) * 0.6;
-    const randomY = (Math.random() - 0.5) * 0.6;
-
-    const newVelocity = vec2(
-      particle.velocity.x * 0.92 + randomX + targetForce.x,
-      particle.velocity.y * 0.92 + randomY + targetForce.y
-    );
-
-    // Limit speed
-    const speed = lenVec2(newVelocity);
-    const maxSpeed = isNight ? 3 : 1.5;
-    const cappedVelocity = speed > maxSpeed ? scaleVec2(normalizeVec2(newVelocity), maxSpeed) : newVelocity;
-
-    // Update glow - fireflies pulse at night
-    let newGlow = particle.glow;
-    if (isNight) {
-      // Pulsing glow
-      newGlow = 0.5 + Math.sin(particle.age * 0.15) * 0.5;
-    } else {
-      // Fade during day
-      newGlow = Math.max(0, particle.glow - 0.02);
-    }
-
-    return {
-      ...particle,
-      pos: addVec2(particle.pos, cappedVelocity),
-      velocity: cappedVelocity,
-      glow: newGlow,
-    };
-  } else if (particle.state === "landed") {
-    // Fireflies take off at night
-    if (isNight && Math.random() < 0.03) {
-      return {
-        ...particle,
-        state: "floating",
-        velocity: vec2((Math.random() - 0.5) * 2, -Math.random() * 2), // Launch upward
-        landedOn: undefined,
-        glow: 0.8,
-      };
-    }
-    
-    // Even landed fireflies glow slightly at night
-    let newGlow = particle.glow;
-    if (isNight) {
-      newGlow = 0.3 + Math.sin(particle.age * 0.1) * 0.2;
-    } else {
-      newGlow = 0;
-    }
-    
-    return { ...particle, glow: newGlow };
-  }
-
-  return particle;
-}
-
 function tickFlowerSeeds(world: World): World {
   // Flowers occasionally release seeds
   const newEntities = new Map(world.entities);
@@ -1188,8 +1252,8 @@ function tickFlowerSeeds(world: World): World {
   for (const entity of world.entities.values()) {
     if (entity.kind !== "plantNode" || entity.nodeKind !== "flower") continue;
 
-    // Chance per tick to release a seed
-    if (Math.random() > 0.005) continue;
+    // Chance per tick to release a seed (~1% per second per flower)
+    if (Math.random() > 0.01) continue;
 
     // Find world position of flower
     const plant = world.plants.get(entity.plantId);
@@ -1209,7 +1273,9 @@ function tickFlowerSeeds(world: World): World {
       particleKind: "seed",
       state: "floating",
       pos: flowerWorldPos,
-      velocity: vec2((Math.random() - 0.5) * 1.5, -Math.random() * 1), // Initial upward float
+      velocity: vec2((Math.random() - 0.5) * 8, -Math.random() * 5 - 2), // Initial upward float
+      rotation: Math.random() * Math.PI * 2,
+      angularVelocity: (Math.random() - 0.5) * 0.1,
       sourceId: entity.id,
       glow: 0,
       age: 0,
@@ -1225,10 +1291,11 @@ function tickFlowerSeeds(world: World): World {
 
 function tickFireflySpawning(world: World): World {
   const timeOfDay = world.dayCycle.timeOfDay;
-  const isDusk = timeOfDay > 0.7 && timeOfDay < 0.8;
+  // Spawn during dusk and early night (0.7-0.9)
+  const isDuskOrNight = timeOfDay > 0.7 || timeOfDay < 0.1;
 
-  // Only spawn at dusk
-  if (!isDusk) return world;
+  // Only spawn at dusk/night
+  if (!isDuskOrNight) return world;
 
   // Count existing fireflies
   let fireflyCount = 0;
@@ -1241,8 +1308,8 @@ function tickFireflySpawning(world: World): World {
   // Max 15 fireflies
   if (fireflyCount >= 15) return world;
 
-  // Spawn chance per tick during dusk
-  if (Math.random() > 0.03) return world;
+  // Spawn chance per tick during dusk/night (~5% per tick)
+  if (Math.random() > 0.05) return world;
 
   // Spawn from a random rock or plant
   const spawnCandidates: Vec2[] = [];
@@ -1271,7 +1338,9 @@ function tickFireflySpawning(world: World): World {
     particleKind: "firefly",
     state: "floating",
     pos: addVec2(spawnPos, vec2((Math.random() - 0.5) * 30, -10 - Math.random() * 20)),
-    velocity: vec2((Math.random() - 0.5) * 2, -Math.random() * 1),
+    velocity: vec2((Math.random() - 0.5) * 5, -Math.random() * 3),
+    rotation: 0,
+    angularVelocity: 0,
     glow: 0.5,
     age: 0,
   };

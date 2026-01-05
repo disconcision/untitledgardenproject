@@ -164,7 +164,13 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
         </filter>
 
         {/* Firefly glow */}
-        <filter id="firefly-glow" x="-200%" y="-200%" width="500%" height="500%">
+        <filter
+          id="firefly-glow"
+          x="-200%"
+          y="-200%"
+          width="500%"
+          height="500%"
+        >
           <feGaussianBlur stdDeviation="8" result="blur" />
           <feColorMatrix
             in="blur"
@@ -968,7 +974,7 @@ const ParticleRenderer = memo(function ParticleRenderer({
   particle,
   showId,
 }: ParticleRendererProps) {
-  const { pos, particleKind, state, glow, age } = particle;
+  const { pos, particleKind, state, glow, age, rotation } = particle;
 
   // Don't render particles that are rooting (becoming plants)
   if (state === "rooting") return null;
@@ -981,8 +987,15 @@ const ParticleRenderer = memo(function ParticleRenderer({
 
   if (particleKind === "seed") {
     // Seeds are small, golden/tan colored, with wispy tails
-    const tailAngle = Math.atan2(particle.velocity.y, particle.velocity.x);
-    const tailLength = state === "floating" ? 8 + Math.sin(age * 0.2) * 3 : 0;
+    // Use the rotation property for smooth tail rotation
+    const rotationDeg = (rotation * 180) / Math.PI;
+    
+    // Dynamic tail length that breathes gently
+    const tailLength = state === "floating" ? 12 + Math.sin(age * 0.1) * 4 : 0;
+    
+    // Secondary wisp for more organic look
+    const secondaryLength = tailLength * 0.6;
+    const secondaryAngle = 0.3; // Slight offset from main tail
 
     return (
       <g
@@ -990,30 +1003,40 @@ const ParticleRenderer = memo(function ParticleRenderer({
         transform={`translate(${pos.x}, ${pos.y})`}
         style={{ opacity: opacity * ageFade }}
       >
-        {/* Wispy tail (only when floating) */}
+        {/* Main wispy tail (only when floating) */}
         {state === "floating" && tailLength > 0 && (
-          <line
-            x1={0}
-            y1={0}
-            x2={-Math.cos(tailAngle) * tailLength}
-            y2={-Math.sin(tailAngle) * tailLength}
-            stroke="var(--color-earth-tan)"
-            strokeWidth={0.5}
-            strokeLinecap="round"
-            opacity={0.6}
-          />
+          <g transform={`rotate(${rotationDeg})`}>
+            {/* Primary tail strand */}
+            <path
+              d={`M 0 0 Q ${-tailLength * 0.4} ${-tailLength * 0.2} ${0} ${-tailLength}`}
+              stroke="var(--color-earth-tan)"
+              strokeWidth={0.8}
+              strokeLinecap="round"
+              fill="none"
+              opacity={0.7}
+            />
+            {/* Secondary tail strand */}
+            <path
+              d={`M 0 0 Q ${tailLength * 0.3} ${-secondaryLength * 0.3} ${Math.sin(secondaryAngle) * 3} ${-secondaryLength}`}
+              stroke="var(--color-earth-tan)"
+              strokeWidth={0.4}
+              strokeLinecap="round"
+              fill="none"
+              opacity={0.4}
+            />
+          </g>
         )}
 
         {/* Seed body */}
         <ellipse
           cx={0}
           cy={0}
-          rx={2.5}
-          ry={1.5}
+          rx={3}
+          ry={2}
           fill="var(--color-earth-tan)"
           stroke="var(--color-earth-mid)"
-          strokeWidth={0.3}
-          transform={`rotate(${(tailAngle * 180) / Math.PI})`}
+          strokeWidth={0.4}
+          transform={`rotate(${rotationDeg})`}
           filter="url(#seed-shimmer)"
         />
 
@@ -1027,15 +1050,16 @@ const ParticleRenderer = memo(function ParticleRenderer({
   }
 
   if (particleKind === "firefly") {
-    // Fireflies are small points that glow at night
-    const glowRadius = 4 + glow * 6;
-    const bodySize = 2;
-    
+    // Fireflies are small points that glow brightly at night
+    const glowRadius = 8 + glow * 12; // Larger glow
+    const bodySize = 2.5;
+
     // Pulse animation
-    const pulse = 1 + Math.sin(age * 0.15) * 0.2;
+    const pulse = 1 + Math.sin(age * 0.12) * 0.15;
 
     // Almost invisible when landed during day
-    const fireflyOpacity = state === "landed" && glow < 0.1 ? 0.1 : opacity * ageFade;
+    const fireflyOpacity =
+      state === "landed" && glow < 0.1 ? 0.08 : opacity * ageFade;
 
     return (
       <g
@@ -1043,14 +1067,26 @@ const ParticleRenderer = memo(function ParticleRenderer({
         transform={`translate(${pos.x}, ${pos.y})`}
         style={{ opacity: fireflyOpacity }}
       >
-        {/* Glow (only when glowing) */}
+        {/* Outer glow (soft ambient) */}
         {glow > 0.1 && (
           <circle
             cx={0}
             cy={0}
-            r={glowRadius * pulse}
+            r={glowRadius * pulse * 1.5}
             fill="var(--color-firefly-glow)"
-            opacity={glow * 0.6}
+            opacity={glow * 0.3}
+            filter="url(#firefly-glow)"
+          />
+        )}
+        
+        {/* Inner glow (brighter core) */}
+        {glow > 0.1 && (
+          <circle
+            cx={0}
+            cy={0}
+            r={glowRadius * pulse * 0.6}
+            fill="#ffffcc"
+            opacity={glow * 0.8}
             filter="url(#firefly-glow)"
           />
         )}
@@ -1060,29 +1096,33 @@ const ParticleRenderer = memo(function ParticleRenderer({
           cx={0}
           cy={0}
           r={bodySize}
-          fill={glow > 0.1 ? "var(--color-firefly-body-lit)" : "var(--color-firefly-body)"}
+          fill={
+            glow > 0.1
+              ? "#e8f060" // Brighter lit color
+              : "var(--color-firefly-body)"
+          }
         />
 
         {/* Wings (only visible when flying) */}
         {state === "floating" && (
           <>
             <ellipse
-              cx={-2}
+              cx={-2.5}
               cy={-1}
-              rx={1.5}
-              ry={0.8}
+              rx={2}
+              ry={1}
               fill="var(--color-firefly-wing)"
-              opacity={0.4}
-              transform={`rotate(${Math.sin(age * 0.5) * 20 - 30})`}
+              opacity={0.5}
+              transform={`rotate(${Math.sin(age * 0.4) * 25 - 30})`}
             />
             <ellipse
-              cx={2}
+              cx={2.5}
               cy={-1}
-              rx={1.5}
-              ry={0.8}
+              rx={2}
+              ry={1}
               fill="var(--color-firefly-wing)"
-              opacity={0.4}
-              transform={`rotate(${-Math.sin(age * 0.5) * 20 + 30})`}
+              opacity={0.5}
+              transform={`rotate(${-Math.sin(age * 0.4) * 25 + 30})`}
             />
           </>
         )}

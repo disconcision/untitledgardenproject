@@ -64,10 +64,10 @@
   --color-vine: var(--color-green-moss);
 
   /* === Particles === */
-  --color-firefly-glow: #e8f0a0;
+  --color-firefly-glow: #ffffa0;
   --color-firefly-body: #3a3830;
-  --color-firefly-body-lit: #c8d470;
-  --color-firefly-wing: #606858;
+  --color-firefly-body-lit: #f0f080;
+  --color-firefly-wing: #707860;
 
   /* === UI === */
   --color-text: var(--color-rock-darkest);
