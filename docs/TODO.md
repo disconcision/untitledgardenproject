@@ -117,4 +117,3 @@ _Move completed items here with date._
 ---
 
 _This file is the source of truth for what's being worked on. Update it every session._
-

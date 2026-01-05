@@ -15,14 +15,14 @@ Before doing any work:
 
 ## Documentation Map
 
-| File | Purpose | When to Update |
-|------|---------|----------------|
-| **docs/README.md** | This index; entry point for agents | When doc structure changes |
-| **docs/AGENT-WORKFLOW.md** | Mandatory workflow, git practices, completion checklist | When process changes |
-| **docs/TODO.md** | Active tasks, in-progress work, backlog | Every session (claim/complete tasks) |
-| **docs/CHECKPOINTS.md** | Tour paths and architecture notes for significant changes | Major features only |
-| **docs/transcripts/** | Conversation transcripts (creator-maintained) | Creator exports after sessions |
-| **SOURCE.md** | Project vision, design, architecture, aesthetic references | Architectural decisions |
+| File                       | Purpose                                                    | When to Update                       |
+| -------------------------- | ---------------------------------------------------------- | ------------------------------------ |
+| **docs/README.md**         | This index; entry point for agents                         | When doc structure changes           |
+| **docs/AGENT-WORKFLOW.md** | Mandatory workflow, git practices, completion checklist    | When process changes                 |
+| **docs/TODO.md**           | Active tasks, in-progress work, backlog                    | Every session (claim/complete tasks) |
+| **docs/CHECKPOINTS.md**    | Tour paths and architecture notes for significant changes  | Major features only                  |
+| **docs/transcripts/**      | Conversation transcripts (creator-maintained)              | Creator exports after sessions       |
+| **SOURCE.md**              | Project vision, design, architecture, aesthetic references | Architectural decisions              |
 
 ## For the Creator (Human)
 
@@ -54,4 +54,3 @@ If the agent didn't provide this, ask: "Give me your completion report."
 ---
 
 _This file is the first thing agents should read. Keep it concise and actionable._
-

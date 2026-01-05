@@ -27,3 +27,6 @@ npm-debug.log*
 # TypeScript
 *.tsbuildinfo
 
+# Transcripts (kept locally, not in repo - revisit later)
+docs/transcripts/*.md
+!docs/transcripts/README.md

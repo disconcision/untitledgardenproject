@@ -19,6 +19,7 @@ SOURCE.md           # Vision, architecture, aesthetic (skim if familiar)
 ### 2. Claim Your Task
 
 In `docs/TODO.md`:
+
 - Move your task to "In Progress"
 - Add date: `- [ ] **[YYYY-MM-DD]** Task description`
 - If the task doesn't exist, add it first
@@ -31,6 +32,7 @@ git checkout -b feature/<short-descriptive-name>
 ```
 
 Use descriptive names:
+
 - `feature/camera-animation`
 - `feature/ecosystem-humidity`
 - `fix/hover-z-index`
@@ -62,19 +64,21 @@ Run `read_lints` on modified files. Fix any issues you introduced.
 
 ### 7. Update Documentation
 
-| Change Type | Update TODO.md? | Update CHECKPOINTS.md? | Update SOURCE.md? |
-|-------------|-----------------|------------------------|-------------------|
-| Any change | ✓ Always | If significant | If architectural |
-| New feature | ✓ | ✓ (with tour path) | Maybe |
-| Bug fix | ✓ | Optional | No |
-| Refactoring | ✓ | No | Maybe |
-| Visual polish | ✓ | Optional | No |
+| Change Type   | Update TODO.md? | Update CHECKPOINTS.md? | Update SOURCE.md? |
+| ------------- | --------------- | ---------------------- | ----------------- |
+| Any change    | ✓ Always        | If significant         | If architectural  |
+| New feature   | ✓               | ✓ (with tour path)     | Maybe             |
+| Bug fix       | ✓               | Optional               | No                |
+| Refactoring   | ✓               | No                     | Maybe             |
+| Visual polish | ✓               | Optional               | No                |
 
 **CHECKPOINTS.md** — Add entry if this is a notable feature:
+
 - Tour path (2-5 verification steps)
 - Architecture notes (why, not just what)
 
 **SOURCE.md** — Update if you made:
+
 - Architectural decisions
 - New dependencies/libraries
 - UI/UX pattern changes
@@ -87,6 +91,7 @@ git commit -m "feat: <what you did>"
 ```
 
 Use conventional commits:
+
 - `feat:` — New feature
 - `fix:` — Bug fix
 - `refactor:` — Code restructure (no behavior change)
@@ -199,6 +204,7 @@ Run through this mentally before providing your completion report:
 ### Multiple Orthogonal Changes
 
 If you're asked to do two unrelated things:
+
 - Create separate branches for each
 - Merge each independently
 - This keeps history clean for bisecting
@@ -206,6 +212,7 @@ If you're asked to do two unrelated things:
 ### Long-Running Work
 
 If work spans multiple sessions:
+
 - Keep the branch open
 - Note "Work in progress" in TODO.md
 - Commit frequently (even incomplete work)
@@ -213,6 +220,7 @@ If work spans multiple sessions:
 ### Discovering Bugs or Issues
 
 If you notice something unrelated to your task:
+
 - Add it to TODO.md under "Up Next" or appropriate backlog section
 - Don't fix it in this branch (unless trivial)
 - Mention it in your completion report
@@ -220,6 +228,7 @@ If you notice something unrelated to your task:
 ### Parallel Agent Work
 
 If another agent might be working simultaneously:
+
 - Check TODO.md "In Progress" section first
 - Avoid claiming the same files
 - Pull before merging to catch conflicts early
@@ -253,4 +262,3 @@ FINISH:
 ---
 
 _This workflow exists to prevent context loss and enable parallel work. Follow it consistently._
-

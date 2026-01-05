@@ -564,6 +564,7 @@ Pick opportunistically:
 ### Long autonomous runs
 
 Choose a single theme and produce:
+
 - 1–3 checkpoints (not 20)
 - Updated tutorial if relevant
 - Completion report summarizing all changes
@@ -660,6 +661,7 @@ Example:
 **Active tasks are tracked in `docs/TODO.md`.**
 
 See that file for:
+
 - What's currently in progress
 - What's up next
 - Full backlog organized by milestone

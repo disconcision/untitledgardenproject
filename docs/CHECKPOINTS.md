@@ -770,12 +770,14 @@ This checkpoint documents the Center View feature that was included in the origi
 **Documentation Restructure**:
 
 1. **docs/README.md** — New entry point for agents
+
    - Quick start checklist
    - Documentation map with update triggers
    - Creator process summary
    - "What to check when agent finishes" checklist
 
 2. **docs/AGENT-WORKFLOW.md** — Comprehensive agent process
+
    - Full workflow in 4 phases (Before/During/After/Report)
    - Completion report template
    - Meta-checklist for self-verification
@@ -783,6 +785,7 @@ This checkpoint documents the Center View feature that was included in the origi
    - Quick reference command summary
 
 3. **docs/TODO.md** — Active task tracking
+
    - In Progress / Up Next / Backlog structure
    - Completed section with dates
    - Instructions for claiming/completing tasks
