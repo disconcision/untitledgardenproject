@@ -30,10 +30,20 @@ These workstreams can be worked on independently by different agents:
 | **Ecosystem (M4)** | None | New simulation mechanics |
 | **Entity System** | None | Infrastructure improvement |
 | **Projective UI** | Basic UI stability | Builds on WorldInspector |
+| **Orbital Dynamics** | None | Island movement around glyphs |
+| **Glyph Pie Menu** | None | Context menus for cluster glyphs |
+| **Multi-Cluster Focus** | None | Ability to select/focus different clusters |
+| **Constellations & Pathways** | Multi-Cluster Focus | Inter-cluster connections |
+| **Panspermia & Seeds** | Constellations for inter-cluster travel | Seed lifecycle, spreading life |
+| **Cut/Graft Mechanic** | None | Redesigned pruning with grafting |
+| **Unified Force Model** | Orbital Dynamics, Constellations | Physics system for entities |
 
 **Strong dependencies to note:**
 - Audio Phase 2/3 → requires Audio MVP complete
 - M5 (Baroque Growth) → should wait for M3/M4 patterns to stabilize
+- Constellations & Pathways → benefits from Multi-Cluster Focus
+- Panspermia → requires Constellations for inter-cluster seed travel
+- Unified Force Model → builds on Orbital Dynamics and Constellations
 
 ---
 
@@ -142,6 +152,181 @@ _Dependency: Basic UI stability | Parallelizable: Yes_
 _Dependency: None | Parallelizable: Yes_
 
 - [ ] **Smart menu space sharing**: Adjust menu positions to avoid overlap
+
+### 🌀 Orbital Dynamics & Cluster Physics
+_Dependency: None | Parallelizable: Yes_
+
+**MVP:**
+- [ ] **Island orbital movement**: Islands slowly rotate/orbit around their cluster's central glyph
+  - Movement should be slow and subtle, not mechanical
+  - Each island maintains its own natural orbital inclination (not all at same radius)
+  - Variance in orbital speed per island for organic feel
+- [ ] **Basic orbital force model**: Simple gravitational-like attraction toward glyph
+  - Not exact physics — prioritize organic appearance over realism
+  - Islands drift rather than snap to positions
+
+**Future / Exploratory:**
+- [ ] **Orbital radius adjustment**: Glyph pie menu option to push islands closer or farther
+  - Islands gradually drift to new orbital radius (not instant teleport)
+  - Preserve variance — don't force all to exact same radius
+  - Goal: affect binding tightness while maintaining organic feel
+- [ ] **3D orbital paths with 2D rendering**: Islands/rocks move in 3D orbital space but render as 2D
+  - Incremental approach: start with 2D orbits, add depth later
+  - Overlapping islands differentiated by subtle fog/opacity
+  - Ones "further back" slightly foggier
+  - Not full 3D rendering — just enough depth cue to disambiguate overlaps
+- [ ] **Avoid mechanistic feel**: Whatever force setup we use, it shouldn't make islands feel like gears or clockwork
+  - Some randomness in movement
+  - Natural-feeling acceleration/deceleration
+  - Occasional perturbations
+
+### 🎯 Glyph Interaction & Entity Pie Menus
+_Dependency: None | Parallelizable: Yes_
+
+**MVP:**
+- [ ] **Glyph pie menu**: Glyphs get their own right-click pie menu (like plant stems do)
+  - Menu items positioned tightly around glyph center (use available space there)
+  - Not on outer circle like plant menus — glyph has space around it
+- [ ] **Cluster selection indicator**: When glyph is selected, draw a visual circle around the whole cluster
+  - Signifies "this menu affects the whole cluster"
+  - Subtle line/glow, not intrusive
+- [ ] **Initial glyph menu actions**: At minimum, push islands closer/farther (orbital radius)
+  - These affect the whole cluster's island arrangement
+
+**Conceptual Vision:**
+- [ ] **Universal entity pie menus**: Eventually every entity type should have a pie menu
+  - Rocks, islands, particles (seeds, fireflies), plants already have them
+  - Consistent interaction pattern across all entities
+- [ ] **Glyph as cluster controller**: Glyph menu options affect cluster-wide properties
+  - Binding tightness, orbital behavior, possibly cluster "personality"
+
+### 🔭 Multi-Cluster Focus & Selection
+_Dependency: None | Parallelizable: Yes_
+
+**MVP:**
+- [ ] **Focal cluster switching**: Ability to change which cluster is the "focal" cluster
+  - Currently only main cluster is un-blurred; others are grayed/blurred
+  - Clicking a different cluster's glyph should make it focal
+- [ ] **Selected cluster clarity**: The currently selected/focal cluster should not be grayed or blurred
+  - Full color and detail visibility
+  - Other clusters remain foggy/distant
+- [ ] **Smooth focus transition**: When switching focal clusters, animate the blur/clarity change
+
+### ✨ Constellations & Inter-Cluster Pathways
+_Dependency: Multi-Cluster Focus | Parallelizable: Partially_
+
+**MVP:**
+- [ ] **Inter-cluster pathway lines**: Faint lines of light connecting cluster glyphs
+  - Thin, subtle lines (not heavy connectors)
+  - Visible when zoomed out — creates constellation-like appearance
+  - Zoomed-out view should vaguely resemble star constellations
+- [ ] **Pathway rendering**: Lines should feel luminous/ethereal, not mechanical
+  - Perhaps animated shimmer or subtle pulse
+
+**Future / Exploratory:**
+- [ ] **Constellation groupings**: Constellations as higher-order construct
+  - One constellation = 1 to ~12+ clusters connected by pathways
+  - Multiple constellations possible in the world
+  - Clusters within a constellation are more connected than between constellations
+- [ ] **Pathway force effects**: The thin lines have a pulling force
+  - Seeds/fireflies near pathways get pulled along
+  - Forms "tunnels" or travel corridors between clusters
+  - Force strength may vary by pathway
+- [ ] **Pathway directionality**: Whether pathways are unidirectional or bidirectional
+  - TBD based on what feels right
+  - Could be some of each — major vs minor pathways
+  - Visual indication if directional (arrow, gradient, flow animation)
+
+### 🌱 Panspermia & Seed Lifecycle
+_Dependency: Pathways for inter-cluster travel | Parallelizable: Partially_
+
+**BUGS:**
+- [ ] **BUG: Seeds not taking root**: Seeds used to take root and become plants, but this seems broken
+  - Investigate particle lifecycle in `simulation/particles.ts`
+  - Seeds should land on islands/rocks and eventually sprout into new plants
+
+**MVP:**
+- [ ] **Inter-cluster seed travel**: Seeds can travel between clusters via pathway forces
+  - When seeds drift near a pathway line, they get pulled along
+  - Seeds arrive at new clusters and can root there
+- [ ] **Seed rooting on arrival**: Seeds that travel to a new cluster can take root on islands there
+  - Creates new plants in previously empty clusters
+  - Life spreads from central cluster outward
+
+**Future / Exploratory:**
+- [ ] **Panspermia narrative**: Life begins in central cluster, spreads outward through pathways
+  - Initial state: only central cluster has plants
+  - Over time, seeds travel and colonize other clusters
+  - Creates emergent "spread of life" across the constellation
+- [ ] **Overcrowding prevention**: Mechanisms to prevent islands from being completely covered in plants
+  - Minimum distance from existing plant roots for new seeds to take hold
+  - Some randomness allowed — some areas can be overgrown, that's cool
+  - Goal: sparse/volcanic aesthetic, not everything covered
+- [ ] **Nutrient/fertility model**: Islands have varying fertility levels
+  - Some islands more fertile → denser plant growth
+  - Some islands sparse/bare → rocky, less hospitable
+  - Fertility could be visualized subtly (soil color, texture)
+  - Affects both seed rooting success and plant growth rate
+- [ ] **Controlled randomness in growth**: Balance between uniform and chaotic
+  - Not all islands same growth density
+  - Some heavily planted, some sparse, some bare
+  - Variation makes the world feel more natural
+
+### ⚡ Unified Force & Physics Model
+_Dependency: Orbital Dynamics, Constellations | Parallelizable: No (integrative work)_
+
+**Conceptual Vision (to be fleshed out in future sessions):**
+- [ ] **Force model architecture**: Different entities/nodes affected by different forces
+  - Define which forces affect which entity types
+  - Create composable force system
+- [ ] **Static vs dynamic positioning**: Forces affect entities differently based on type
+  - Plants: mostly static, positioned under glyph gravitation
+  - Particles (seeds, fireflies): dynamic movement, affected by multiple forces
+  - Islands: slow orbital movement around glyphs
+- [ ] **Pathway pulling force**: Particles near pathway lines get pulled along
+  - Creates directed movement between clusters
+  - Force may be stronger at pathway center, weaker at edges
+- [ ] **Glyph gravitation**: Glyphs exert gravitational pull on nearby entities
+  - Islands orbit at their natural inclinations
+  - Particles may orbit briefly or get captured
+- [ ] **Aesthetic over realism**: Physics should look/feel cool, not be scientifically accurate
+  - Tune parameters for visual appeal
+  - Rich parameter space to explore
+  - Prioritize integrated, consistent feel over strict mechanics
+- [ ] **Force visualization (optional)**: Subtle visual indicators of force fields
+  - Could help user understand dynamics
+  - Should not clutter the aesthetic
+
+### ✂️ Cut/Graft Mechanic Redesign
+_Dependency: None | Parallelizable: Yes_
+
+**MVP:**
+- [ ] **Cut attaches to cursor**: When cutting a plant subtree, it doesn't disappear
+  - Subtree attaches to cursor and follows it around
+  - Visual: subtree rendered at cursor position, slightly faded/ghostly
+  - Player is "carrying" the cut piece
+- [ ] **Release in void**: Clicking in empty space releases the carried subtree
+  - Subtree floats like a seed
+  - Gradually drifts apart into pieces
+  - Pieces move independently, then fade out and disappear
+  - Creates satisfying "letting go" moment
+- [ ] **Graft to existing stem**: Clicking on another plant's stem grafts the subtree
+  - Works like the branch feature: picks an appropriate angle
+  - Smart angle selection: avoid overlapping existing branches
+  - Subtree becomes part of the new plant
+  - Enables creative plant assembly by cutting and grafting
+
+**Future / Exploratory:**
+- [ ] **Re-root to rock**: Optionally, clicking on a rock plants the cut subtree there
+  - Creates new plant rooted to that rock
+  - May or may not make sense with the system — decide based on feel
+- [ ] **Graft angle algorithm**: Smarter algorithm for picking graft attachment angle
+  - Analyze existing branch angles at target stem
+  - Choose angle that minimizes overlap
+  - Consider overall plant balance/aesthetics
+- [ ] **Graft visual feedback**: Preview where graft will attach before confirming
+  - Ghost preview of final position
+  - Helps player plan complex grafts
 
 ### 🛠️ Infrastructure & Meta Features
 _Various dependencies — see notes_
