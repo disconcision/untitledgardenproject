@@ -99,6 +99,17 @@ export type Camera = {
   zoom: number;
 };
 
+// === Day Cycle ===
+
+export type DayCycle = {
+  // Current time of day (0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset)
+  timeOfDay: number;
+  // Length of a full day in milliseconds (default: 3 minutes = 180000ms)
+  dayLengthMs: number;
+  // Whether the day cycle is advancing
+  running: boolean;
+};
+
 // === Tutorial ===
 
 export type TutorialStep = {
@@ -107,6 +118,16 @@ export type TutorialStep = {
   completed: boolean;
   focusTarget?: Id;
 };
+
+// === Context Menu ===
+
+export type ContextMenu = {
+  nodeId: Id;
+  // Screen position for the menu
+  screenPos: Vec2;
+  // World position of the node (for rendering offset)
+  worldPos: Vec2;
+} | null;
 
 // === World State ===
 
@@ -120,8 +141,10 @@ export type World = {
     dt: number;
     paused: boolean;
   };
+  dayCycle: DayCycle;
   selection: Id | null;
   hover: Id | null;
+  contextMenu: ContextMenu;
   tutorial: {
     visible: boolean;
     steps: TutorialStep[];
@@ -191,6 +214,7 @@ export function createInitialWorld(seed: number): World {
     },
     selection: null,
     hover: null,
+    contextMenu: null,
     tutorial: {
       visible: true,
       steps: [
@@ -210,8 +234,8 @@ export function createInitialWorld(seed: number): World {
           completed: false,
         },
         {
-          id: "prune",
-          instruction: "Click a leaf to prune it",
+          id: "context",
+          instruction: "Right-click a stem to branch or trim",
           completed: false,
         },
         {
@@ -220,6 +244,11 @@ export function createInitialWorld(seed: number): World {
           completed: false,
         },
       ],
+    },
+    dayCycle: {
+      timeOfDay: 0.35, // Start in the morning
+      dayLengthMs: 180000, // 3 minutes default
+      running: true,
     },
     debug: {
       showIds: false,

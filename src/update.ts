@@ -32,6 +32,12 @@ export type Msg =
   // Interaction
   | { type: "sprout"; budId: Id }
   | { type: "prune"; nodeId: Id }
+  | { type: "trim"; nodeId: Id } // Same as prune but for the context menu action
+  | { type: "branch"; nodeId: Id } // Add a new branch from this node
+
+  // Context Menu
+  | { type: "contextMenu/open"; nodeId: Id; screenPos: Vec2; worldPos: Vec2 }
+  | { type: "contextMenu/close" }
 
   // Simulation
   | { type: "tick"; dt: number }
@@ -47,17 +53,27 @@ export type Msg =
   | { type: "debug/toggleIds" }
   | { type: "debug/toggleHitTargets" }
   | { type: "debug/toggleFreeze" }
-  | { type: "debug/regenerate"; seed: number };
+  | { type: "debug/regenerate"; seed: number }
+  
+  // Day Cycle
+  | { type: "dayCycle/setTime"; timeOfDay: number }
+  | { type: "dayCycle/setDayLength"; dayLengthMs: number }
+  | { type: "dayCycle/toggleRunning" }
+  | { type: "dayCycle/tick"; dtMs: number };
 
 // === Audio Event Hooks ===
 
 export type AudioEvent =
   | { type: "sprout" }
   | { type: "prune" }
+  | { type: "branch" }
+  | { type: "trim" }
   | { type: "select" }
   | { type: "hover" }
   | { type: "pan" }
-  | { type: "zoom" };
+  | { type: "zoom" }
+  | { type: "menuOpen" }
+  | { type: "menuClose" };
 
 const audioEventListeners: ((event: AudioEvent) => void)[] = [];
 
@@ -177,6 +193,57 @@ export function update(msg: Msg, world: World): World {
       return world;
     }
 
+    case "trim": {
+      const result = pruneNode(world, msg.nodeId);
+      if (result) {
+        emitAudioEvent({ type: "trim" });
+        return {
+          ...result,
+          contextMenu: null, // Close menu after action
+          tutorial: completeTutorialStep(result.tutorial, "context"),
+        };
+      }
+      // Close menu even on failure so user knows something happened
+      return { ...world, contextMenu: null };
+    }
+
+    case "branch": {
+      const result = branchFromNode(world, msg.nodeId);
+      if (result) {
+        emitAudioEvent({ type: "branch" });
+        return {
+          ...result,
+          contextMenu: null, // Close menu after action
+          tutorial: completeTutorialStep(result.tutorial, "context"),
+        };
+      }
+      // Close menu even on failure so user knows something happened
+      return { ...world, contextMenu: null };
+    }
+
+    // === Context Menu ===
+    case "contextMenu/open": {
+      emitAudioEvent({ type: "menuOpen" });
+      return {
+        ...world,
+        contextMenu: {
+          nodeId: msg.nodeId,
+          screenPos: msg.screenPos,
+          worldPos: msg.worldPos,
+        },
+      };
+    }
+
+    case "contextMenu/close": {
+      if (world.contextMenu) {
+        emitAudioEvent({ type: "menuClose" });
+      }
+      return {
+        ...world,
+        contextMenu: null,
+      };
+    }
+
     // === Simulation ===
     case "tick": {
       if (world.time.paused || world.debug.freezeTime) {
@@ -279,6 +346,60 @@ export function update(msg: Msg, world: World): World {
 
     case "debug/regenerate":
       return world;
+
+    // === Day Cycle ===
+    case "dayCycle/setTime": {
+      return {
+        ...world,
+        dayCycle: {
+          ...world.dayCycle,
+          timeOfDay: Math.max(0, Math.min(1, msg.timeOfDay)),
+        },
+      };
+    }
+
+    case "dayCycle/setDayLength": {
+      // Clamp between 30 seconds and 30 minutes
+      const clamped = Math.max(30000, Math.min(1800000, msg.dayLengthMs));
+      return {
+        ...world,
+        dayCycle: {
+          ...world.dayCycle,
+          dayLengthMs: clamped,
+        },
+      };
+    }
+
+    case "dayCycle/toggleRunning": {
+      return {
+        ...world,
+        dayCycle: {
+          ...world.dayCycle,
+          running: !world.dayCycle.running,
+        },
+      };
+    }
+
+    case "dayCycle/tick": {
+      if (!world.dayCycle.running) return world;
+      
+      // Calculate how much time of day to advance
+      const fractionOfDay = msg.dtMs / world.dayCycle.dayLengthMs;
+      let newTimeOfDay = world.dayCycle.timeOfDay + fractionOfDay;
+      
+      // Wrap around at midnight
+      if (newTimeOfDay >= 1) {
+        newTimeOfDay = newTimeOfDay % 1;
+      }
+      
+      return {
+        ...world,
+        dayCycle: {
+          ...world.dayCycle,
+          timeOfDay: newTimeOfDay,
+        },
+      };
+    }
 
     default:
       return world;
@@ -422,10 +543,10 @@ function pruneNode(world: World, nodeId: Id): World | null {
     return null;
   }
 
-  // Find the plant
+  // Find the plant this node belongs to
   let targetPlant: Plant | null = null;
   for (const plant of world.plants.values()) {
-    if (plant.adjacency.has(nodeId)) {
+    if (plant.rootId === nodeId || plant.adjacency.has(nodeId)) {
       targetPlant = plant;
       break;
     }
@@ -460,6 +581,78 @@ function pruneNode(world: World, nodeId: Id): World | null {
     const filteredChildren = childIds.filter((c: Id) => !toRemove.has(c));
     newAdjacency.set(parentId, filteredChildren);
   }
+
+  const newPlants = new Map(world.plants);
+  newPlants.set(targetPlant.id, { ...targetPlant, adjacency: newAdjacency });
+
+  return {
+    ...world,
+    entities: newEntities,
+    plants: newPlants,
+  };
+}
+
+// === Branch Logic ===
+
+function branchFromNode(world: World, nodeId: Id): World | null {
+  const node = world.entities.get(nodeId);
+  if (!node || node.kind !== "plantNode") {
+    return null;
+  }
+
+  // Only stems can branch (not buds, leaves, or flowers)
+  if (node.nodeKind !== "stem") {
+    return null;
+  }
+
+  // Find the plant this node belongs to
+  let targetPlant: Plant | null = null;
+  for (const plant of world.plants.values()) {
+    // Check both rootId and adjacency since root might not be in adjacency yet
+    if (plant.rootId === nodeId || plant.adjacency.has(nodeId)) {
+      targetPlant = plant;
+      break;
+    }
+  }
+  if (!targetPlant) {
+    return null;
+  }
+
+  const parentDepth = node.depth ?? 0;
+  const newEntities = new Map(world.entities);
+
+  // Create a new branch bud
+  const branchBudId = genId("node");
+  
+  // Pick a random side and angle offset
+  const existingChildren = targetPlant.adjacency.get(nodeId) || [];
+  // Try to go the opposite side from existing branches
+  let branchSide = Math.random() > 0.5 ? 1 : -1;
+  
+  // Offset from parent angle
+  const branchAngle = node.angle + branchSide * (0.5 + Math.random() * 0.6);
+  const branchLength = Math.max(10, 18 - parentDepth * 1.5) + Math.random() * 8;
+
+  const branchBud: PlantNode = {
+    kind: "plantNode",
+    id: branchBudId,
+    plantId: node.plantId,
+    nodeKind: "bud",
+    localPos: addVec2(
+      node.localPos,
+      scaleVec2(vec2(Math.cos(branchAngle), Math.sin(branchAngle)), branchLength)
+    ),
+    angle: branchAngle,
+    charge: 0.5, // Start half charged
+    depth: parentDepth + 1,
+  };
+  newEntities.set(branchBudId, branchBud);
+
+  // Update plant adjacency
+  const newAdjacency = new Map(targetPlant.adjacency);
+  const children = [...existingChildren, branchBudId];
+  newAdjacency.set(nodeId, children);
+  newAdjacency.set(branchBudId, []);
 
   const newPlants = new Map(world.plants);
   newPlants.set(targetPlant.id, { ...targetPlant, adjacency: newAdjacency });

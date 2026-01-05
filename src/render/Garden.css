@@ -35,16 +35,25 @@
 
 .bud,
 .leaf,
-.flower {
-  transition: filter 100ms ease-out;
+.flower,
+.stem-node {
+  transition: fill 100ms ease-out, r 100ms ease-out, filter 100ms ease-out;
 }
 
-.bud.hovered {
-  fill: var(--color-bud-charged);
+.bud.hovered,
+.leaf.hovered,
+.flower.hovered,
+.stem-node.hovered {
+  filter: brightness(1.15);
 }
 
-.leaf.hovered {
-  fill: var(--color-leaf-highlight);
+/* Hover glow effects */
+.bud-glow,
+.leaf-hover-glow,
+.stem-hover-glow,
+.flower-hover-glow {
+  pointer-events: none;
+  transition: opacity 150ms ease-out;
 }
 
 /* === Bud Glow Animation === */
@@ -78,7 +87,36 @@
 /* === Island Highlight === */
 
 .island-highlighted {
-  filter: brightness(1.05);
+  filter: brightness(1.1);
+  stroke: var(--color-green-moss) !important;
+  stroke-width: 2px !important;
+}
+
+/* === Cluster Glyph === */
+
+.cluster-glyph {
+  cursor: pointer;
+  transition: transform 150ms ease-out;
+}
+
+.cluster-glyph.hovered {
+  transform: scale(1.15);
+}
+
+.cluster-hover-ring {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%,
+  100% {
+    opacity: 0.4;
+    r: 16;
+  }
+  50% {
+    opacity: 0.7;
+    r: 18;
+  }
 }
 
 /* === Debug === */

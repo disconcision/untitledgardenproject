@@ -13,10 +13,14 @@ import { CanvasBackground } from "./render/Canvas";
 import { Garden } from "./render/Garden";
 import { HUD } from "./ui/HUD";
 import { WorldInspector } from "./ui/WorldInspector";
+import { PieMenu } from "./ui/PieMenu";
+import { TimeConfig } from "./ui/TimeConfig";
 import { useCamera } from "./hooks/useCamera";
+import { interpolateScheme, applySchemeToDOM } from "./theme/dayNightScheme";
 
 const INITIAL_SEED = 42;
 const SIM_TICK_MS = 1000;
+const DAY_CYCLE_TICK_MS = 100; // Update colors every 100ms for smooth transitions
 
 export default function App() {
   const [world, setWorld] = useState<World>(() => generateWorld(INITIAL_SEED));
@@ -43,6 +47,21 @@ export default function App() {
     return () => clearInterval(interval);
   }, [dispatch, world.time.paused, world.debug.freezeTime]);
 
+  // Day cycle tick - faster for smooth color transitions
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch({ type: "dayCycle/tick", dtMs: DAY_CYCLE_TICK_MS });
+    }, DAY_CYCLE_TICK_MS);
+
+    return () => clearInterval(interval);
+  }, [dispatch]);
+
+  // Apply color scheme based on time of day
+  useEffect(() => {
+    const scheme = interpolateScheme(world.dayCycle.timeOfDay);
+    applySchemeToDOM(scheme);
+  }, [world.dayCycle.timeOfDay]);
+
   return (
     <div
       ref={containerRef}
@@ -65,6 +84,8 @@ export default function App() {
       <Garden world={world} dispatch={dispatch} />
       <HUD world={world} dispatch={dispatch} onRegenerate={handleRegenerate} />
       <WorldInspector world={world} dispatch={dispatch} />
+      <PieMenu world={world} dispatch={dispatch} />
+      <TimeConfig world={world} dispatch={dispatch} />
     </div>
   );
 }

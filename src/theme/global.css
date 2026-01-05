@@ -53,11 +53,14 @@
   --color-island-shadow: var(--color-earth-loam);
   --color-rock: var(--color-rock-mid);
   --color-stem: var(--color-earth-dark);
+  --color-stem-highlight: var(--color-earth-tan);
   --color-leaf: var(--color-green-fern);
   --color-leaf-highlight: var(--color-green-fresh);
   --color-bud: var(--color-green-lichen);
+  --color-bud-highlight: var(--color-green-bright);
   --color-bud-charged: var(--color-accent-gold);
   --color-flower: var(--color-accent-coral);
+  --color-flower-highlight: #e8887f;
   --color-vine: var(--color-green-moss);
 
   /* === UI === */

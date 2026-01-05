@@ -126,31 +126,27 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   flex-shrink: 0;
-}
-
-/* Kind-specific colors */
-.inspector-kind {
   background: var(--color-ui-bg);
   color: var(--color-text-muted);
 }
 
-.inspector-node-row .inspector-kind[class*="cluster"] {
-  background: rgba(139, 115, 85, 0.2);
-  color: var(--color-brown-bark);
+/* === Icon styling === */
+
+.inspector-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  opacity: 0.7;
 }
 
-.inspector-node-row .inspector-kind {
-  /* Default */
+.inspector-node-row:hover .inspector-icon,
+.inspector-node-row.hovered .inspector-icon,
+.inspector-node-row.selected .inspector-icon {
+  opacity: 1;
+  color: var(--color-text-primary);
 }
-
-/* Match kind text for coloring */
-.inspector-kind:is([class]):has(+ :not(.inspector-kind)) {
-  /* Fallback styling handled above */
-}
-
-/* We'll color by the kind text content via data attribute if needed */
-/* For now, simple approach: all kinds get the muted style, 
-   selection/hover provides context */
 
 .inspector-children {
   /* Children inherit indentation via CSS var */

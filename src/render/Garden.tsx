@@ -155,7 +155,14 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
       <g transform={transform}>
         {/* Render clusters from far to near (painters algorithm) */}
         {clusterData.map(
-          ({ cluster, fogOpacity, isDistant, islands, rocks, plants: clusterPlants }) => (
+          ({
+            cluster,
+            fogOpacity,
+            isDistant,
+            islands,
+            rocks,
+            plants: clusterPlants,
+          }) => (
             <g
               key={cluster.id}
               className={isDistant ? "distant-cluster" : "main-cluster"}
@@ -170,6 +177,8 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
                 cluster={cluster}
                 showId={debug.showIds}
                 isDistant={isDistant}
+                isHovered={hover === cluster.id}
+                dispatch={isDistant ? undefined : dispatch}
               />
 
               {/* Islands */}
@@ -180,8 +189,8 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
                     key={island.id}
                     island={island}
                     worldPos={worldPos}
-                    isHovered={!isDistant && hover === island.id}
-                    isSelected={!isDistant && selection === island.id}
+                    isHovered={hover === island.id}
+                    isSelected={selection === island.id}
                     showId={debug.showIds}
                     showHitTarget={debug.showHitTargets}
                     dispatch={isDistant ? undefined : dispatch}
@@ -191,7 +200,9 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
 
               {/* Rocks */}
               {rocks.map((rock: Rock) => {
-                const island = entities.get(rock.islandId) as Island | undefined;
+                const island = entities.get(rock.islandId) as
+                  | Island
+                  | undefined;
                 if (!island) return null;
                 const islandWorldPos = getIslandWorldPos(island, clusters);
                 return (
@@ -199,7 +210,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
                     key={rock.id}
                     rock={rock}
                     islandPos={islandWorldPos}
-                    isHovered={!isDistant && hover === rock.id}
+                    isHovered={hover === rock.id}
                     showId={debug.showIds}
                     showHitTarget={debug.showHitTargets}
                     dispatch={isDistant ? undefined : dispatch}
@@ -209,12 +220,16 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
 
               {/* Plants */}
               {clusterPlants.map((plant: Plant) => {
-                const island = entities.get(plant.islandId) as Island | undefined;
+                const island = entities.get(plant.islandId) as
+                  | Island
+                  | undefined;
                 if (!island) return null;
                 const islandWorldPos = getIslandWorldPos(island, clusters);
 
                 const nodes = Array.from(plant.adjacency.keys())
-                  .map((id: string) => entities.get(id) as PlantNode | undefined)
+                  .map(
+                    (id: string) => entities.get(id) as PlantNode | undefined
+                  )
                   .filter((n): n is PlantNode => n !== undefined);
 
                 return (
@@ -223,7 +238,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
                     plant={plant}
                     nodes={nodes}
                     islandPos={islandWorldPos}
-                    hover={isDistant ? null : hover}
+                    hover={hover}
                     showIds={debug.showIds}
                     showHitTargets={debug.showHitTargets}
                     dispatch={isDistant ? undefined : dispatch}
@@ -245,15 +260,19 @@ type ClusterGlyphRendererProps = {
   cluster: Cluster;
   showId: boolean;
   isDistant: boolean;
+  isHovered: boolean;
+  dispatch?: (msg: Msg) => void;
 };
 
 const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
   cluster,
   showId,
   isDistant,
+  isHovered,
+  dispatch,
 }: ClusterGlyphRendererProps) {
   const { pos, glyphKind, rotation } = cluster;
-  
+
   // Distant glyphs are slightly larger to remain visible through fog
   const scale = isDistant ? 1.5 : 1;
 
@@ -344,9 +363,29 @@ const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
   return (
     <g
       transform={`translate(${pos.x}, ${pos.y}) scale(${scale})`}
-      className="cluster-glyph"
+      className={`cluster-glyph ${isHovered ? "hovered" : ""}`}
       filter="url(#glyph-glow)"
+      data-entity-id={cluster.id}
+      onPointerEnter={
+        dispatch ? () => dispatch({ type: "hover", id: cluster.id }) : undefined
+      }
+      onPointerLeave={
+        dispatch ? () => dispatch({ type: "hover", id: null }) : undefined
+      }
     >
+      {/* Hover indicator ring */}
+      {isHovered && (
+        <circle
+          cx={0}
+          cy={0}
+          r={16}
+          fill="none"
+          stroke="var(--color-green-moss)"
+          strokeWidth={1.5}
+          opacity={0.6}
+          className="cluster-hover-ring"
+        />
+      )}
       {renderGlyph()}
 
       {showId && (
@@ -391,11 +430,16 @@ const IslandRenderer = memo(function IslandRenderer({
       style={{ "--anim-delay": animDelay } as React.CSSProperties}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={island.id}
-      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: island.id }) : undefined}
-      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
+      onPointerEnter={
+        dispatch ? () => dispatch({ type: "hover", id: island.id }) : undefined
+      }
+      onPointerLeave={
+        dispatch ? () => dispatch({ type: "hover", id: null }) : undefined
+      }
       onDoubleClick={
         dispatch
-          ? () => dispatch({ type: "camera/focus", target: worldPos, zoom: 1.5 })
+          ? () =>
+              dispatch({ type: "camera/focus", target: worldPos, zoom: 1.5 })
           : undefined
       }
     >
@@ -491,8 +535,12 @@ const RockRenderer = memo(function RockRenderer({
       className="rock-group"
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={rock.id}
-      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: rock.id }) : undefined}
-      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
+      onPointerEnter={
+        dispatch ? () => dispatch({ type: "hover", id: rock.id }) : undefined
+      }
+      onPointerLeave={
+        dispatch ? () => dispatch({ type: "hover", id: null }) : undefined
+      }
     >
       {/* Render each boulder in the formation */}
       {rock.boulders.map((boulder, idx) => {
@@ -676,15 +724,33 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
 }: PlantNodeRendererProps) {
   const worldPos = addVec2(islandPos, node.localPos);
   const isCharged = node.nodeKind === "bud" && (node.charge ?? 0) >= 0.8;
-  const isInteractive = dispatch && (node.nodeKind === "bud" || node.nodeKind === "leaf");
+  // All plant nodes are interactive (for context menu)
+  const isInteractive = dispatch !== undefined;
+  // Primary click only for buds
+  const hasPrimaryAction = dispatch && node.nodeKind === "bud" && isCharged;
 
   const handleClick = () => {
     if (!dispatch) return;
-    if (node.nodeKind === "bud") {
+    // Primary action: only charged buds sprout on left-click
+    if (node.nodeKind === "bud" && isCharged) {
       dispatch({ type: "sprout", budId: node.id });
-    } else if (node.nodeKind === "leaf") {
-      dispatch({ type: "prune", nodeId: node.id });
     }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!dispatch) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Get screen position for the menu
+    const screenPos = { x: e.clientX, y: e.clientY };
+
+    dispatch({
+      type: "contextMenu/open",
+      nodeId: node.id,
+      screenPos,
+      worldPos,
+    });
   };
 
   // Hit target radius - generous for clickability
@@ -693,12 +759,19 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
 
   return (
     <g
-      className={`plant-node ${isInteractive ? "interactive" : ""}`}
+      className={`plant-node ${isInteractive ? "interactive" : ""} ${
+        hasPrimaryAction ? "has-action" : ""
+      }`}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={node.id}
-      onPointerEnter={dispatch ? () => dispatch({ type: "hover", id: node.id }) : undefined}
-      onPointerLeave={dispatch ? () => dispatch({ type: "hover", id: null }) : undefined}
-      onClick={isInteractive ? handleClick : undefined}
+      onPointerEnter={
+        dispatch ? () => dispatch({ type: "hover", id: node.id }) : undefined
+      }
+      onPointerLeave={
+        dispatch ? () => dispatch({ type: "hover", id: null }) : undefined
+      }
+      onClick={hasPrimaryAction ? handleClick : undefined}
+      onContextMenu={isInteractive ? handleContextMenu : undefined}
     >
       {/* Invisible hit target - always present for interactive nodes */}
       {isInteractive && (
@@ -713,46 +786,100 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
 
       {node.nodeKind === "bud" && (
         <>
-          {isCharged && (
+          {(isCharged || isHovered) && (
             <circle
               cx={0}
               cy={0}
-              r={10}
-              fill="var(--color-bud-charged)"
-              opacity={0.3}
+              r={isHovered ? 14 : 10}
+              fill={isHovered ? "var(--color-bud-highlight)" : "var(--color-bud-charged)"}
+              opacity={isHovered ? 0.4 : 0.3}
               className="bud-glow"
             />
           )}
           <circle
             cx={0}
             cy={0}
-            r={isCharged ? 7 : 5}
-            fill={isCharged ? "var(--color-bud-charged)" : "var(--color-bud)"}
+            r={isHovered ? 8 : isCharged ? 7 : 5}
+            fill={
+              isHovered
+                ? "var(--color-bud-highlight)"
+                : isCharged
+                ? "var(--color-bud-charged)"
+                : "var(--color-bud)"
+            }
             className={`bud ${isHovered ? "hovered" : ""}`}
           />
         </>
       )}
 
       {node.nodeKind === "leaf" && (
-        <path
-          d={leafPath({ x: 0, y: 0 }, node.angle, 16, 8)}
-          fill={isHovered ? "var(--color-leaf-highlight)" : "var(--color-leaf)"}
-          className={`leaf ${isHovered ? "hovered" : ""}`}
-        />
+        <>
+          {isHovered && (
+            <ellipse
+              cx={Math.cos(node.angle) * 6}
+              cy={Math.sin(node.angle) * 6}
+              rx={14}
+              ry={10}
+              fill="var(--color-leaf-highlight)"
+              opacity={0.35}
+              transform={`rotate(${(node.angle * 180) / Math.PI})`}
+              className="leaf-hover-glow"
+            />
+          )}
+          <path
+            d={leafPath({ x: 0, y: 0 }, node.angle, isHovered ? 18 : 16, isHovered ? 10 : 8)}
+            fill={isHovered ? "var(--color-leaf-highlight)" : "var(--color-leaf)"}
+            stroke={isHovered ? "var(--color-green-moss)" : "none"}
+            strokeWidth={isHovered ? 1 : 0}
+            className={`leaf ${isHovered ? "hovered" : ""}`}
+          />
+        </>
       )}
 
       {node.nodeKind === "stem" && (
-        <circle cx={0} cy={0} r={3} fill="var(--color-stem)" />
+        <>
+          {isHovered && (
+            <circle
+              cx={0}
+              cy={0}
+              r={8}
+              fill="var(--color-stem)"
+              opacity={0.3}
+              className="stem-hover-glow"
+            />
+          )}
+          <circle
+            cx={0}
+            cy={0}
+            r={isHovered ? 5 : 3}
+            fill={
+              isHovered ? "var(--color-stem-highlight)" : "var(--color-stem)"
+            }
+            className={`stem-node ${isHovered ? "hovered" : ""}`}
+          />
+        </>
       )}
 
       {node.nodeKind === "flower" && (
-        <circle
-          cx={0}
-          cy={0}
-          r={8}
-          fill="var(--color-flower)"
-          className={isHovered ? "hovered" : ""}
-        />
+        <>
+          {isHovered && (
+            <circle
+              cx={0}
+              cy={0}
+              r={14}
+              fill="var(--color-flower)"
+              opacity={0.3}
+              className="flower-hover-glow"
+            />
+          )}
+          <circle
+            cx={0}
+            cy={0}
+            r={isHovered ? 10 : 8}
+            fill={isHovered ? "var(--color-flower-highlight)" : "var(--color-flower)"}
+            className={`flower ${isHovered ? "hovered" : ""}`}
+          />
+        </>
       )}
 
       {showHitTarget && (

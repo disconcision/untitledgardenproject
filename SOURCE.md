@@ -4,6 +4,65 @@ A browser-based software toy: a dense, tactile, explorable _floating garden_ of 
 
 ---
 
+## ⚠️ Agent Workflow Checklist (MANDATORY)
+
+**Every agent making changes MUST follow this workflow.** This applies to all feature work, bug fixes, and improvements.
+
+### Before Starting Work
+
+1. **Create a feature branch**
+   ```bash
+   git checkout main && git pull
+   git checkout -b feature/<short-descriptive-name>
+   ```
+   - Use descriptive names: `feature/lucide-icons`, `feature/pie-menu`, `fix/panel-alignment`
+   - This creates a record of the work and allows parallel agent work
+
+### During Work
+
+2. **Make focused changes** — 1–3 coherent improvements per session, not scattered edits
+3. **Test in browser** — Verify changes work visually; use Cursor's browser tools
+4. **Check for lint errors** — Run `read_lints` on modified files
+
+### After Completing Work
+
+5. **Update documentation** (if relevant):
+
+   - **SOURCE.md**: Add to Design Decisions Log if you made architectural/tooling choices
+   - **CHECKPOINTS.md**: Add checkpoint entry with description and tour path
+   - **Tutorial steps**: Update if user-facing behavior changed
+
+6. **Commit with clear message**
+
+   ```bash
+   git add -A
+   git commit -m "feat: <what you did>"
+   ```
+
+   - Use conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`
+
+7. **Merge to main**
+   ```bash
+   git checkout main && git pull
+   git merge feature/<branch-name>
+   git push
+   ```
+   - Handle merge conflicts if they arise from parallel agent work
+   - Delete the feature branch after merging: `git branch -d feature/<branch-name>`
+
+### What Triggers Documentation Updates
+
+| Change Type            | Update SOURCE.md?  | Update CHECKPOINTS.md? |
+| ---------------------- | ------------------ | ---------------------- |
+| New dependency/library | ✓ Design Decisions | ✓                      |
+| UI/UX pattern change   | ✓ Design Decisions | ✓                      |
+| Architectural decision | ✓ Design Decisions | ✓                      |
+| Bug fix                | Maybe              | ✓                      |
+| Visual polish only     | No                 | Optional               |
+| Refactoring            | Maybe              | No                     |
+
+---
+
 ## 0. North Star
 
 Create an artifact that feels **artisanally iterated**: subtle layout, animation timing, micro-interactions, visual detail at every scale. Each revision should be quickly apprehendable.
@@ -345,15 +404,32 @@ type World = {
 | Action                     | Result                             |
 | -------------------------- | ---------------------------------- |
 | Click charged bud          | Sprout: add stem segment + new bud |
-| Click leaf                 | Prune: remove leaf + small subtree |
 | Hover any entity           | Highlight, show tooltip            |
 | Drag stem (later)          | Bend path locally                  |
 | Drag vine endpoint (later) | Reattach to another node           |
 
+### Context menu (pie menu)
+
+Right-click on plant nodes opens a radial pie menu with context-sensitive actions:
+
+| Node type | Available actions                          |
+| --------- | ------------------------------------------ |
+| Stem      | **Branch** (add new bud), **Trim** (prune) |
+| Bud       | **Trim** (prune subtree)                   |
+| Leaf      | **Trim** (prune subtree)                   |
+| Root stem | **Branch** only (can't trim roots)         |
+
+The pie menu:
+
+- Appears at click position, offset so node stays visible
+- Icons arranged radially (scissors for trim, branch icon for branch)
+- Animates in smoothly, closes on action or click-away
+- Uses lucide-react icons matching corner panel style
+
 ### Reveal strategy
 
-- First interactions: obvious, safe, immediate feedback
-- Deeper interactions: contextual menu on long-press/right-click, or unlocked after basic tutorial
+- First interactions: obvious, safe, immediate feedback (click bud to sprout)
+- Deeper interactions: contextual pie menu on right-click for branch/trim actions
 
 ---
 
@@ -677,31 +753,37 @@ Agent may decide, but **must document in Design Decisions Log**:
 
 ## 22. Design Decisions Log
 
-| Date       | Decision                    | Rationale                                                                 |
-| ---------- | --------------------------- | ------------------------------------------------------------------------- |
-| (init)     | React + TS + Vite           | Mainstream, fast reload, TS for type safety                               |
-| (init)     | SVG + Canvas hybrid         | SVG for crisp paths, Canvas for atmosphere                                |
-| (init)     | MVU-ish architecture        | Clean state, enables undo/replay                                          |
-| 2026-01-04 | Git for checkpointing       | Commits as checkpoints, describe in docs, branches when exploring         |
-| 2026-01-04 | Wiki-style docs folder      | SOURCE.md spawns sub-docs as complexity grows; [[bracket]] links allowed  |
-| 2026-01-04 | Bezier splines first        | More organic feel; polylines available as alternative primitive later     |
-| 2026-01-04 | Rich theming infrastructure | CSS variables, color scheme controls; dark mode planned but not default   |
-| 2026-01-04 | Sound hooks from start      | Interaction events structured for easy sound layer addition               |
-| 2026-01-04 | Tutorial from day one       | "What's New" overlay present even in scaffold                             |
-| 2026-01-04 | Garden as editor            | The visual form IS the syntax; direct manipulation of structure           |
-| 2026-01-04 | core/ folder for pure logic | Enables Node CLI tools, testing, agentic harness                          |
-| 2026-01-04 | CLI tools for agent         | Agent can validate hypotheses without browser; tighter loops              |
-| 2026-01-04 | Vitest for testing          | Fast, Vite-native; unit tests for core, light behavioral tests            |
-| 2026-01-04 | Creator process documented  | Human speaks feedback, agent implements; minimize context-switching       |
-| 2026-01-04 | Corner dock UI              | Minimal icons at corners expand to panels; cleaner than fixed panels      |
-| 2026-01-04 | CSS animations for sway     | Ambient motion via CSS, not React state; better performance               |
-| 2026-01-04 | 1s simulation tick          | Slow tick for logic, CSS for visuals; 60fps re-renders eliminated         |
-| 2026-01-04 | Plants grow from rocks      | Rocks are anchors; plants reach into sky, not buried in islands           |
-| 2026-01-04 | CSS vs SVG transform bug    | CSS animation transform overrides SVG transform attr; removed CSS sway    |
-| 2026-01-04 | Recursive branching         | Plants have Y-forks, sub-branches; more buds per plant                    |
-| 2026-01-04 | UI panel expand animation   | Icon in corner, panel expands from it; × replaces icon when open          |
-| 2026-01-04 | World Inspector panel       | Collapsible tree view of world hierarchy; first step toward projective UI |
-| 2026-01-04 | Projective UI vision        | Same structure viewable as outliner or rendered; per-node lens switching  |
+| Date       | Decision                    | Rationale                                                                  |
+| ---------- | --------------------------- | -------------------------------------------------------------------------- |
+| (init)     | React + TS + Vite           | Mainstream, fast reload, TS for type safety                                |
+| (init)     | SVG + Canvas hybrid         | SVG for crisp paths, Canvas for atmosphere                                 |
+| (init)     | MVU-ish architecture        | Clean state, enables undo/replay                                           |
+| 2026-01-04 | Git for checkpointing       | Commits as checkpoints, describe in docs, branches when exploring          |
+| 2026-01-04 | Wiki-style docs folder      | SOURCE.md spawns sub-docs as complexity grows; [[bracket]] links allowed   |
+| 2026-01-04 | Bezier splines first        | More organic feel; polylines available as alternative primitive later      |
+| 2026-01-04 | Rich theming infrastructure | CSS variables, color scheme controls; dark mode planned but not default    |
+| 2026-01-04 | Sound hooks from start      | Interaction events structured for easy sound layer addition                |
+| 2026-01-04 | Tutorial from day one       | "What's New" overlay present even in scaffold                              |
+| 2026-01-04 | Garden as editor            | The visual form IS the syntax; direct manipulation of structure            |
+| 2026-01-04 | core/ folder for pure logic | Enables Node CLI tools, testing, agentic harness                           |
+| 2026-01-04 | CLI tools for agent         | Agent can validate hypotheses without browser; tighter loops               |
+| 2026-01-04 | Vitest for testing          | Fast, Vite-native; unit tests for core, light behavioral tests             |
+| 2026-01-04 | Creator process documented  | Human speaks feedback, agent implements; minimize context-switching        |
+| 2026-01-04 | Corner dock UI              | Minimal icons at corners expand to panels; cleaner than fixed panels       |
+| 2026-01-04 | CSS animations for sway     | Ambient motion via CSS, not React state; better performance                |
+| 2026-01-04 | 1s simulation tick          | Slow tick for logic, CSS for visuals; 60fps re-renders eliminated          |
+| 2026-01-04 | Plants grow from rocks      | Rocks are anchors; plants reach into sky, not buried in islands            |
+| 2026-01-04 | CSS vs SVG transform bug    | CSS animation transform overrides SVG transform attr; removed CSS sway     |
+| 2026-01-04 | Recursive branching         | Plants have Y-forks, sub-branches; more buds per plant                     |
+| 2026-01-04 | UI panel expand animation   | Icon in corner, panel expands from it; × replaces icon when open           |
+| 2026-01-04 | World Inspector panel       | Collapsible tree view of world hierarchy; first step toward projective UI  |
+| 2026-01-04 | Projective UI vision        | Same structure viewable as outliner or rendered; per-node lens switching   |
+| 2026-01-05 | Lucide React icons          | Consistent icon library for UI; replaces emoji/text icons; clean, modern   |
+| 2026-01-05 | Corner-anchored close btns  | Close button (×) appears in same position as panel icon for each corner    |
+| 2026-01-05 | Agent workflow checklist    | Mandatory git branching + doc updates for all agent work; enables parallel |
+| 2026-01-05 | Pie menu for node actions   | Right-click on plant nodes opens radial menu with trim/branch actions      |
+| 2026-01-05 | Trim action removes subtree | Pruning from any non-root node removes entire subtree below it             |
+| 2026-01-05 | Branch action on stems      | Creates new bud branching from stem; enables player-directed growth        |
 
 ---
 

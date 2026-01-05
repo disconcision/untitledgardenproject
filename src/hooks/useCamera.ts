@@ -22,11 +22,14 @@ export function useCamera({ dispatch, containerRef }: UseCameraOptions) {
       // Only pan on background drag (no target entity)
       if ((e.target as HTMLElement).dataset?.entityId) return
       
+      // Close context menu when clicking on background
+      dispatch({ type: 'contextMenu/close' })
+      
       isDragging.current = true
       lastPos.current = vec2(e.clientX, e.clientY)
       ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
     },
-    []
+    [dispatch]
   )
   
   const handlePointerMove = useCallback(

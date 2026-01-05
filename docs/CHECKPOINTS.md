@@ -334,6 +334,8 @@ This sets the foundation for:
 - Bidirectional selection sync (click/hover in tree ↔ highlight in world)
 - Bottom-left corner dock (follows HUD pattern)
 - Live state display (e.g., bud charge shown as ⚡)
+- **Camera focus on click**: Clicking any entity focuses camera on it
+- **Smart zoom**: Different entity types get different zoom levels (rocks 1.3x, plant nodes 1.5x)
 
 **CSS**: `WorldInspector.css`
 
@@ -341,6 +343,11 @@ This sets the foundation for:
 - Hover/selection highlighting with green tints
 - Monospace font for IDs
 - Scrollable content area
+
+**Garden.tsx changes**:
+
+- Hover highlighting now works for ALL clusters (not just the main one)
+- Previously distant clusters had hover disabled; now you can hover from inspector
 
 **Documentation**: Added Section 6 "Projective UI" to SOURCE.md
 
@@ -352,8 +359,10 @@ This sets the foundation for:
 1. Click the 🌳 button in bottom-left corner
 2. Expand cluster-1 → island-5 → plant-34
 3. See stems, buds (with charge), leaves
-4. Hover a node in tree → observe highlight
-5. Click a node → selects it (syncs with world)
+4. Hover a node in tree → observe highlight in world
+5. Click any entity → camera focuses on it
+6. Click island-18 (cluster-2) → camera pans to distant cluster
+7. Click rock-25 (cluster-3) → camera zooms in on rock
 
 ### Architecture
 
@@ -374,12 +383,14 @@ This is the first step toward **projective UI**:
 ### What Changed
 
 **Generation**:
+
 - World now generates 3-5 clusters (1 main + 2-4 distant)
 - Main cluster: 4-6 islands, 1-2 rocks each, 70% plant chance
 - Distant clusters: 2-3 islands, 1 rock each, 50% plant chance
 - Clusters positioned at varying distances (600+ units for distant)
 
 **Rendering with Fog**:
+
 - Clusters sorted by distance (painters algorithm: far to near)
 - Fog effect based on distance from origin:
   - < 200 units: fully visible
@@ -389,6 +400,7 @@ This is the first step toward **projective UI**:
 - Distant clusters: non-interactive (no hover/click handlers)
 
 **Tests**:
+
 - Updated to expect 3-5 clusters with 6-30 total islands
 
 ### Tour Path
@@ -405,6 +417,171 @@ This is the first step toward **projective UI**:
 - `getFogOpacity(distance)`: linear interpolation between fogStart/fogEnd
 - Fog applied via CSS opacity and blur filter on cluster group
 - Distant clusters still grow plants (simulation runs), just not interactive
+
+---
+
+## CP-009: Lucide Icons + Corner Panel Alignment + Workflow Docs
+
+**Date**: 2026-01-05
+**Seed**: 42
+
+### What Changed
+
+**Icon Library**:
+
+- Added `lucide-react` as dependency for consistent, modern icons
+- Replaced text/emoji icons with Lucide icons:
+  - Tutorial: `?` → `Compass` icon
+  - Debug: `⚙` (emoji) → `Settings` icon
+  - World Inspector: `🌳` → `TreeDeciduous` icon
+  - Close buttons: `×` → `X` icon
+- Icon size standardized at 16px across all panels
+
+**Corner Panel Alignment**:
+
+- Fixed close button (×) positioning to match each corner's icon position
+- Top-left: icon/close at top-left (already worked)
+- Top-right: icon/close now properly at top-right (was incorrectly on left)
+- Bottom-left: icon/close at bottom-left (using `flex-direction: column-reverse`)
+- Bottom-right: CSS prepared for future panels
+
+**Documentation**:
+
+- Added **Agent Workflow Checklist** section at top of SOURCE.md
+- Mandatory process: git branches for features, doc updates, conventional commits
+- Enables parallel agent work with proper merge handling
+
+### Tour Path
+
+1. **Load app** — Observe Compass icon (top-left), Settings icon (top-right), Tree icon (bottom-left)
+2. **Click Compass** — Tutorial opens, X appears in same spot
+3. **Close tutorial** — Compass returns to exact same position
+4. **Click Settings (top-right)** — Panel opens, X is in top-right corner (not left)
+5. **Open World Inspector** — X appears at bottom-left, same as tree icon was
+
+### Files Changed
+
+- `src/ui/HUD.tsx`: Added Lucide imports, replaced icons
+- `src/ui/HUD.css`: Added align-items rules for corner positioning, bottom-left/right rules
+- `src/ui/WorldInspector.tsx`: Added Lucide imports, replaced icons
+- `SOURCE.md`: Added workflow checklist, design decisions
+- `docs/CHECKPOINTS.md`: This entry
+
+---
+
+## CP-010: Interactive World Inspector + Plant Tree Structure
+
+**Date**: 2026-01-05
+**Seed**: 42
+
+### What Changed
+
+**World Inspector Enhancements**:
+
+1. **Cluster click-to-focus**: Clicking any cluster in the inspector now focuses the camera on it (was broken because `id` prop was missing)
+
+2. **Hierarchical plant tree structure**: Plants now render as actual trees using the `adjacency` map:
+
+   - `plant-34 → stem → stem → stem → leaf` instead of flat list
+   - Uses recursive `PlantNodeTree` component
+   - Shows branching structure where it exists
+
+3. **Entity icons**: All entities now have Lucide icons:
+
+   - Clusters: Hexagon, Star, Triangle, Sparkles, Mountain, Gem (rotating per cluster)
+   - Islands: Mountain icon
+   - Rocks: Gem icon
+   - Plants: TreeDeciduous icon
+   - Plant nodes: Circle (bud), Sprout (stem), Leaf, Sparkles (flower)
+
+4. **Hover effects for all entities**:
+   - Clusters: Ring pulse animation + scale on hover
+   - Islands: Green stroke highlight
+   - Rocks: Already had color change (now works for all clusters)
+   - All entities now show hover even in distant clusters
+
+**Garden.tsx changes**:
+
+- `ClusterGlyphRenderer` now has `isHovered` and `dispatch` props
+- Cluster glyphs show hover ring animation when hovered
+- Hover highlighting works for ALL clusters (removed `!isDistant` checks)
+
+### Tour Path
+
+1. **Open World Inspector** (🌳 bottom-left)
+2. **Click cluster-3** → Camera pans to that cluster
+3. **Expand island-5 → plant-34** → See hierarchical stem structure
+4. **Hover a cluster glyph** in inspector → Animated ring appears in world
+5. **Click a rock in distant cluster** → Camera zooms to it
+
+### Files Changed
+
+- `src/ui/WorldInspector.tsx`: Added icons, hierarchical plant rendering, fixed cluster id
+- `src/ui/WorldInspector.css`: Added icon styling
+- `src/render/Garden.tsx`: Added cluster hover props
+- `src/render/Garden.css`: Added cluster hover animations
+
+---
+
+## CP-011: Pie Menu for Plant Node Actions
+
+**Date**: 2026-01-05
+**Seed**: 42
+
+### What Changed
+
+**Pie Menu Context Interaction System**:
+
+1. **Right-click on plant nodes** opens a radial pie menu with context-sensitive actions:
+
+   - **Branch** (GitBranch icon): Available on stems; creates new bud branching off the stem
+   - **Trim** (Scissors icon): Available on non-root nodes; removes node and its entire subtree
+
+2. **Context-aware action availability**:
+
+   - Root stems: Only "Branch" (can't trim the foundation)
+   - Non-root stems: Both "Branch" and "Trim"
+   - Buds/leaves: Only "Trim"
+
+3. **Visual design**:
+
+   - Radial layout with icons offset from the clicked node
+   - Animated appearance (scale + fade in)
+   - Hover state: green background + slight scale
+   - Matches corner panel icon style (Lucide icons, 14px)
+
+4. **Tutorial updated**: "Right-click a stem to branch or trim" replaces the old "Click leaf to prune" step
+
+**New files**:
+
+- `src/ui/PieMenu.tsx`: Radial context menu component
+- `src/ui/PieMenu.css`: Styling and animations
+
+**Architecture**:
+
+- Added `contextMenu` state to World model (`nodeId`, `screenPos`, `worldPos`)
+- New message types: `contextMenu/open`, `contextMenu/close`, `trim`, `branch`
+- `branchFromNode()` function creates a new bud with randomized angle and position
+- Reused existing `pruneNode()` for trim action
+
+### Tour Path
+
+1. **Load the app** — See floating islands with plants
+2. **Right-click on a stem** (brown connection line) → Pie menu appears
+3. **Click "Branch"** → New bud appears on that stem
+4. **Right-click on a non-root stem** → Both Trim and Branch options appear
+5. **Click "Trim"** → That part of the plant and everything below it is removed
+6. **Open World Inspector** → See the plant structure update in real-time
+
+### Files Changed
+
+- `src/core/model.ts`: Added ContextMenu type and field to World
+- `src/update.ts`: Added branch/trim/contextMenu message handlers
+- `src/ui/PieMenu.tsx`: New component
+- `src/ui/PieMenu.css`: New styles
+- `src/render/Garden.tsx`: Added right-click handler to plant nodes
+- `src/hooks/useCamera.ts`: Close context menu on background click
+- `src/App.tsx`: Added PieMenu to component tree
 
 ---
 
