@@ -63,6 +63,12 @@ _Workstream: Visual | Dependency: None | Parallelizable: Yes_
 - [ ] **Prune animation**: Animate subtree removal (fade/collapse before removing)
 - [ ] **Animation timing audit**: Standardize durations (150ms hovers, 300ms growth) per SOURCE.md spec
 
+### 🐛 UI Bug Fixes
+_Workstream: UI | Dependency: None | Parallelizable: Yes_
+
+- [ ] **Two-finger scroll event capture**: When hovering over scrollable menus (WorldInspector, Tutorial), two-finger scroll zooms the canvas instead of scrolling the menu
+- [ ] **Padding/margin inconsistency on menu boxes**: Time box has no top padding; audit and unify spacing across all corner dock panels
+
 ### 🎨 Scene Depth & Atmosphere
 _Workstream: Visual | Dependency: None | Parallelizable: Yes_
 

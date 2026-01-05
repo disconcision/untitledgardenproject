@@ -58,6 +58,12 @@ export function useCamera({ dispatch, containerRef }: UseCameraOptions) {
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
+      // Don't capture wheel events over UI panels — let them scroll
+      const target = e.target as HTMLElement;
+      if (target.closest(".hud-corner, .pie-menu")) {
+        return;
+      }
+
       e.preventDefault();
 
       const container = containerRef.current;

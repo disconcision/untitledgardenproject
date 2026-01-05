@@ -79,6 +79,7 @@ export const TimeConfig = memo(function TimeConfig({ world, dispatch }: TimeConf
     <div
       className="hud-corner hud-bottom-right"
       style={{ zIndex: world.focusedPanel === "time" ? 101 : 100 }}
+      onClick={(): void => dispatch({ type: "panel/openTime" })}
     >
       <div className={`hud-panel-wrapper time-panel ${isOpen ? "open" : ""}`}>
         {/* Icon/Close button - always in corner position */}

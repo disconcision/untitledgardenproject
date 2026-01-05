@@ -380,6 +380,7 @@ export const WorldInspector = memo(function WorldInspector({
     <div
       className="hud-corner hud-bottom-left"
       style={{ zIndex: world.focusedPanel === "inspector" ? 101 : 100 }}
+      onClick={(): void => dispatch({ type: "panel/openInspector" })}
     >
       <div className={`hud-panel-wrapper inspector-panel ${open ? "open" : ""}`}>
         <button
