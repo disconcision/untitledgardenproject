@@ -2,13 +2,48 @@
 
 > **⚠️ Agents: Start here.** This is your entry point to the project.
 
+---
+
+## ⛔ CRITICAL: Git Workflow Required
+
+**DO NOT make any changes without following git workflow.**
+
+Every agent session MUST:
+
+```bash
+# 1. START with a feature branch
+git checkout main && git pull
+git checkout -b feature/<descriptive-name>
+
+# 2. CLAIM your task in docs/TODO.md (move to "In Progress")
+
+# 3. DO your work, commit after each logical unit
+git add -A && git commit -m "feat: description"
+
+# 4. MERGE when done
+git checkout main && git pull
+git merge feature/<branch-name>
+git push
+
+# 5. DELETE the branch
+git branch -d feature/<branch-name>
+
+# 6. PROVIDE completion report to creator
+```
+
+**Why?** Multiple agents work in parallel. Without branches, agents collide and overwrite each other's work.
+
+**For parallel agents**: Use git worktrees to isolate work (see `AGENT-WORKFLOW.md` section on worktrees).
+
+---
+
 ## Quick Start for Agents
 
 **Before doing any work, you MUST read the workflow documentation:**
 
 ```
 1. Read this file (docs/README.md) — you're here
-2. Read docs/AGENT-WORKFLOW.md — MANDATORY, contains git process
+2. Read docs/AGENT-WORKFLOW.md — MANDATORY, full git process details
 3. Check docs/TODO.md — claim your task before starting
 4. Skim SOURCE.md — project vision and architecture
 ```
@@ -64,10 +99,21 @@ If the agent didn't provide this, ask: "Give me your completion report."
 
 These are not suggestions. Every session must include:
 
-- [ ] Feature branch created
-- [ ] Branch merged and deleted when done
-- [ ] TODO.md updated
-- [ ] Completion report provided
+- [ ] **Feature branch created** — `git checkout -b feature/xxx`
+- [ ] **TODO.md updated** — claim task at start, mark complete at end
+- [ ] **Changes committed** — `git add -A && git commit -m "..."`
+- [ ] **Branch merged to main** — `git checkout main && git merge feature/xxx`
+- [ ] **Branch deleted** — `git branch -d feature/xxx`
+- [ ] **Completion report provided** — tell the creator what you did
+
+### Common Mistakes
+
+| Mistake | Why It's Bad | Prevention |
+|---------|--------------|------------|
+| Working directly on main | Other agents can't see your work until merged; no clean revert | Always create a branch first |
+| Not claiming task in TODO.md | Other agents might work on the same thing | Claim before starting |
+| Forgetting to merge/delete branch | Stale branches accumulate; work isn't in main | Follow the git commands above |
+| Making docs-only changes without git | These are still changes that can conflict | ALL changes need branches |
 
 ---
 
