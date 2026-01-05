@@ -781,6 +781,9 @@ Agent may decide, but **must document in Design Decisions Log**:
 | 2026-01-05 | Lucide React icons          | Consistent icon library for UI; replaces emoji/text icons; clean, modern   |
 | 2026-01-05 | Corner-anchored close btns  | Close button (×) appears in same position as panel icon for each corner    |
 | 2026-01-05 | Agent workflow checklist    | Mandatory git branching + doc updates for all agent work; enables parallel |
+| 2026-01-05 | OKLCH color interpolation   | Perceptual color space for smooth day/night transitions; no muddy midtones |
+| 2026-01-05 | Day/night cycle system      | Time-based color scheme cycling; configurable day length, pause/scrub UI   |
+| 2026-01-05 | CSS vars for dynamic colors | All colors via custom properties; entire UI adapts to day/night mode       |
 | 2026-01-05 | Pie menu for node actions   | Right-click on plant nodes opens radial menu with trim/branch actions      |
 | 2026-01-05 | Trim action removes subtree | Pruning from any non-root node removes entire subtree below it             |
 | 2026-01-05 | Branch action on stems      | Creates new bud branching from stem; enables player-directed growth        |

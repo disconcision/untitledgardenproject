@@ -13,7 +13,15 @@ import { Camera } from "../model";
 
 type CanvasBackgroundProps = {
   camera: Camera;
+  timeOfDay?: number; // For triggering re-renders when time changes
 };
+
+// Read CSS custom properties for current color scheme
+function getCSSColor(property: string): string {
+  const root = document.documentElement;
+  const computed = getComputedStyle(root);
+  return computed.getPropertyValue(property).trim() || '#e8eff1';
+}
 
 type Particle = {
   x: number;
@@ -26,16 +34,33 @@ type Particle = {
 
 export const CanvasBackground = memo(function CanvasBackground({
   camera,
+  timeOfDay,
 }: CanvasBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const frameRef = useRef<number>(0);
   const cameraRef = useRef(camera);
+  const colorsRef = useRef({
+    bgWarm: '#f5f2ec',
+    bgPale: '#e8eff1',
+    bgDeep: '#d0dce0',
+    particleColor: 'rgba(160, 170, 165, 0.1)',
+  });
 
   // Update camera ref without re-render
   useEffect(() => {
     cameraRef.current = camera;
   }, [camera]);
+
+  // Update colors when time of day changes
+  useEffect(() => {
+    colorsRef.current = {
+      bgWarm: getCSSColor('--bg-warm'),
+      bgPale: getCSSColor('--bg-pale'),
+      bgDeep: getCSSColor('--bg-deep'),
+      particleColor: `rgba(160, 170, 165, ${timeOfDay !== undefined && timeOfDay < 0.2 ? 0.15 : 0.1})`,
+    };
+  }, [timeOfDay]);
 
   // Initialize particles once
   useEffect(() => {
@@ -66,7 +91,8 @@ export const CanvasBackground = memo(function CanvasBackground({
     const centerY = height / 2;
     const cam = cameraRef.current;
 
-    // === Sky Gradient ===
+    // === Sky Gradient (uses CSS color scheme) ===
+    const colors = colorsRef.current;
     const gradient = ctx.createRadialGradient(
       centerX,
       centerY * 0.7,
@@ -75,9 +101,9 @@ export const CanvasBackground = memo(function CanvasBackground({
       centerY,
       Math.max(width, height) * 0.8
     );
-    gradient.addColorStop(0, "#f5f2ec");
-    gradient.addColorStop(0.5, "#e8eff1");
-    gradient.addColorStop(1, "#d0dce0");
+    gradient.addColorStop(0, colors.bgWarm);
+    gradient.addColorStop(0.5, colors.bgPale);
+    gradient.addColorStop(1, colors.bgDeep);
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
@@ -105,7 +131,9 @@ export const CanvasBackground = memo(function CanvasBackground({
       ) {
         ctx.beginPath();
         ctx.arc(screenX, screenY, p.size * cam.zoom, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(160, 170, 165, ${p.alpha})`;
+        // Particles slightly brighter at night
+        const particleAlpha = colorsRef.current.particleColor.includes('0.15') ? p.alpha * 1.5 : p.alpha;
+        ctx.fillStyle = `rgba(160, 170, 165, ${particleAlpha})`;
         ctx.fill();
       }
     }

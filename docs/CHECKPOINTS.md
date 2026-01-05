@@ -595,15 +595,16 @@ This is the first step toward **projective UI**:
 **Pie Menu Enhancement**:
 
 1. **New "Center View" action**: Available on stem nodes; centers the camera on the selected node
+
    - Uses the Crosshair icon from Lucide
    - Positioned at the bottom of the pie menu (angle: π/2)
    - Dispatches `camera/focus` with the node's world position
    - Automatically closes the menu after action
 
 2. **Action layout**:
-   - Trim (Scissors): Upper left (-π * 0.75)
-   - Branch (GitBranch): Upper right (-π * 0.25)
-   - Center View (Crosshair): Bottom center (π * 0.5)
+   - Trim (Scissors): Upper left (-π \* 0.75)
+   - Branch (GitBranch): Upper right (-π \* 0.25)
+   - Center View (Crosshair): Bottom center (π \* 0.5)
 
 ### Tour Path
 
@@ -614,6 +615,81 @@ This is the first step toward **projective UI**:
 ### Files Changed
 
 - `src/ui/PieMenu.tsx`: Added Crosshair import and centerView action
+
+---
+
+## CP-013: Day/Night Cycle with Perceptual Color Interpolation
+
+**Date**: 2026-01-05
+**Seed**: 42
+
+### What Changed
+
+**Day/Night Cycle System**:
+
+1. **Time of day simulation**: World now tracks `dayCycle` state with:
+   - `timeOfDay`: 0-1 value (0=midnight, 0.25=sunrise, 0.5=noon, 0.75=sunset)
+   - `dayLengthMs`: Configurable cycle length (default 3 minutes)
+   - `running`: Play/pause toggle for time advancement
+
+2. **OKLCH Color Space**: New `src/theme/oklch.ts` module:
+   - RGB ↔ OKLCH conversion functions
+   - Perceptual color interpolation (smoother than RGB)
+   - Hue interpolation via shortest path around the color wheel
+   - Day/night blend calculations with smooth transitions
+   - Golden hour factor for sunrise/sunset warmth
+
+3. **Dynamic Color Schemes**: New `src/theme/dayNightScheme.ts`:
+   - Full day and night color palettes
+   - All colors interpolated in OKLCH space
+   - Golden hour warmth applied to sky during sunrise/sunset
+   - Colors applied to CSS custom properties for dynamic theming
+
+4. **Canvas Background Updates**:
+   - Reads CSS custom properties for sky gradient colors
+   - Background transitions smoothly between day (light blue-gray) and night (deep blue-gray)
+   - Particles slightly more visible at night
+
+5. **TimeConfig UI Panel** (bottom-right corner):
+   - Time display with phase icon (sun/moon/sunrise/sunset)
+   - Play/pause button
+   - Time scrubber with gradient visualization
+   - Day length presets (1, 3, 5, 10 minutes)
+   - Quick jump buttons (Midnight, Sunrise, Noon, Sunset)
+   - Panel adapts to light/dark mode automatically
+
+**Model Changes**:
+- Added `DayCycle` type to core model
+- Added `dayCycle/setTime`, `dayCycle/setDayLength`, `dayCycle/toggleRunning`, `dayCycle/tick` messages
+
+### Tour Path
+
+1. **Load the app** — Starts in morning (~8-9 AM), light mode
+2. **Open Time Config** (clock icon, bottom-right) → See current time and controls
+3. **Click "Midnight"** → Watch world transition to dark mode (night sky, muted colors)
+4. **Click "Sunrise"** → See golden hour warmth in sky
+5. **Click "Noon"** → Brightest day colors
+6. **Drag the time scrubber** → Smoothly preview any time of day
+7. **Click "1 min"** → Speed up the cycle, watch colors shift continuously
+8. **Click pause** → Freeze time at any point
+
+### Files Changed
+
+- `src/core/model.ts`: Added DayCycle type and dayCycle field to World
+- `src/update.ts`: Added dayCycle message handlers
+- `src/theme/oklch.ts`: New OKLCH color utilities
+- `src/theme/dayNightScheme.ts`: Day/night color schemes and interpolation
+- `src/render/Canvas.tsx`: Dynamic sky gradient from CSS variables
+- `src/ui/TimeConfig.tsx`: New time control panel
+- `src/ui/TimeConfig.css`: Panel styling
+- `src/App.tsx`: Integrated TimeConfig and day cycle tick
+
+### Design Decisions
+
+- **OKLCH over RGB**: Perceptual uniformity means color transitions look more natural. A midnight blue transitioning to dawn pink doesn't go through muddy intermediate colors.
+- **CSS variables for all colors**: Allows the entire UI (panels, buttons, text) to automatically adapt to day/night mode without per-component logic.
+- **Separate tick rate**: Day cycle updates every 100ms for smooth color transitions, independent of the slower 1s simulation tick.
+- **Golden hour effect**: Sunrise/sunset aren't just linear blends—they add warm orange/pink tints that peak during transition periods.
 
 ---
 
