@@ -29,6 +29,26 @@ The garden is not a static illustration. It is an **interactive simulation** tha
   - **Quick loop**: User feedback → small targeted changes
   - **Long loop**: Agent refines autonomously, returns checkpoints + guided tour
 
+### Process (creator)
+
+The human creator's operating loop:
+
+1. **View the artifact** — Open the garden in browser (ideally Cursor's built-in browser pane)
+2. **Observe and react** — Pan, zoom, interact; notice what feels right or wrong
+3. **Speak feedback** — Audio recording while interacting; stream of consciousness is fine
+4. **Prompt the agent** — Audio transcription goes to the agent panel
+5. **Agent implements** — Changes happen; HMR refreshes the view
+6. **Repeat** — Stay in one environment as much as possible
+
+**Goal**: Minimize context-switching. The creator should be able to stay in the garden (or one window) and just _talk_. The agent does the implementation work.
+
+**Roles**:
+
+- **Creator**: Vision, feedback, direction, taste. Speaks more than types.
+- **Agent**: Implementation, iteration, documentation, testing. Writes code, updates SOURCE.md, proposes changes.
+
+These roles can flex — the creator might implement, the agent might propose vision — but this is the default posture.
+
 ---
 
 ## 2. Non-Goals (early phases)
@@ -60,7 +80,22 @@ The garden is not a static illustration. It is an **interactive simulation** tha
 
 ---
 
-## 4. Core Concept: Garden as Multi-Structure World
+## 4. Core Concept: Garden as Editor
+
+The garden is not just a visualization — it is an **editor** for a domain-specific data structure. The visual representation _is_ the syntax. There is no separate "code view" and "preview" — you edit the structure by directly manipulating its visual form.
+
+This means:
+
+- **Direct manipulation**: Click a bud to sprout, drag to reposition, prune by clicking
+- **Immediate feedback**: Changes are visible instantly; the garden _is_ the state
+- **Structural editing**: You're not editing pixels or text; you're editing graphs, trees, and relationships
+- **Semantic operations**: Actions like "sprout" or "prune" are meaningful in the domain
+
+The garden as editor is distinct from a drawing tool. You don't draw arbitrary shapes — you perform operations on a structured world that has rules.
+
+---
+
+## 5. Garden as Multi-Structure World
 
 The world consists of **entities** (nodes with stable identity) participating in multiple overlapping structures:
 
@@ -465,21 +500,109 @@ Produce:
 
 ---
 
-## 17. Initial TODOs
+## 17. Agentic Harness
 
-- [x] Scaffold Vite + React + TS *(CP-001)*
-- [x] Implement camera pan/zoom *(CP-001)*
-- [x] Procedural generator (seeded) for islands + plants *(CP-001)*
-- [x] SVG render stems/leaves + hover/selection *(CP-001)*
-- [ ] Click bud → sprout; click leaf → prune *(events wired, logic TODO)*
-- [x] Tutorial overlay v1 *(CP-001)*
-- [x] Debug toggles: show IDs, hit targets, freeze time, regenerate *(CP-001)*
-- [x] Canvas background gradient + grain *(CP-001)*
-- [x] Create `CHECKPOINTS.md` *(CP-001)*
+The agent (Claude, running in Cursor) benefits from tools beyond just the browser. This section describes infrastructure for tighter agent feedback loops.
+
+### Node CLI Tools
+
+The core logic (model, update, generate, simulation) is **pure TypeScript** with no React/DOM dependencies. This enables:
+
+- **Headless generation**: `npx tsx scripts/generate.ts --seed 42` → prints world summary
+- **Validation**: `npx tsx scripts/validate.ts` → checks invariants, runs quick tests
+- **Inspection**: `npx tsx scripts/inspect.ts --id island-3` → prints entity details
+
+These tools are **primarily for the agent** to use during development:
+
+- Quick hypothesis validation without spinning up the browser
+- Test logic changes before visual verification
+- Get structured output (JSON, counts, diffs) for comparison
+
+If these tools don't meaningfully help the agent iterate, they can be simplified or removed. The goal is tighter loops, not infrastructure for its own sake.
+
+### Directory Structure
+
+```
+scripts/
+├── generate.ts   # CLI: generate world, print summary
+├── validate.ts   # CLI: run quick invariant checks
+└── inspect.ts    # CLI: inspect specific entities
+src/
+├── core/         # Pure logic (no React)
+│   ├── model.ts
+│   ├── update.ts
+│   ├── generate.ts
+│   └── sim/
+│       └── tick.ts
+├── render/       # React/DOM/SVG (browser only)
+├── ui/           # React components
+└── ...
+```
 
 ---
 
-## 18. Open Design Choices
+## 18. Testing Strategy
+
+Tests should help the agent iterate robustly without imposing heavy cost on development.
+
+### Unit Tests (core logic)
+
+- **What**: Pure functions in `core/` — generation, update, simulation rules
+- **Tool**: Vitest (fast, works with Vite)
+- **Style**: Small, focused, fast. Test invariants and edge cases.
+- **Run**: `npm test` — should complete in <5 seconds
+
+Example tests:
+
+- `generateWorld(seed)` produces valid world (entities have IDs, plants have roots)
+- `update(msg, world)` returns new world without mutating old
+- Pruning a leaf removes it from the tree
+- Sprouting a bud adds a new node
+
+### Behavioral Tests (light)
+
+- **What**: High-level scenarios that shouldn't regress
+- **Tool**: Vitest with JSDOM or Playwright for critical paths
+- **Style**: Minimal. Only test things that have broken before or are critical.
+- **Run**: `npm run test:e2e` — can be slower, run less frequently
+
+Example:
+
+- Pan/zoom updates camera state correctly
+- Clicking a charged bud triggers sprout message
+
+### When to Add Tests
+
+- When implementing core logic (generation, simulation rules)
+- When a bug is found — add a test that would have caught it
+- When refactoring — tests provide safety net
+
+### When NOT to Add Tests
+
+- Visual styling (test manually)
+- One-off experiments (delete the code instead of testing it)
+- Things that are obviously correct and unlikely to regress
+
+---
+
+## 19. Initial TODOs
+
+- [x] Scaffold Vite + React + TS _(CP-001)_
+- [ ] Reorganize into `core/` (pure logic) and `render/` (React) _(planned)_
+- [ ] Add Vitest + basic unit tests _(planned)_
+- [ ] Add CLI scripts for agent use _(planned)_
+- [x] Implement camera pan/zoom _(CP-001)_
+- [x] Procedural generator (seeded) for islands + plants _(CP-001)_
+- [x] SVG render stems/leaves + hover/selection _(CP-001)_
+- [ ] Click bud → sprout; click leaf → prune _(events wired, logic TODO)_
+- [x] Tutorial overlay v1 _(CP-001)_
+- [x] Debug toggles: show IDs, hit targets, freeze time, regenerate _(CP-001)_
+- [x] Canvas background gradient + grain _(CP-001)_
+- [x] Create `CHECKPOINTS.md` _(CP-001)_
+
+---
+
+## 20. Open Design Choices
 
 Agent may decide, but **must document in Design Decisions Log**:
 
@@ -491,23 +614,28 @@ Agent may decide, but **must document in Design Decisions Log**:
 
 ---
 
-## 19. Design Decisions Log
+## 21. Design Decisions Log
 
-| Date       | Decision                        | Rationale                                                                 |
-| ---------- | ------------------------------- | ------------------------------------------------------------------------- |
-| (init)     | React + TS + Vite               | Mainstream, fast reload, TS for type safety                               |
-| (init)     | SVG + Canvas hybrid             | SVG for crisp paths, Canvas for atmosphere                                |
-| (init)     | MVU-ish architecture            | Clean state, enables undo/replay                                          |
-| 2026-01-04 | Git for checkpointing           | Commits as checkpoints, describe in docs, branches when exploring         |
-| 2026-01-04 | Wiki-style docs folder          | SOURCE.md spawns sub-docs as complexity grows; [[bracket]] links allowed  |
-| 2026-01-04 | Bezier splines first            | More organic feel; polylines available as alternative primitive later     |
-| 2026-01-04 | Rich theming infrastructure     | CSS variables, color scheme controls; dark mode planned but not default   |
-| 2026-01-04 | Sound hooks from start          | Interaction events structured for easy sound layer addition               |
-| 2026-01-04 | Tutorial from day one           | "What's New" overlay present even in scaffold                             |
+| Date       | Decision                    | Rationale                                                                |
+| ---------- | --------------------------- | ------------------------------------------------------------------------ |
+| (init)     | React + TS + Vite           | Mainstream, fast reload, TS for type safety                              |
+| (init)     | SVG + Canvas hybrid         | SVG for crisp paths, Canvas for atmosphere                               |
+| (init)     | MVU-ish architecture        | Clean state, enables undo/replay                                         |
+| 2026-01-04 | Git for checkpointing       | Commits as checkpoints, describe in docs, branches when exploring        |
+| 2026-01-04 | Wiki-style docs folder      | SOURCE.md spawns sub-docs as complexity grows; [[bracket]] links allowed |
+| 2026-01-04 | Bezier splines first        | More organic feel; polylines available as alternative primitive later    |
+| 2026-01-04 | Rich theming infrastructure | CSS variables, color scheme controls; dark mode planned but not default  |
+| 2026-01-04 | Sound hooks from start      | Interaction events structured for easy sound layer addition              |
+| 2026-01-04 | Tutorial from day one       | "What's New" overlay present even in scaffold                            |
+| 2026-01-04 | Garden as editor            | The visual form IS the syntax; direct manipulation of structure          |
+| 2026-01-04 | core/ folder for pure logic | Enables Node CLI tools, testing, agentic harness                         |
+| 2026-01-04 | CLI tools for agent         | Agent can validate hypotheses without browser; tighter loops             |
+| 2026-01-04 | Vitest for testing          | Fast, Vite-native; unit tests for core, light behavioral tests           |
+| 2026-01-04 | Creator process documented  | Human speaks feedback, agent implements; minimize context-switching      |
 
 ---
 
-## 20. Aesthetic References + Vibe
+## 22. Aesthetic References + Vibe
 
 The agent should internalize these not as constraints but as **taste anchors**—touchstones to return to when making visual, interactive, or structural decisions. The garden should feel like it belongs in the same universe as these things.
 
@@ -580,7 +708,7 @@ The agent should internalize these not as constraints but as **taste anchors**�
 
 - **Grays** (rocks, scaffolds): Important role. Dark grays, volcanic grays, ite grays. The bones of the world.
 - **Browns** (soil, bark, earth): Rich spectrum from dark loam to sandy tan. The substrate.
-- **Greens** (plants, life): *Extremely* rich series. Moss greens, fern greens, lichen yellowy-greens, deep forest greens, new-growth bright greens. This is where the life is.
+- **Greens** (plants, life): _Extremely_ rich series. Moss greens, fern greens, lichen yellowy-greens, deep forest greens, new-growth bright greens. This is where the life is.
 - **Accents**: Botanical pops — flower colors, berry colors — used sparingly. Warm corals, cool violets, bright yellows. Earned, not scattered.
 
 **Atmosphere**: Humid light filtered through canopy. Not harsh sun, not gloom. The luminous gray-green of an overcast forest morning.
@@ -589,40 +717,48 @@ The agent should internalize these not as constraints but as **taste anchors**�
 
 ---
 
-## 21. Repo Structure
+## 23. Repo Structure
 
 ```
 /
 ├── SOURCE.md          # This file — the DNA
-├── docs/              # Wiki-style design docs (spawned from SOURCE as complexity grows)
+├── docs/              # Wiki-style design docs
 │   ├── CHECKPOINTS.md # Git checkpoint log with tour paths
-│   ├── PALETTE.md     # Color palette details (when needed)
-│   └── ...            # Additional docs as needed, [[bracket]] links between them
+│   └── ...            # Additional docs as needed, [[bracket]] links
+├── scripts/           # CLI tools for agent use (Node, no browser)
+│   ├── generate.ts    # Generate world, print summary
+│   ├── validate.ts    # Quick invariant checks
+│   └── inspect.ts     # Inspect specific entities
 ├── src/
-│   ├── model.ts       # Types + World
-│   ├── update.ts      # Messages + update function
-│   ├── generate.ts    # Procedural garden generation
-│   ├── theme/
-│   │   ├── colors.ts  # CSS variable definitions, palette
-│   │   └── tokens.ts  # Design tokens
-│   ├── sim/
-│   │   └── tick.ts    # Simulation rules
-│   ├── render/
+│   ├── core/          # Pure logic (no React/DOM — runs in Node or browser)
+│   │   ├── model.ts   # Types + World
+│   │   ├── update.ts  # Messages + update function
+│   │   ├── generate.ts# Procedural garden generation
+│   │   └── sim/
+│   │       └── tick.ts# Simulation rules
+│   ├── render/        # React/DOM/SVG (browser only)
 │   │   ├── Canvas.tsx # Background layer (atmosphere)
 │   │   ├── Garden.tsx # SVG world layer
-│   │   └── paths.ts   # Bezier/polyline path utilities
+│   │   └── paths.ts   # Bezier/polyline path utilities (pure, could move to core)
+│   ├── theme/
+│   │   ├── colors.ts  # Palette constants
+│   │   └── global.css # CSS custom properties
 │   ├── ui/
 │   │   ├── Tutorial.tsx
-│   │   ├── DebugPanel.tsx
-│   │   └── HUD.tsx
+│   │   └── DebugPanel.tsx
 │   ├── hooks/
-│   │   ├── useCamera.ts
-│   │   └── useInteraction.ts
-│   ├── audio/         # Sound hooks (scaffolded, not yet implemented)
-│   │   └── events.ts  # Interaction events that will trigger sounds
+│   │   └── useCamera.ts
+│   ├── audio/         # Sound hooks (scaffolded)
+│   │   └── events.ts
 │   └── App.tsx        # Main composition
+├── tests/             # Vitest tests
+│   ├── core/
+│   │   ├── generate.test.ts
+│   │   └── update.test.ts
+│   └── setup.ts
 ├── index.html
 ├── vite.config.ts
+├── vitest.config.ts
 └── package.json
 ```
 
