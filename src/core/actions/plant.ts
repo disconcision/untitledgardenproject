@@ -5,7 +5,18 @@
  * Each function takes a World and returns a modified World or null on failure.
  */
 
-import { World, Id, vec2, addVec2, scaleVec2, genId, PlantNode, Plant } from "../model";
+import {
+  World,
+  Id,
+  vec2,
+  addVec2,
+  scaleVec2,
+  genId,
+  PlantNode,
+  Plant,
+  CarriedSubtree,
+  Vec2,
+} from "../model";
 
 /**
  * Sprout a bud into a stem, creating new growth.
@@ -250,12 +261,195 @@ export function branchFromNode(world: World, nodeId: Id): World | null {
   };
 }
 
+/**
+ * Graft a carried subtree onto a target stem node.
+ * Remaps all node IDs to avoid collisions and attaches at optimal angle.
+ *
+ * @param world - Current world state
+ * @param targetNodeId - ID of the stem to graft onto
+ * @param subtree - The carried subtree to graft
+ * @returns Modified world, or null if graft failed
+ */
+export function graftSubtree(
+  world: World,
+  targetNodeId: Id,
+  subtree: CarriedSubtree
+): World | null {
+  const targetNode = world.entities.get(targetNodeId);
+  if (!targetNode || targetNode.kind !== "plantNode" || targetNode.nodeKind !== "stem") {
+    return null;
+  }
+
+  const targetPlant = findPlantForNode(world, targetNodeId);
+  if (!targetPlant) return null;
+
+  // Find the best angle for grafting
+  const graftAngle = findBestBranchAngle(world, targetPlant, targetNodeId, targetNode.angle);
+
+  // Calculate offset to reposition subtree relative to target node
+  const subtreeRoot = subtree.nodes.find((n: PlantNode): boolean => n.id === subtree.rootId);
+  if (!subtreeRoot) return null;
+
+  // Remap all node IDs to new unique IDs
+  const idMap = new Map<Id, Id>();
+  for (const node of subtree.nodes) {
+    idMap.set(node.id, genId("node"));
+  }
+
+  const newRootId = idMap.get(subtree.rootId)!;
+
+  // Calculate the rotation needed to align subtree with graft angle
+  const originalAngle = subtreeRoot.angle;
+  const angleDiff = graftAngle - originalAngle;
+
+  // Clone nodes with new IDs, rotated positions, and updated references
+  const newEntities = new Map(world.entities);
+  const parentDepth = targetNode.depth ?? 0;
+
+  for (const node of subtree.nodes) {
+    const newId = idMap.get(node.id)!;
+
+    // Rotate localPos around subtree root
+    const relativePos = {
+      x: node.localPos.x - subtreeRoot.localPos.x,
+      y: node.localPos.y - subtreeRoot.localPos.y,
+    };
+
+    const cos = Math.cos(angleDiff);
+    const sin = Math.sin(angleDiff);
+    const rotatedRelativePos = {
+      x: relativePos.x * cos - relativePos.y * sin,
+      y: relativePos.x * sin + relativePos.y * cos,
+    };
+
+    // Position relative to target node
+    const newLocalPos = addVec2(targetNode.localPos, rotatedRelativePos);
+
+    const newNode: PlantNode = {
+      ...node,
+      id: newId,
+      plantId: targetNode.plantId,
+      localPos: newLocalPos,
+      angle: node.angle + angleDiff,
+      // Adjust depth based on graft point
+      depth: (node.depth ?? 0) - (subtreeRoot.depth ?? 0) + parentDepth + 1,
+    };
+
+    newEntities.set(newId, newNode);
+  }
+
+  // Build new adjacency with remapped IDs
+  const newAdjacency = new Map(targetPlant.adjacency);
+
+  for (const [oldParentId, oldChildIds] of subtree.adjacency) {
+    const newParentId = idMap.get(oldParentId);
+    if (newParentId) {
+      const newChildIds = oldChildIds
+        .map((oldId: Id): Id | undefined => idMap.get(oldId))
+        .filter((id: Id | undefined): id is Id => id !== undefined);
+      newAdjacency.set(newParentId, newChildIds);
+    }
+  }
+
+  // Connect target node to new subtree root
+  const existingChildren = newAdjacency.get(targetNodeId) || [];
+  newAdjacency.set(targetNodeId, [...existingChildren, newRootId]);
+
+  const newPlants = new Map(world.plants);
+  newPlants.set(targetPlant.id, { ...targetPlant, adjacency: newAdjacency });
+
+  return {
+    ...world,
+    entities: newEntities,
+    plants: newPlants,
+    carriedSubtree: null,
+  };
+}
+
+/**
+ * Cut a subtree from a plant (for grafting or releasing).
+ * Returns both the modified world and the extracted subtree.
+ *
+ * @param world - Current world state
+ * @param nodeId - ID of the node to cut (becomes subtree root)
+ * @param islandWorldPos - World position of the island (for rendering offsets)
+ * @returns Object with modified world and carried subtree, or null if cut failed
+ */
+export function cutSubtree(
+  world: World,
+  nodeId: Id,
+  islandWorldPos: Vec2
+): { world: World; subtree: CarriedSubtree } | null {
+  const node = world.entities.get(nodeId);
+  if (!node || node.kind !== "plantNode") {
+    return null;
+  }
+
+  const targetPlant = findPlantForNode(world, nodeId);
+  if (!targetPlant) return null;
+
+  // Can't cut the root
+  if (targetPlant.rootId === nodeId) return null;
+
+  // Find all nodes to extract (this node and descendants)
+  const toExtract = collectDescendants(targetPlant, nodeId);
+  toExtract.add(nodeId);
+
+  // Build the extracted subtree structure
+  const subtreeNodes: PlantNode[] = [];
+  const subtreeAdjacency = new Map<Id, Id[]>();
+
+  for (const id of toExtract) {
+    const entity = world.entities.get(id);
+    if (entity && entity.kind === "plantNode") {
+      subtreeNodes.push(entity);
+      // Copy adjacency for this node (only children that are also in subtree)
+      const children = targetPlant.adjacency.get(id) || [];
+      const subtreeChildren = children.filter((childId: Id): boolean => toExtract.has(childId));
+      subtreeAdjacency.set(id, subtreeChildren);
+    }
+  }
+
+  // Remove nodes from world entities
+  const newEntities = new Map(world.entities);
+  for (const id of toExtract) {
+    newEntities.delete(id);
+  }
+
+  // Update plant adjacency to remove extracted nodes
+  const newAdjacency = new Map<Id, Id[]>();
+  for (const [parentId, childIds] of targetPlant.adjacency) {
+    if (toExtract.has(parentId)) continue;
+    const filteredChildren = childIds.filter((c: Id): boolean => !toExtract.has(c));
+    newAdjacency.set(parentId, filteredChildren);
+  }
+
+  const newPlants = new Map(world.plants);
+  newPlants.set(targetPlant.id, { ...targetPlant, adjacency: newAdjacency });
+
+  const subtree: CarriedSubtree = {
+    nodes: subtreeNodes,
+    adjacency: subtreeAdjacency,
+    rootId: nodeId,
+    sourceIslandPos: islandWorldPos,
+  };
+
+  return {
+    world: {
+      ...world,
+      entities: newEntities,
+      plants: newPlants,
+    },
+    subtree,
+  };
+}
+
 // === Helper Functions ===
 
 /**
  * Find the plant that contains a given node.
  */
-function findPlantForNode(world: World, nodeId: Id): Plant | null {
+export function findPlantForNode(world: World, nodeId: Id): Plant | null {
   for (const plant of world.plants.values()) {
     if (plant.rootId === nodeId || plant.adjacency.has(nodeId)) {
       return plant;
@@ -267,7 +461,7 @@ function findPlantForNode(world: World, nodeId: Id): Plant | null {
 /**
  * Collect all descendant node IDs from a given node.
  */
-function collectDescendants(plant: Plant, nodeId: Id): Set<Id> {
+export function collectDescendants(plant: Plant, nodeId: Id): Set<Id> {
   const descendants = new Set<Id>();
   const queue = [...(plant.adjacency.get(nodeId) || [])];
 
@@ -284,7 +478,12 @@ function collectDescendants(plant: Plant, nodeId: Id): Set<Id> {
 /**
  * Find the best angle for a new branch, maximizing distance from existing children.
  */
-function findBestBranchAngle(world: World, plant: Plant, nodeId: Id, parentAngle: number): number {
+export function findBestBranchAngle(
+  world: World,
+  plant: Plant,
+  nodeId: Id,
+  parentAngle: number
+): number {
   const existingChildren = plant.adjacency.get(nodeId) || [];
   const childAngles: number[] = [];
 

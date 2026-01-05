@@ -55,6 +55,16 @@ _(none currently)_
 
 ---
 
+## Recently Completed
+
+### ✂️ Cut/Graft Mechanic MVP (Completed Jan 2026)
+
+- [x] **Cut attaches to cursor**: Subtree follows cursor, rendered ghostly
+- [x] **Release in void**: Clicking empty space releases subtree, pieces drift and fade
+- [x] **Graft to existing stem**: Clicking another stem grafts subtree with smart angle
+
+---
+
 ## Up Next (Priority Order)
 
 ### 🔊 Audio System MVP
@@ -300,17 +310,17 @@ _Dependency: Orbital Dynamics, Constellations | Parallelizable: No (integrative 
 ### ✂️ Cut/Graft Mechanic Redesign
 _Dependency: None | Parallelizable: Yes_
 
-**MVP:**
-- [ ] **Cut attaches to cursor**: When cutting a plant subtree, it doesn't disappear
+**MVP: ✅ COMPLETE**
+- [x] **Cut attaches to cursor**: When cutting a plant subtree, it doesn't disappear
   - Subtree attaches to cursor and follows it around
   - Visual: subtree rendered at cursor position, slightly faded/ghostly
   - Player is "carrying" the cut piece
-- [ ] **Release in void**: Clicking in empty space releases the carried subtree
+- [x] **Release in void**: Clicking in empty space releases the carried subtree
   - Subtree floats like a seed
   - Gradually drifts apart into pieces
   - Pieces move independently, then fade out and disappear
   - Creates satisfying "letting go" moment
-- [ ] **Graft to existing stem**: Clicking on another plant's stem grafts the subtree
+- [x] **Graft to existing stem**: Clicking on another plant's stem grafts the subtree
   - Works like the branch feature: picks an appropriate angle
   - Smart angle selection: avoid overlapping existing branches
   - Subtree becomes part of the new plant

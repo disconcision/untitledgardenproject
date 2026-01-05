@@ -6,7 +6,19 @@
  */
 
 import { useMemo, memo } from "react";
-import { World, Cluster, Island, Rock, PlantNode, Plant, Particle, Vec2, addVec2 } from "../model";
+import {
+  World,
+  Cluster,
+  Island,
+  Rock,
+  PlantNode,
+  Plant,
+  Particle,
+  Vec2,
+  addVec2,
+  DriftingPiece,
+  CarriedSubtree,
+} from "../model";
 import { Msg } from "../update";
 import { ClusterGlyphRenderer } from "./ClusterGlyph";
 import { IslandRenderer } from "./Island";
@@ -58,7 +70,18 @@ type ClusterRenderData = {
 // === Main Component ===
 
 export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JSX.Element {
-  const { camera, clusters, entities, plants, hover, selection, debug } = world;
+  const {
+    camera,
+    clusters,
+    entities,
+    plants,
+    hover,
+    selection,
+    debug,
+    carriedSubtree,
+    cursorWorldPos,
+    driftingPieces,
+  } = world;
 
   // Group entities by cluster for fog rendering
   const clusterData = useMemo((): ClusterRenderData[] => {
@@ -226,10 +249,180 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
         {particles.map((particle: Particle) => (
           <ParticleRenderer key={particle.id} particle={particle} showId={debug.showIds} />
         ))}
+
+        {/* Drifting pieces (released subtrees fading out) */}
+        {driftingPieces.map((piece: DriftingPiece) => (
+          <DriftingPieceRenderer key={piece.id} piece={piece} />
+        ))}
+
+        {/* Carried subtree (following cursor) */}
+        {carriedSubtree && (
+          <CarriedSubtreeRenderer subtree={carriedSubtree} cursorPos={cursorWorldPos} />
+        )}
       </g>
     </svg>
   );
 });
+
+// === Carried Subtree Renderer ===
+
+type CarriedSubtreeRendererProps = {
+  subtree: CarriedSubtree;
+  cursorPos: Vec2;
+};
+
+function CarriedSubtreeRenderer({ subtree, cursorPos }: CarriedSubtreeRendererProps): JSX.Element {
+  // Find the root node to calculate offset
+  const rootNode = subtree.nodes.find((n: PlantNode): boolean => n.id === subtree.rootId);
+  if (!rootNode) return <g />;
+
+  // Render subtree at cursor position, offset so root is at cursor
+  const nodeMap = new Map(subtree.nodes.map((n: PlantNode): [string, PlantNode] => [n.id, n]));
+
+  return (
+    <g
+      className="carried-subtree"
+      style={{
+        opacity: 0.7,
+        filter: "saturate(0.5)",
+        pointerEvents: "none",
+      }}
+    >
+      {/* Stems */}
+      {Array.from(subtree.adjacency.entries()).map(([parentId, childIds]: [string, string[]]) => {
+        const parent = nodeMap.get(parentId);
+        if (!parent) return null;
+
+        return childIds.map((childId: string) => {
+          const child = nodeMap.get(childId);
+          if (!child) return null;
+
+          // Position relative to cursor (root at cursor)
+          const p1 = addVec2(cursorPos, {
+            x: parent.localPos.x - rootNode.localPos.x,
+            y: parent.localPos.y - rootNode.localPos.y,
+          });
+          const p2 = addVec2(cursorPos, {
+            x: child.localPos.x - rootNode.localPos.x,
+            y: child.localPos.y - rootNode.localPos.y,
+          });
+
+          const midX = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.12;
+          const midY = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.12;
+
+          const parentDepth = parent.depth ?? 0;
+          const childDepth = child.depth ?? parentDepth + 1;
+          const avgDepth = (parentDepth + childDepth) / 2;
+          const strokeWidth = Math.max(1, 4 - avgDepth * 0.6);
+
+          return (
+            <path
+              key={`stem-${parentId}-${childId}`}
+              d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
+              fill="none"
+              stroke="var(--color-stem)"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+            />
+          );
+        });
+      })}
+
+      {/* Nodes */}
+      {subtree.nodes.map((node: PlantNode) => {
+        const pos = addVec2(cursorPos, {
+          x: node.localPos.x - rootNode.localPos.x,
+          y: node.localPos.y - rootNode.localPos.y,
+        });
+
+        return (
+          <g key={node.id} transform={`translate(${pos.x}, ${pos.y})`}>
+            {node.nodeKind === "bud" && (
+              <circle
+                r={6}
+                fill="var(--color-bud)"
+                stroke="var(--color-bud-dark)"
+                strokeWidth={0.5}
+              />
+            )}
+            {node.nodeKind === "stem" && (
+              <circle
+                r={3}
+                fill="var(--color-stem)"
+                stroke="var(--color-stem-dark)"
+                strokeWidth={0.5}
+              />
+            )}
+            {node.nodeKind === "leaf" && (
+              <ellipse
+                rx={4}
+                ry={8}
+                fill="var(--color-leaf)"
+                stroke="var(--color-leaf-dark)"
+                strokeWidth={0.3}
+                transform={`rotate(${(node.angle * 180) / Math.PI + 90})`}
+              />
+            )}
+            {node.nodeKind === "flower" && (
+              <circle
+                r={5}
+                fill="var(--color-flower-petal)"
+                stroke="var(--color-flower-petal-dark)"
+                strokeWidth={0.3}
+              />
+            )}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+// === Drifting Piece Renderer ===
+
+type DriftingPieceRendererProps = {
+  piece: DriftingPiece;
+};
+
+function DriftingPieceRenderer({ piece }: DriftingPieceRendererProps): JSX.Element {
+  const { node, pos, opacity } = piece;
+
+  return (
+    <g
+      transform={`translate(${pos.x}, ${pos.y})`}
+      style={{
+        opacity,
+        filter: "saturate(0.3)",
+        pointerEvents: "none",
+      }}
+    >
+      {node.nodeKind === "bud" && (
+        <circle r={6} fill="var(--color-bud)" stroke="var(--color-bud-dark)" strokeWidth={0.5} />
+      )}
+      {node.nodeKind === "stem" && (
+        <circle r={3} fill="var(--color-stem)" stroke="var(--color-stem-dark)" strokeWidth={0.5} />
+      )}
+      {node.nodeKind === "leaf" && (
+        <ellipse
+          rx={4}
+          ry={8}
+          fill="var(--color-leaf)"
+          stroke="var(--color-leaf-dark)"
+          strokeWidth={0.3}
+          transform={`rotate(${(node.angle * 180) / Math.PI + 90})`}
+        />
+      )}
+      {node.nodeKind === "flower" && (
+        <circle
+          r={5}
+          fill="var(--color-flower-petal)"
+          stroke="var(--color-flower-petal-dark)"
+          strokeWidth={0.3}
+        />
+      )}
+    </g>
+  );
+}
 
 // === SVG Filter Definitions ===
 

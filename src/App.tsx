@@ -22,8 +22,9 @@ const INITIAL_SEED = 42;
 const SIM_TICK_MS = 1000;
 const DAY_CYCLE_TICK_MS = 100; // Update colors every 100ms for smooth transitions
 const PARTICLE_TICK_MS = 50; // Smooth particle movement at 20fps
+const DRIFT_TICK_MS = 50; // Drifting pieces animation at 20fps
 
-export default function App() {
+export default function App(): JSX.Element {
   const [world, setWorld] = useState<World>(() => generateWorld(INITIAL_SEED));
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +36,7 @@ export default function App() {
     setWorld(generateWorld(seed));
   }, []);
 
-  const camera = useCamera({ dispatch, containerRef });
+  const camera = useCamera({ dispatch, containerRef, carriedSubtree: world.carriedSubtree });
 
   // Unified simulation control:
   // - dayCycle.running is the master "simulation running" toggle
@@ -75,16 +76,60 @@ export default function App() {
     return () => clearInterval(interval);
   }, [dispatch, simulationRunning]);
 
+  // Drift tick - animate drifting pieces (released subtrees)
+  useEffect(() => {
+    if (world.driftingPieces.length === 0) return;
+
+    const interval = setInterval(() => {
+      dispatch({ type: "drift/tick", dtMs: DRIFT_TICK_MS });
+    }, DRIFT_TICK_MS);
+
+    return () => clearInterval(interval);
+  }, [dispatch, world.driftingPieces.length]);
+
+  // Track cursor position in world coordinates
+  const handleCursorMove = useCallback(
+    (e: React.PointerEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      // Convert screen coordinates to world coordinates
+      const screenX = e.clientX - rect.left - rect.width / 2;
+      const screenY = e.clientY - rect.top - rect.height / 2;
+
+      // Apply inverse camera transform
+      const worldX = (screenX - world.camera.pan.x) / world.camera.zoom;
+      const worldY = (screenY - world.camera.pan.y) / world.camera.zoom;
+
+      dispatch({ type: "cursor/move", worldPos: { x: worldX, y: worldY } });
+    },
+    [dispatch, world.camera.pan.x, world.camera.pan.y, world.camera.zoom]
+  );
+
   // Apply color scheme based on time of day
   useEffect(() => {
     const scheme = interpolateScheme(world.dayCycle.timeOfDay);
     applySchemeToDOM(scheme);
   }, [world.dayCycle.timeOfDay]);
 
+  // Determine cursor style based on carrying state
+  const isCarrying = world.carriedSubtree !== null;
+  const cursorStyle = isCarrying ? "crosshair" : "grab";
+
+  // Combined pointer move handler
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent): void => {
+      camera.handlePointerMove(e);
+      handleCursorMove(e);
+    },
+    [camera, handleCursorMove]
+  );
+
   return (
     <div
       ref={containerRef}
-      className="garden-container"
+      className={`garden-container ${isCarrying ? "is-carrying" : ""}`}
       style={{
         position: "fixed",
         top: 0,
@@ -93,10 +138,10 @@ export default function App() {
         height: "100vh",
         overflow: "hidden",
         touchAction: "none",
-        cursor: "grab",
+        cursor: cursorStyle,
       }}
       onPointerDown={camera.handlePointerDown}
-      onPointerMove={camera.handlePointerMove}
+      onPointerMove={handlePointerMove}
       onPointerUp={camera.handlePointerUp}
     >
       <CanvasBackground camera={world.camera} timeOfDay={world.dayCycle.timeOfDay} />

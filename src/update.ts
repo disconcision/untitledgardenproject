@@ -10,8 +10,8 @@
  * - core/tutorial.ts — tutorial step completion
  */
 
-import { World, Id, Vec2, vec2, addVec2, scaleVec2 } from "./model";
-import { sproutBud, pruneNode, branchFromNode } from "./core/actions";
+import { World, Id, Vec2, vec2, addVec2, scaleVec2, DriftingPiece, genId } from "./model";
+import { sproutBud, pruneNode, branchFromNode, cutSubtree, graftSubtree } from "./core/actions";
 import {
   tickParticlesFast,
   tickParticleLifecycle,
@@ -37,6 +37,13 @@ export type Msg =
   | { type: "prune"; nodeId: Id }
   | { type: "trim"; nodeId: Id }
   | { type: "branch"; nodeId: Id }
+
+  // Cut/Graft
+  | { type: "cut"; nodeId: Id; islandWorldPos: Vec2 }
+  | { type: "graft"; targetNodeId: Id }
+  | { type: "release" }
+  | { type: "cursor/move"; worldPos: Vec2 }
+  | { type: "drift/tick"; dtMs: number }
 
   // Context Menu
   | { type: "contextMenu/open"; nodeId: Id; screenPos: Vec2; worldPos: Vec2 }
@@ -78,6 +85,9 @@ export type AudioEvent =
   | { type: "prune" }
   | { type: "branch" }
   | { type: "trim" }
+  | { type: "cut" }
+  | { type: "graft" }
+  | { type: "release" }
   | { type: "select" }
   | { type: "hover" }
   | { type: "pan" }
@@ -132,6 +142,22 @@ export function update(msg: Msg, world: World): World {
 
     case "branch":
       return handleBranch(world, msg.nodeId);
+
+    // === Cut/Graft ===
+    case "cut":
+      return handleCut(world, msg.nodeId, msg.islandWorldPos);
+
+    case "graft":
+      return handleGraft(world, msg.targetNodeId);
+
+    case "release":
+      return handleRelease(world);
+
+    case "cursor/move":
+      return handleCursorMove(world, msg.worldPos);
+
+    case "drift/tick":
+      return handleDriftTick(world, msg.dtMs);
 
     // === Context Menu ===
     case "contextMenu/open":
@@ -353,6 +379,126 @@ function handleBranch(world: World, nodeId: Id): World {
     };
   }
   return { ...world, contextMenu: null };
+}
+
+// === Cut/Graft Handlers ===
+
+function handleCut(world: World, nodeId: Id, islandWorldPos: Vec2): World {
+  const result = cutSubtree(world, nodeId, islandWorldPos);
+  if (result) {
+    emitAudioEvent({ type: "cut" });
+    return {
+      ...result.world,
+      carriedSubtree: result.subtree,
+      contextMenu: null,
+      tutorial: completeTutorialStep(result.world.tutorial, "context"),
+    };
+  }
+  return { ...world, contextMenu: null };
+}
+
+function handleGraft(world: World, targetNodeId: Id): World {
+  if (!world.carriedSubtree) return world;
+
+  const result = graftSubtree(world, targetNodeId, world.carriedSubtree);
+  if (result) {
+    emitAudioEvent({ type: "graft" });
+    return {
+      ...result,
+      carriedSubtree: null,
+    };
+  }
+  return world;
+}
+
+function handleRelease(world: World): World {
+  if (!world.carriedSubtree) return world;
+
+  emitAudioEvent({ type: "release" });
+
+  // Convert carried subtree nodes into drifting pieces
+  const driftingPieces: DriftingPiece[] = world.carriedSubtree.nodes.map((node) => {
+    // Calculate world position for the node
+    const worldPos = addVec2(world.cursorWorldPos, {
+      x:
+        node.localPos.x -
+        (world.carriedSubtree!.nodes.find((n) => n.id === world.carriedSubtree!.rootId)?.localPos
+          .x ?? 0),
+      y:
+        node.localPos.y -
+        (world.carriedSubtree!.nodes.find((n) => n.id === world.carriedSubtree!.rootId)?.localPos
+          .y ?? 0),
+    });
+
+    // Random drift velocity (spread outward from center)
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.3 + Math.random() * 0.5;
+
+    return {
+      id: genId("drift"),
+      node,
+      pos: worldPos,
+      velocity: {
+        x: Math.cos(angle) * speed,
+        y: Math.sin(angle) * speed,
+      },
+      opacity: 1,
+      age: 0,
+    };
+  });
+
+  return {
+    ...world,
+    carriedSubtree: null,
+    driftingPieces: [...world.driftingPieces, ...driftingPieces],
+  };
+}
+
+function handleCursorMove(world: World, worldPos: Vec2): World {
+  return {
+    ...world,
+    cursorWorldPos: worldPos,
+  };
+}
+
+function handleDriftTick(world: World, dtMs: number): World {
+  if (world.driftingPieces.length === 0) return world;
+
+  const dt = dtMs / 1000; // Convert to seconds
+  const fadeRate = 0.5; // Opacity fade per second
+  const maxAge = 120; // Frames before removal
+
+  const updatedPieces: DriftingPiece[] = [];
+
+  for (const piece of world.driftingPieces) {
+    const newAge = piece.age + 1;
+    const newOpacity = Math.max(0, piece.opacity - fadeRate * dt);
+
+    // Remove pieces that have faded out or are too old
+    if (newOpacity <= 0 || newAge >= maxAge) {
+      continue;
+    }
+
+    // Update position with drift velocity (slow down over time)
+    const damping = 0.98;
+    const newVelocity = {
+      x: piece.velocity.x * damping,
+      y: piece.velocity.y * damping,
+    };
+
+    updatedPieces.push({
+      ...piece,
+      pos: addVec2(piece.pos, scaleVec2(piece.velocity, dt * 60)), // 60fps base
+      velocity: newVelocity,
+      opacity: newOpacity,
+      age: newAge,
+    });
+  }
+
+  return {
+    ...world,
+    driftingPieces: updatedPieces,
+  };
 }
 
 // === Context Menu Handlers ===

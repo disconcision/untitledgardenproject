@@ -8,9 +8,9 @@
  * Features radial expand/contract animations on open/close.
  */
 
-import { memo, useEffect, useCallback, useState, useRef } from "react";
+import { memo, useEffect, useCallback, useState, useRef, useMemo } from "react";
 import { Scissors, GitBranch, Crosshair } from "lucide-react";
-import { World } from "../model";
+import { World, Island, Cluster, addVec2 } from "../model";
 import { Msg } from "../update";
 import "./PieMenu.css";
 
@@ -35,9 +35,12 @@ type PieMenuProps = {
 };
 
 export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) {
-  const { contextMenu, entities, plants } = world;
+  const { contextMenu, entities, plants, clusters, carriedSubtree } = world;
   const [isClosing, setIsClosing] = useState(false);
   const closingTimeoutRef = useRef<number | null>(null);
+
+  // Don't show pie menu when carrying a subtree
+  const isCarrying = carriedSubtree !== null;
 
   // Trigger the close animation, then dispatch the actual close
   const triggerClose = useCallback((): void => {
@@ -80,7 +83,30 @@ export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  if (!contextMenu) return null;
+  // Compute island world position for cut action
+  const islandWorldPos = useMemo(() => {
+    if (!contextMenu) return { x: 0, y: 0 };
+
+    const node = entities.get(contextMenu.nodeId);
+    if (!node || node.kind !== "plantNode") return { x: 0, y: 0 };
+
+    // Find the plant and its island
+    for (const plant of plants.values()) {
+      if (plant.rootId === contextMenu.nodeId || plant.adjacency.has(contextMenu.nodeId)) {
+        const island = entities.get(plant.islandId) as Island | undefined;
+        if (island) {
+          const cluster = clusters.get(island.clusterId) as Cluster | undefined;
+          if (cluster) {
+            return addVec2(cluster.pos, island.localPos);
+          }
+          return island.localPos;
+        }
+      }
+    }
+    return { x: 0, y: 0 };
+  }, [contextMenu, entities, plants, clusters]);
+
+  if (!contextMenu || isCarrying) return null;
 
   const node = entities.get(contextMenu.nodeId);
   if (!node || node.kind !== "plantNode") {
@@ -108,18 +134,23 @@ export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) 
   }
 
   // Determine available actions based on node type
-  const canTrim = !isRoot; // Can't trim the root
+  const canCut = !isRoot; // Can't cut the root
   const canBranch = node.nodeKind === "stem"; // Only stems can branch
   const canCenterView = node.nodeKind === "stem"; // Center view on stems
 
   const actions: PieMenuAction[] = [
     {
-      id: "trim",
+      id: "cut",
       icon: <Scissors size={ICON_SIZE} />,
-      label: "Trim",
+      label: "Cut",
       angle: -Math.PI * 0.75, // Upper left
-      enabled: canTrim,
-      onAction: () => dispatch({ type: "trim", nodeId: contextMenu.nodeId }),
+      enabled: canCut,
+      onAction: () =>
+        dispatch({
+          type: "cut",
+          nodeId: contextMenu.nodeId,
+          islandWorldPos,
+        }),
     },
     {
       id: "branch",

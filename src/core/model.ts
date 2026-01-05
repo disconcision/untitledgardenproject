@@ -125,6 +125,26 @@ export type Plant = {
   adjacency: Map<Id, Id[]>;
 };
 
+// === Cut/Graft System ===
+
+// Subtree being carried by cursor after cutting
+export type CarriedSubtree = {
+  nodes: PlantNode[]; // All nodes in subtree
+  adjacency: Map<Id, Id[]>; // Subtree structure
+  rootId: Id; // Root node of subtree
+  sourceIslandPos: Vec2; // Original island position (for rendering offsets)
+};
+
+// Subtree piece drifting after release into void
+export type DriftingPiece = {
+  id: Id;
+  node: PlantNode;
+  pos: Vec2; // Current world position
+  velocity: Vec2; // Drift velocity
+  opacity: number; // Fading out (1 -> 0)
+  age: number; // Frames since release
+};
+
 // === Camera ===
 
 export type Camera = {
@@ -202,6 +222,10 @@ export type World = {
   // Track which panel is on top (last focused)
   focusedPanel: PanelId | null;
   seed: number;
+  // Cut/Graft system
+  carriedSubtree: CarriedSubtree | null;
+  cursorWorldPos: Vec2;
+  driftingPieces: DriftingPiece[];
 };
 
 // === Vector Helpers ===
@@ -356,6 +380,10 @@ export function createInitialWorld(seed: number): World {
     },
     focusedPanel: null,
     seed,
+    // Cut/Graft system
+    carriedSubtree: null,
+    cursorWorldPos: vec2(0, 0),
+    driftingPieces: [],
   };
 }
 

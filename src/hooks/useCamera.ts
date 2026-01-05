@@ -6,27 +6,42 @@
 
 import { useRef, useCallback, useEffect } from "react";
 import { Msg } from "../update";
-import { Vec2, vec2 } from "../model";
+import { Vec2, vec2, CarriedSubtree } from "../model";
 
 type UseCameraOptions = {
   dispatch: (msg: Msg) => void;
   containerRef: React.RefObject<HTMLElement | null>;
+  carriedSubtree: CarriedSubtree | null;
 };
 
-export function useCamera({ dispatch, containerRef }: UseCameraOptions) {
+export function useCamera({ dispatch, containerRef, carriedSubtree }: UseCameraOptions) {
   const isDragging = useRef(false);
   const lastPos = useRef<Vec2>(vec2(0, 0));
 
   const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      // Only pan on background drag (no target entity)
-      if ((e.target as HTMLElement).dataset?.entityId) return;
-
+    (e: React.PointerEvent): void => {
       // Don't close context menu or start panning if clicking inside the pie menu
       const target = e.target as HTMLElement;
       if (target.closest(".pie-menu, .pie-menu-backdrop")) {
         return;
       }
+
+      // If carrying a subtree, handle graft or release
+      if (carriedSubtree) {
+        // Check if clicking on a plant node (potential graft target)
+        const entityId = (target as HTMLElement).dataset?.entityId;
+        if (entityId) {
+          // Graft to the clicked entity (handler will validate it's a stem)
+          dispatch({ type: "graft", targetNodeId: entityId });
+        } else {
+          // Clicked on void - release the subtree
+          dispatch({ type: "release" });
+        }
+        return;
+      }
+
+      // Only pan on background drag (no target entity)
+      if ((e.target as HTMLElement).dataset?.entityId) return;
 
       // Close context menu when clicking on background
       dispatch({ type: "contextMenu/close" });
@@ -35,7 +50,7 @@ export function useCamera({ dispatch, containerRef }: UseCameraOptions) {
       lastPos.current = vec2(e.clientX, e.clientY);
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [dispatch]
+    [dispatch, carriedSubtree]
   );
 
   const handlePointerMove = useCallback(
