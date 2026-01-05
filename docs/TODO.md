@@ -66,6 +66,8 @@ _Move completed items here with date._
 
 ### 2026-01-05
 
+- [x] Tutorial completion hooks for simulation and panel steps (time-pause, time-scrub, watch-grow, inspector, debug)
+- [x] Tutorial maintenance documentation in AGENT-WORKFLOW.md
 - [x] Unified simulation model: day cycle pause also pauses plant growth
 - [x] TimeConfig panel restyled to match HUD corner dock pattern
 - [x] All UI panels sync with day/night color scheme
