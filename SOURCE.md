@@ -588,9 +588,9 @@ Example:
 ## 19. Initial TODOs
 
 - [x] Scaffold Vite + React + TS _(CP-001)_
-- [ ] Reorganize into `core/` (pure logic) and `render/` (React) _(planned)_
-- [ ] Add Vitest + basic unit tests _(planned)_
-- [ ] Add CLI scripts for agent use _(planned)_
+- [x] Reorganize into `core/` (pure logic) and `render/` (React) _(CP-002)_
+- [x] Add Vitest + basic unit tests _(CP-002)_
+- [x] Add CLI scripts for agent use _(CP-002)_
 - [x] Implement camera pan/zoom _(CP-001)_
 - [x] Procedural generator (seeded) for islands + plants _(CP-001)_
 - [x] SVG render stems/leaves + hover/selection _(CP-001)_
