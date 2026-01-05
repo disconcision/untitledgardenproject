@@ -1,22 +1,23 @@
 /**
  * Hanging Garden — SVG World Layer
  *
- * The main garden visualization: islands, rocks, plants, vines.
- * Crisp, zoomable, interactive.
+ * Minimal, subtle rendering. Rocks as primary anchors.
+ * CSS animations for ambient motion (not React state).
  */
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { World, Island, Rock, PlantNode, Plant, Vec2, addVec2 } from "../model";
 import { Msg } from "../update";
 import { blobPath, leafPath } from "./paths";
+import "./Garden.css";
 
 type GardenProps = {
   world: World;
   dispatch: (msg: Msg) => void;
 };
 
-export function Garden({ world, dispatch }: GardenProps) {
-  const { camera, entities, plants, hover, selection, debug, time } = world;
+export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
+  const { camera, entities, plants, hover, selection, debug } = world;
 
   // Group entities by type
   const { islands, rocks } = useMemo(() => {
@@ -34,64 +35,42 @@ export function Garden({ world, dispatch }: GardenProps) {
       }
     }
 
-    // Sort islands by depth for proper layering
     islands.sort((a: Island, b: Island): number => b.depth - a.depth);
-
     return { islands, rocks };
   }, [entities]);
 
-  // Compute transform
   const transform = `translate(${camera.pan.x}, ${camera.pan.y}) scale(${camera.zoom})`;
 
   return (
     <svg
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        overflow: "visible",
-      }}
-      viewBox={`${-window.innerWidth / 2} ${-window.innerHeight / 2} ${
-        window.innerWidth
-      } ${window.innerHeight}`}
+      className="garden-svg"
+      viewBox={`${-window.innerWidth / 2} ${-window.innerHeight / 2} ${window.innerWidth} ${window.innerHeight}`}
     >
       <defs>
-        {/* Gradients and filters */}
-        <filter id="island-shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow
-            dx="0"
-            dy="4"
-            stdDeviation="8"
-            floodColor="var(--color-earth-loam)"
-            floodOpacity="0.3"
-          />
+        {/* Subtle blur for soft shadows */}
+        <filter id="soft-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
+          <feOffset in="blur" dx="0" dy="3" result="offsetBlur" />
+          <feFlood floodColor="#3a3a3a" floodOpacity="0.15" result="color" />
+          <feComposite in="color" in2="offsetBlur" operator="in" result="shadow" />
+          <feMerge>
+            <feMergeNode in="shadow" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
 
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+        {/* Glow for charged buds */}
+        <filter id="bud-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-
-        <radialGradient id="island-fill" cx="30%" cy="30%">
-          <stop offset="0%" stopColor="var(--color-earth-tan)" />
-          <stop offset="60%" stopColor="var(--color-earth-mid)" />
-          <stop offset="100%" stopColor="var(--color-earth-dark)" />
-        </radialGradient>
-
-        <radialGradient id="rock-fill" cx="30%" cy="30%">
-          <stop offset="0%" stopColor="var(--color-rock-light)" />
-          <stop offset="70%" stopColor="var(--color-rock-mid)" />
-          <stop offset="100%" stopColor="var(--color-rock-dark)" />
-        </radialGradient>
       </defs>
 
       <g transform={transform}>
-        {/* Islands */}
+        {/* Islands - subtle, small soil patches */}
         {islands.map((island: Island) => (
           <IslandRenderer
             key={island.id}
@@ -100,12 +79,11 @@ export function Garden({ world, dispatch }: GardenProps) {
             isSelected={selection === island.id}
             showId={debug.showIds}
             showHitTarget={debug.showHitTargets}
-            time={time.t}
             dispatch={dispatch}
           />
         ))}
 
-        {/* Rocks (rendered on their islands) */}
+        {/* Rocks - the primary anchors */}
         {rocks.map((rock: Rock) => {
           const island = entities.get(rock.islandId) as Island | undefined;
           if (!island) return null;
@@ -116,6 +94,7 @@ export function Garden({ world, dispatch }: GardenProps) {
               islandPos={island.pos}
               isHovered={hover === rock.id}
               showId={debug.showIds}
+              showHitTarget={debug.showHitTargets}
               dispatch={dispatch}
             />
           );
@@ -146,9 +125,10 @@ export function Garden({ world, dispatch }: GardenProps) {
       </g>
     </svg>
   );
-}
+});
 
 // === Island Renderer ===
+// Smaller, more subtle soil patches
 
 type IslandRendererProps = {
   island: Island;
@@ -156,60 +136,50 @@ type IslandRendererProps = {
   isSelected: boolean;
   showId: boolean;
   showHitTarget: boolean;
-  time: number;
   dispatch: (msg: Msg) => void;
 };
 
-function IslandRenderer({
+const IslandRenderer = memo(function IslandRenderer({
   island,
   isHovered,
   isSelected,
   showId,
   showHitTarget,
-  time,
   dispatch,
 }: IslandRendererProps) {
-  // Subtle ambient sway
-  const swayX = Math.sin(time * 0.0003 + island.pos.x * 0.01) * 2;
-  const swayY = Math.cos(time * 0.0004 + island.pos.y * 0.01) * 1.5;
-
   const pathData = blobPath(island.shape);
+
+  // CSS animation delay based on position for variety
+  const animDelay = `${(island.pos.x * 0.001 + island.pos.y * 0.002) % 1}s`;
 
   return (
     <g
-      transform={`translate(${island.pos.x + swayX}, ${island.pos.y + swayY})`}
+      className="island-group"
+      style={{ "--anim-delay": animDelay } as React.CSSProperties}
+      transform={`translate(${island.pos.x}, ${island.pos.y})`}
       data-entity-id={island.id}
       onPointerEnter={() => dispatch({ type: "hover", id: island.id })}
       onPointerLeave={() => dispatch({ type: "hover", id: null })}
       onDoubleClick={() =>
         dispatch({ type: "camera/focus", target: island.pos, zoom: 1.5 })
       }
-      style={{ cursor: "pointer" }}
     >
-      {/* Shadow */}
+      {/* Soft shadow - diffuse blur, no hard edge */}
       <path
         d={pathData}
-        fill="var(--color-earth-loam)"
-        opacity={0.3}
-        transform="translate(4, 6)"
+        fill="rgba(60, 50, 40, 0.12)"
+        transform="translate(0, 4) scale(0.95)"
+        style={{ filter: "blur(4px)" }}
       />
 
-      {/* Main island shape */}
+      {/* Main island shape - no stroke, subtle fill */}
       <path
         d={pathData}
-        fill="url(#island-fill)"
-        stroke={
-          isHovered || isSelected
-            ? "var(--color-hover)"
-            : "var(--color-earth-dark)"
-        }
-        strokeWidth={isHovered || isSelected ? 3 : 1.5}
-        style={{
-          transition: "stroke-width 150ms ease-out",
-        }}
+        fill="var(--color-earth-mid)"
+        opacity={0.7}
+        className={isHovered || isSelected ? "island-highlighted" : ""}
       />
 
-      {/* Hit target outline */}
       {showHitTarget && (
         <circle
           cx={0}
@@ -223,79 +193,97 @@ function IslandRenderer({
         />
       )}
 
-      {/* ID label */}
       {showId && (
-        <text
-          x={0}
-          y={-island.radius - 10}
-          textAnchor="middle"
-          fontSize={10}
-          fill="var(--color-text-muted)"
-        >
+        <text x={0} y={-island.radius - 8} textAnchor="middle" className="debug-label">
           {island.id}
         </text>
       )}
     </g>
   );
-}
+});
 
 // === Rock Renderer ===
+// More angular, interesting shapes. Primary visual anchor.
 
 type RockRendererProps = {
   rock: Rock;
   islandPos: Vec2;
   isHovered: boolean;
   showId: boolean;
+  showHitTarget: boolean;
   dispatch: (msg: Msg) => void;
 };
 
-function RockRenderer({
+const RockRenderer = memo(function RockRenderer({
   rock,
   islandPos,
   isHovered,
   showId,
+  showHitTarget,
   dispatch,
 }: RockRendererProps) {
   const worldPos = addVec2(islandPos, rock.localPos);
 
-  // Simple rock shape - irregular polygon
+  // More complex polygon (8-10 sides) for interesting silhouette
+  const numSides = 8 + Math.floor((rock.rotation * 10) % 3);
   const points: string = Array.from(
-    { length: 6 },
+    { length: numSides },
     (_: unknown, i: number): string => {
-      const angle = rock.rotation + (i / 6) * Math.PI * 2;
-      const r = rock.size * (0.7 + Math.sin(i * 2.3) * 0.3);
-      return `${Math.cos(angle) * r},${Math.sin(angle) * r}`;
+      const baseAngle = rock.rotation + (i / numSides) * Math.PI * 2;
+      // Vary radius more for angular, faceted look
+      const variance = Math.sin(i * 3.7 + rock.size) * 0.35 + Math.cos(i * 2.1) * 0.15;
+      const r = rock.size * (0.6 + variance);
+      return `${Math.cos(baseAngle) * r},${Math.sin(baseAngle) * r}`;
     }
   ).join(" ");
 
+  const animDelay = `${(rock.localPos.x * 0.002) % 1}s`;
+
   return (
     <g
+      className="rock-group"
+      style={{ "--anim-delay": animDelay } as React.CSSProperties}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={rock.id}
       onPointerEnter={() => dispatch({ type: "hover", id: rock.id })}
       onPointerLeave={() => dispatch({ type: "hover", id: null })}
     >
+      {/* Shadow */}
       <polygon
         points={points}
-        fill="url(#rock-fill)"
-        stroke={isHovered ? "var(--color-hover)" : "var(--color-rock-dark)"}
-        strokeWidth={isHovered ? 2 : 1}
+        fill="rgba(40, 40, 40, 0.1)"
+        transform="translate(1, 2)"
+        style={{ filter: "blur(2px)" }}
       />
 
+      {/* Rock body - flat color, no gradient */}
+      <polygon
+        points={points}
+        fill={isHovered ? "var(--color-rock-light)" : "var(--color-rock-mid)"}
+        className="rock-shape"
+      />
+
+      {showHitTarget && (
+        <circle
+          cx={0}
+          cy={0}
+          r={rock.size}
+          fill="none"
+          stroke="red"
+          strokeWidth={1}
+          strokeDasharray="2 2"
+          opacity={0.5}
+        />
+      )}
+
       {showId && (
-        <text
-          x={0}
-          y={-rock.size - 5}
-          textAnchor="middle"
-          fontSize={8}
-          fill="var(--color-text-muted)"
-        >
+        <text x={0} y={-rock.size - 4} textAnchor="middle" className="debug-label">
           {rock.id}
         </text>
       )}
     </g>
   );
-}
+});
 
 // === Plant Renderer ===
 
@@ -309,7 +297,7 @@ type PlantRendererProps = {
   dispatch: (msg: Msg) => void;
 };
 
-function PlantRenderer({
+const PlantRenderer = memo(function PlantRenderer({
   plant,
   nodes,
   islandPos,
@@ -318,43 +306,38 @@ function PlantRenderer({
   showHitTargets,
   dispatch,
 }: PlantRendererProps) {
-  // Build a map for quick lookup
-  const nodeMap = new Map(
-    nodes.map((n: PlantNode): [string, PlantNode] => [n.id, n])
-  );
+  const nodeMap = new Map(nodes.map((n: PlantNode): [string, PlantNode] => [n.id, n]));
 
   return (
-    <g>
-      {/* Stems first (behind nodes) */}
-      {Array.from(plant.adjacency.entries()).map(
-        ([parentId, childIds]: [string, string[]]) => {
-          const parent = nodeMap.get(parentId);
-          if (!parent) return null;
+    <g className="plant-group">
+      {/* Stems */}
+      {Array.from(plant.adjacency.entries()).map(([parentId, childIds]: [string, string[]]) => {
+        const parent = nodeMap.get(parentId);
+        if (!parent) return null;
 
-          return childIds.map((childId: string) => {
-            const child = nodeMap.get(childId);
-            if (!child) return null;
+        return childIds.map((childId: string) => {
+          const child = nodeMap.get(childId);
+          if (!child) return null;
 
-            const p1 = addVec2(islandPos, parent.localPos);
-            const p2 = addVec2(islandPos, child.localPos);
+          const p1 = addVec2(islandPos, parent.localPos);
+          const p2 = addVec2(islandPos, child.localPos);
 
-            // Quadratic bezier with slight curve
-            const midX = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.1;
-            const midY = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.1;
+          const midX = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.12;
+          const midY = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.12;
 
-            return (
-              <path
-                key={`stem-${parentId}-${childId}`}
-                d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
-                fill="none"
-                stroke="var(--color-stem)"
-                strokeWidth={3}
-                strokeLinecap="round"
-              />
-            );
-          });
-        }
-      )}
+          return (
+            <path
+              key={`stem-${parentId}-${childId}`}
+              d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
+              fill="none"
+              stroke="var(--color-stem)"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              className="stem-path"
+            />
+          );
+        });
+      })}
 
       {/* Nodes */}
       {nodes.map((node: PlantNode) => (
@@ -370,9 +353,10 @@ function PlantRenderer({
       ))}
     </g>
   );
-}
+});
 
 // === Plant Node Renderer ===
+// Larger hit targets, clearer visual feedback
 
 type PlantNodeRendererProps = {
   node: PlantNode;
@@ -383,7 +367,7 @@ type PlantNodeRendererProps = {
   dispatch: (msg: Msg) => void;
 };
 
-function PlantNodeRenderer({
+const PlantNodeRenderer = memo(function PlantNodeRenderer({
   node,
   islandPos,
   isHovered,
@@ -392,107 +376,94 @@ function PlantNodeRenderer({
   dispatch,
 }: PlantNodeRendererProps) {
   const worldPos = addVec2(islandPos, node.localPos);
+  const isCharged = node.nodeKind === "bud" && (node.charge ?? 0) >= 0.8;
+  const isInteractive = node.nodeKind === "bud" || node.nodeKind === "leaf";
 
   const handleClick = () => {
-    if (node.nodeKind === "bud" && (node.charge ?? 0) >= 0.8) {
+    if (node.nodeKind === "bud") {
       dispatch({ type: "sprout", budId: node.id });
     } else if (node.nodeKind === "leaf") {
       dispatch({ type: "prune", nodeId: node.id });
     }
   };
 
-  const isCharged = node.nodeKind === "bud" && (node.charge ?? 0) >= 0.8;
+  // Hit target radius - generous for clickability
+  const hitRadius = node.nodeKind === "bud" ? 14 : node.nodeKind === "leaf" ? 16 : 8;
 
   return (
     <g
+      className={`plant-node ${isInteractive ? "interactive" : ""}`}
       transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={node.id}
       onPointerEnter={() => dispatch({ type: "hover", id: node.id })}
       onPointerLeave={() => dispatch({ type: "hover", id: null })}
-      onClick={handleClick}
-      style={{
-        cursor:
-          node.nodeKind === "bud" || node.nodeKind === "leaf"
-            ? "pointer"
-            : "default",
-      }}
+      onClick={isInteractive ? handleClick : undefined}
     >
+      {/* Invisible hit target - always present for interactive nodes */}
+      {isInteractive && (
+        <circle cx={0} cy={0} r={hitRadius} fill="transparent" className="hit-target" />
+      )}
+
       {node.nodeKind === "bud" && (
         <>
-          {/* Glow for charged buds */}
           {isCharged && (
             <circle
               cx={0}
               cy={0}
-              r={8}
+              r={10}
               fill="var(--color-bud-charged)"
-              opacity={0.4}
-              filter="url(#glow)"
+              opacity={0.3}
+              className="bud-glow"
             />
           )}
           <circle
             cx={0}
             cy={0}
-            r={5}
+            r={isCharged ? 7 : 5}
             fill={isCharged ? "var(--color-bud-charged)" : "var(--color-bud)"}
-            stroke={
-              isHovered ? "var(--color-hover)" : "var(--color-green-moss)"
-            }
-            strokeWidth={isHovered ? 2 : 1}
+            className={`bud ${isHovered ? "hovered" : ""}`}
           />
         </>
       )}
 
       {node.nodeKind === "leaf" && (
         <path
-          d={leafPath({ x: 0, y: 0 }, node.angle, 12, 6)}
+          d={leafPath({ x: 0, y: 0 }, node.angle, 16, 8)}
           fill={isHovered ? "var(--color-leaf-highlight)" : "var(--color-leaf)"}
-          stroke="var(--color-green-moss)"
-          strokeWidth={1}
+          className={`leaf ${isHovered ? "hovered" : ""}`}
         />
       )}
 
-      {node.nodeKind === "stem" && (
-        <circle cx={0} cy={0} r={3} fill="var(--color-stem)" />
-      )}
+      {node.nodeKind === "stem" && <circle cx={0} cy={0} r={3} fill="var(--color-stem)" />}
 
       {node.nodeKind === "flower" && (
         <circle
           cx={0}
           cy={0}
-          r={6}
+          r={8}
           fill="var(--color-flower)"
-          stroke="var(--color-accent-coral)"
-          strokeWidth={1}
+          className={isHovered ? "hovered" : ""}
         />
       )}
 
-      {/* Hit target */}
       {showHitTarget && (
         <circle
           cx={0}
           cy={0}
-          r={10}
+          r={hitRadius}
           fill="none"
           stroke="blue"
           strokeWidth={1}
           strokeDasharray="2 2"
-          opacity={0.5}
+          opacity={0.6}
         />
       )}
 
-      {/* ID label */}
       {showId && (
-        <text
-          x={0}
-          y={-12}
-          textAnchor="middle"
-          fontSize={7}
-          fill="var(--color-text-muted)"
-        >
+        <text x={0} y={-hitRadius - 4} textAnchor="middle" className="debug-label">
           {node.id}
         </text>
       )}
     </g>
   );
-}
+});

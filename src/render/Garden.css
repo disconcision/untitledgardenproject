@@ -1,0 +1,113 @@
+/**
+ * Garden SVG styles
+ * CSS animations for ambient motion (no React re-renders)
+ */
+
+.garden-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* === Ambient Sway Animation === */
+
+@keyframes gentle-sway {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(1px, -0.5px);
+  }
+  50% {
+    transform: translate(0, 1px);
+  }
+  75% {
+    transform: translate(-1px, -0.5px);
+  }
+}
+
+.island-group,
+.rock-group {
+  animation: gentle-sway 8s ease-in-out infinite;
+  animation-delay: var(--anim-delay, 0s);
+}
+
+.plant-group {
+  animation: gentle-sway 6s ease-in-out infinite;
+  animation-delay: var(--anim-delay, 0.5s);
+}
+
+/* === Plant Nodes === */
+
+.plant-node {
+  cursor: default;
+}
+
+.plant-node.interactive {
+  cursor: pointer;
+}
+
+.plant-node.interactive:hover .bud,
+.plant-node.interactive:hover .leaf {
+  transform: scale(1.15);
+}
+
+.bud, .leaf, .flower {
+  transition: transform 100ms ease-out, fill 100ms ease-out;
+}
+
+.bud.hovered {
+  fill: var(--color-bud-charged);
+}
+
+.leaf.hovered {
+  fill: var(--color-leaf-highlight);
+}
+
+/* === Bud Glow Animation === */
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+.bud-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* === Stem === */
+
+.stem-path {
+  transition: stroke-width 100ms ease-out;
+}
+
+/* === Rock === */
+
+.rock-shape {
+  transition: fill 100ms ease-out;
+}
+
+/* === Island Highlight === */
+
+.island-highlighted {
+  opacity: 0.85;
+}
+
+/* === Debug === */
+
+.debug-label {
+  font-size: 8px;
+  fill: var(--color-text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+

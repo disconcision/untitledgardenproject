@@ -42,13 +42,13 @@ describe("generateWorld", () => {
     expect(summary.nodeCount).toBeGreaterThan(0);
   });
 
-  it("creates 4-7 islands", () => {
+  it("creates 3-5 islands", () => {
     // Test across several seeds
     for (let seed = 1; seed <= 20; seed++) {
       const world = generateWorld(seed);
       const summary = summarizeWorld(world);
-      expect(summary.islandCount).toBeGreaterThanOrEqual(4);
-      expect(summary.islandCount).toBeLessThanOrEqual(7);
+      expect(summary.islandCount).toBeGreaterThanOrEqual(3);
+      expect(summary.islandCount).toBeLessThanOrEqual(5);
     }
   });
 });

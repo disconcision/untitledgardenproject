@@ -3,19 +3,18 @@
  *
  * Atmospheric effects: gradient sky, subtle grain, drifting particles.
  * The liminal layer — felt more than seen.
+ *
+ * NOTE: This component manages its own animation loop (not React state)
+ * for performance. It only re-renders when camera changes.
  */
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, memo } from "react";
 import { Camera } from "../model";
 
 type CanvasBackgroundProps = {
   camera: Camera;
-  time: number; // Available for future time-based effects
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-// Particle for ambient drift
 type Particle = {
   x: number;
   y: number;
@@ -25,25 +24,30 @@ type Particle = {
   alpha: number;
 };
 
-export function CanvasBackground({
+export const CanvasBackground = memo(function CanvasBackground({
   camera,
-  time: _time,
 }: CanvasBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const frameRef = useRef<number>(0);
+  const cameraRef = useRef(camera);
+
+  // Update camera ref without re-render
+  useEffect(() => {
+    cameraRef.current = camera;
+  }, [camera]);
 
   // Initialize particles once
   useEffect(() => {
     const particles: Particle[] = [];
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 30; i++) {
       particles.push({
         x: Math.random() * 2000 - 1000,
         y: Math.random() * 2000 - 1000,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.2 - 0.1, // slight upward drift
-        size: 1 + Math.random() * 2,
-        alpha: 0.1 + Math.random() * 0.2,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.15 - 0.05,
+        size: 1 + Math.random() * 1.5,
+        alpha: 0.08 + Math.random() * 0.12,
       });
     }
     particlesRef.current = particles;
@@ -60,9 +64,9 @@ export function CanvasBackground({
     const height = canvas.height;
     const centerX = width / 2;
     const centerY = height / 2;
+    const cam = cameraRef.current;
 
     // === Sky Gradient ===
-    // Humid light, overcast forest morning
     const gradient = ctx.createRadialGradient(
       centerX,
       centerY * 0.7,
@@ -71,47 +75,28 @@ export function CanvasBackground({
       centerY,
       Math.max(width, height) * 0.8
     );
-    gradient.addColorStop(0, "#f0ebe3"); // warm center (filtered sun)
-    gradient.addColorStop(0.4, "#e8eff1"); // pale
-    gradient.addColorStop(0.7, "#d8e2e5"); // mid
-    gradient.addColorStop(1, "#c8d4d8"); // deep edges
+    gradient.addColorStop(0, "#f5f2ec");
+    gradient.addColorStop(0.5, "#e8eff1");
+    gradient.addColorStop(1, "#d0dce0");
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // === Subtle Grain ===
-    // Very light noise texture
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const data = imageData.data;
-    const grainAmount = 4;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const noise = (Math.random() - 0.5) * grainAmount;
-      data[i] = Math.max(0, Math.min(255, data[i] + noise));
-      data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
-      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
-    }
-    ctx.putImageData(imageData, 0, 0);
-
-    // === Drifting Particles ===
+    // === Drifting Particles (very subtle) ===
     const particles = particlesRef.current;
 
     for (const p of particles) {
-      // Update position
       p.x += p.vx;
       p.y += p.vy;
 
-      // Wrap around (in world space)
       if (p.x > 1500) p.x -= 3000;
       if (p.x < -1500) p.x += 3000;
       if (p.y > 1500) p.y -= 3000;
       if (p.y < -1500) p.y += 3000;
 
-      // Screen position
-      const screenX = centerX + (p.x + camera.pan.x) * camera.zoom;
-      const screenY = centerY + (p.y + camera.pan.y) * camera.zoom;
+      const screenX = centerX + (p.x + cam.pan.x) * cam.zoom;
+      const screenY = centerY + (p.y + cam.pan.y) * cam.zoom;
 
-      // Only draw if on screen
       if (
         screenX > -20 &&
         screenX < width + 20 &&
@@ -119,12 +104,12 @@ export function CanvasBackground({
         screenY < height + 20
       ) {
         ctx.beginPath();
-        ctx.arc(screenX, screenY, p.size * camera.zoom, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(180, 190, 185, ${p.alpha})`;
+        ctx.arc(screenX, screenY, p.size * cam.zoom, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(160, 170, 165, ${p.alpha})`;
         ctx.fill();
       }
     }
-  }, [camera]);
+  }, []);
 
   // Handle resize
   useEffect(() => {
@@ -137,15 +122,14 @@ export function CanvasBackground({
       canvas.height = window.innerHeight * dpr;
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
-      render();
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [render]);
+  }, []);
 
-  // Animation loop
+  // Animation loop - runs independently of React
   useEffect(() => {
     const animate = () => {
       render();
@@ -169,4 +153,4 @@ export function CanvasBackground({
       }}
     />
   );
-}
+});

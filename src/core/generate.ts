@@ -1,8 +1,8 @@
 /**
  * Hanging Garden — Procedural Generation (Core)
  *
- * Seeded generation of islands, plants, rocks, vines.
- * Deterministic given seed. No React/DOM dependencies.
+ * Seeded generation. Rocks as primary anchors.
+ * Plants grow from rock edges with sky behind them.
  */
 
 import {
@@ -18,12 +18,14 @@ import {
   createInitialWorld,
   addVec2,
   scaleVec2,
+  normalizeVec2,
+  subVec2,
+  lenVec2,
 } from "./model";
 
 // === Seeded Random ===
 
 export function createRng(seed: number): () => number {
-  // Simple mulberry32 PRNG
   return () => {
     let t = (seed += 0x6d2b79f5);
     t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -38,7 +40,7 @@ function generateBlobShape(
   rng: () => number,
   radius: number,
   irregularity: number = 0.3,
-  points: number = 12
+  points: number = 10
 ): Vec2[] {
   const shape: Vec2[] = [];
   for (let i = 0; i < points; i++) {
@@ -50,44 +52,50 @@ function generateBlobShape(
 }
 
 // === Island Generation ===
+// Smaller, more subtle - just soil patches
 
 function generateIsland(
   rng: () => number,
   index: number,
   totalIslands: number
 ): Island {
-  const spreadRadius = 400 + totalIslands * 50;
+  const spreadRadius = 350 + totalIslands * 40;
   const angle = (index / totalIslands) * Math.PI * 2 + rng() * 0.5;
-  const distance = spreadRadius * (0.3 + rng() * 0.7);
+  const distance = spreadRadius * (0.4 + rng() * 0.6);
 
-  const radius = 60 + rng() * 80;
+  // SMALLER islands - 30-60px radius
+  const radius = 30 + rng() * 30;
 
   return {
     kind: "island",
     id: genId("island"),
     pos: vec2(Math.cos(angle) * distance, Math.sin(angle) * distance),
     radius,
-    shape: generateBlobShape(rng, radius, 0.25 + rng() * 0.2),
+    shape: generateBlobShape(rng, radius, 0.2 + rng() * 0.15),
     depth: 0.8 + rng() * 0.4,
   };
 }
 
 // === Rock Generation ===
+// Larger, more prominent - the primary visual anchors
 
 function generateRocksForIsland(rng: () => number, island: Island): Rock[] {
-  const count = Math.floor(1 + rng() * 3);
+  // 2-4 rocks per island, larger and more spread out
+  const count = 2 + Math.floor(rng() * 3);
   const rocks: Rock[] = [];
 
   for (let i = 0; i < count; i++) {
-    const angle = rng() * Math.PI * 2;
-    const dist = island.radius * (0.2 + rng() * 0.6);
+    const angle = (i / count) * Math.PI * 2 + rng() * 0.8;
+    // Rocks positioned at edge of island or slightly beyond
+    const dist = island.radius * (0.6 + rng() * 0.6);
 
     rocks.push({
       kind: "rock",
       id: genId("rock"),
       islandId: island.id,
       localPos: vec2(Math.cos(angle) * dist, Math.sin(angle) * dist),
-      size: 8 + rng() * 20,
+      // Bigger rocks: 15-35px
+      size: 15 + rng() * 20,
       rotation: rng() * Math.PI * 2,
     });
   }
@@ -96,21 +104,35 @@ function generateRocksForIsland(rng: () => number, island: Island): Rock[] {
 }
 
 // === Plant Generation ===
+// Plants grow from rock edges, reaching into open sky
 
-function generatePlantForIsland(
+function generatePlantForRock(
   rng: () => number,
+  rock: Rock,
   island: Island
 ): { nodes: PlantNode[]; plant: Plant } {
   const plantId = genId("plant");
   const nodes: PlantNode[] = [];
   const adjacency = new Map<string, string[]>();
 
-  const rootAngle = rng() * Math.PI * 2;
-  const rootDist = island.radius * (0.1 + rng() * 0.3);
-  const rootPos = vec2(
-    Math.cos(rootAngle) * rootDist,
-    Math.sin(rootAngle) * rootDist
+  // Root position at rock edge, pointing outward (toward sky)
+  const outwardDir = normalizeVec2(subVec2(rock.localPos, vec2(0, 0)));
+
+  // If rock is near center, pick a random outward direction
+  const outwardAngle =
+    lenVec2(rock.localPos) > 10
+      ? Math.atan2(outwardDir.y, outwardDir.x)
+      : rng() * Math.PI * 2;
+
+  // Root starts at rock edge
+  const rootOffset = scaleVec2(
+    vec2(Math.cos(outwardAngle), Math.sin(outwardAngle)),
+    rock.size * 0.7
   );
+  const rootPos = addVec2(rock.localPos, rootOffset);
+
+  // Growth direction: mostly outward and upward
+  const growAngle = outwardAngle * 0.5 + -Math.PI / 2 * 0.5 + (rng() - 0.5) * 0.4;
 
   const rootId = genId("node");
   nodes.push({
@@ -119,19 +141,19 @@ function generatePlantForIsland(
     plantId,
     nodeKind: "stem",
     localPos: rootPos,
-    angle: -Math.PI / 2 + (rng() - 0.5) * 0.3,
+    angle: growAngle,
   });
   adjacency.set(rootId, []);
 
   let currentId = rootId;
   let currentPos = rootPos;
-  let currentAngle = -Math.PI / 2 + (rng() - 0.5) * 0.3;
+  let currentAngle = growAngle;
 
-  const segmentCount = 2 + Math.floor(rng() * 3);
+  const segmentCount = 2 + Math.floor(rng() * 2);
 
   for (let i = 0; i < segmentCount; i++) {
-    const segmentLength = 15 + rng() * 20;
-    const angleVariation = (rng() - 0.5) * 0.4;
+    const segmentLength = 20 + rng() * 15;
+    const angleVariation = (rng() - 0.5) * 0.35;
     currentAngle += angleVariation;
 
     const newPos = addVec2(
@@ -152,17 +174,18 @@ function generatePlantForIsland(
       nodeKind: isLast ? "bud" : "stem",
       localPos: newPos,
       angle: currentAngle,
-      charge: isLast ? 0.5 + rng() * 0.5 : undefined,
+      charge: isLast ? 0.6 + rng() * 0.4 : undefined,
     });
 
     adjacency.get(currentId)!.push(newId);
     adjacency.set(newId, []);
 
-    if (!isLast && rng() > 0.4) {
+    // Add leaves on stems (not on first segment)
+    if (!isLast && i > 0 && rng() > 0.3) {
       const leafId = genId("node");
-      const leafAngle =
-        currentAngle + (rng() > 0.5 ? 1 : -1) * (0.4 + rng() * 0.4);
-      const leafDist = 10 + rng() * 15;
+      const leafSide = rng() > 0.5 ? 1 : -1;
+      const leafAngle = currentAngle + leafSide * (0.6 + rng() * 0.5);
+      const leafDist = 14 + rng() * 10;
 
       nodes.push({
         kind: "plantNode",
@@ -171,10 +194,7 @@ function generatePlantForIsland(
         nodeKind: "leaf",
         localPos: addVec2(
           newPos,
-          scaleVec2(
-            vec2(Math.cos(leafAngle), Math.sin(leafAngle)),
-            leafDist
-          )
+          scaleVec2(vec2(Math.cos(leafAngle), Math.sin(leafAngle)), leafDist)
         ),
         angle: leafAngle,
       });
@@ -205,24 +225,29 @@ export function generateWorld(seed: number): World {
   const rng = createRng(seed);
   const world = createInitialWorld(seed);
 
-  const islandCount = 4 + Math.floor(rng() * 4);
+  // Fewer islands: 3-5
+  const islandCount = 3 + Math.floor(rng() * 3);
   const islands: Island[] = [];
+  const allRocks: { rock: Rock; island: Island }[] = [];
 
   for (let i = 0; i < islandCount; i++) {
     const island = generateIsland(rng, i, islandCount);
     islands.push(island);
     world.entities.set(island.id, island);
-  }
 
-  for (const island of islands) {
+    // Generate rocks
     const rocks = generateRocksForIsland(rng, island);
     for (const rock of rocks) {
       world.entities.set(rock.id, rock);
+      allRocks.push({ rock, island });
     }
+  }
 
-    const plantCount = 1 + Math.floor(rng() * 2);
-    for (let p = 0; p < plantCount; p++) {
-      const { nodes, plant } = generatePlantForIsland(rng, island);
+  // Generate plants from rocks (not all rocks have plants)
+  for (const { rock, island } of allRocks) {
+    // 60% of rocks have a plant
+    if (rng() > 0.4) {
+      const { nodes, plant } = generatePlantForRock(rng, rock, island);
       for (const node of nodes) {
         world.entities.set(node.id, node);
       }
@@ -232,4 +257,3 @@ export function generateWorld(seed: number): World {
 
   return world;
 }
-

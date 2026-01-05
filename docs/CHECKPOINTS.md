@@ -54,6 +54,63 @@ This file logs development checkpoints. Each checkpoint includes:
 
 ---
 
+## CP-003: Performance + Visual Overhaul + Sprout/Prune
+
+**Date**: 2026-01-04  
+**Seed**: 42  
+**Commit**: 194fc10
+
+### What Changed
+
+**Performance Fixes**:
+
+- Simulation tick now fires every 1s (not 60fps)
+- CSS animations for ambient sway (no React re-renders for visual motion)
+- Components wrapped in `React.memo`
+
+**Visual Overhaul**:
+
+- Islands smaller (30-60px radius), more subtle soil patches
+- Rocks larger and more angular (8-10 sides), as primary visual anchors
+- Plants grow from rock edges into open sky (not buried in islands)
+- Removed harsh gradients and outlines
+- Soft diffuse shadows using blur, not drop-shadow
+
+**Bug Fix — Sprout/Prune**:
+
+- Clicking bud now actually sprouts: converts bud→stem, adds new bud + optional leaf
+- Clicking leaf now prunes: removes node and all descendants
+- Buds charge over time during simulation tick
+
+**Hit Targets**:
+
+- Invisible expanded hit circles (14-16px radius)
+- Much easier to click buds and leaves
+
+**UI — Corner Dock System**:
+
+- New `HUD.tsx` replaces separate Tutorial/DebugPanel
+- Icons at corners, expand to minimal panels
+- Removed header labels ("What's New", "Debug")
+- Cleaner, more minimal aesthetic
+
+### Tour Path
+
+1. **Load** — See rocks with plants growing outward into sky
+2. **Click a glowing bud** — Watch it sprout a new branch
+3. **Click a leaf** — Watch it get pruned
+4. **Open debug panel** (gear icon) → Random seed — Regenerate
+5. **Pan/zoom** — Notice smooth performance
+
+### Notes
+
+- Island count reduced to 3-5 (was 4-7)
+- Rocks are now 2-4 per island, larger (15-35px)
+- Plants grow outward from rocks, reaching toward sky
+- Performance should now be smooth even with many entities
+
+---
+
 ## CP-002: Core Module + Testing + CLI
 
 **Date**: 2026-01-04  

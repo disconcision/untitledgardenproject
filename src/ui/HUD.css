@@ -1,0 +1,204 @@
+/**
+ * HUD styles — minimal, corner-based
+ */
+
+.hud-corner {
+  position: fixed;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.hud-top-left {
+  top: 16px;
+  left: 16px;
+}
+
+.hud-top-right {
+  top: 16px;
+  right: 16px;
+}
+
+.hud-bottom-left {
+  bottom: 16px;
+  left: 16px;
+}
+
+.hud-bottom-right {
+  bottom: 16px;
+  right: 16px;
+}
+
+/* === Icon Button === */
+
+.hud-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-text-primary);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transition: background 100ms ease-out, transform 100ms ease-out;
+}
+
+.hud-icon:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+}
+
+/* === Panel === */
+
+.hud-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 180px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  color: var(--color-text-primary);
+}
+
+.hud-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-close:hover {
+  color: var(--color-text-primary);
+}
+
+/* === Progress === */
+
+.hud-progress {
+  height: 3px;
+  background: var(--color-ui-border);
+  border-radius: 2px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.hud-progress-bar {
+  height: 100%;
+  background: var(--color-green-fern);
+  transition: width 200ms ease-out;
+}
+
+/* === Steps === */
+
+.hud-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hud-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.hud-steps li.completed {
+  color: var(--color-text-muted);
+}
+
+.hud-steps li.completed .step-text {
+  text-decoration: line-through;
+}
+
+.step-check {
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.hud-footer {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-ui-border);
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+/* === Debug Controls === */
+
+.hud-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.hud-toggle input {
+  margin: 0;
+}
+
+.hud-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 11px;
+}
+
+.hud-input {
+  width: 60px;
+  padding: 2px 4px;
+  border: 1px solid var(--color-ui-border);
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.hud-button {
+  width: 100%;
+  padding: 4px 8px;
+  margin-top: 6px;
+  border: 1px solid var(--color-ui-border);
+  border-radius: 4px;
+  background: white;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.hud-button:hover {
+  background: var(--color-ui-bg);
+}
+
+.hud-stats {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-ui-border);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.hud-stats > div {
+  padding: 1px 0;
+}
+

@@ -2,6 +2,7 @@
  * Hanging Garden — Main App
  *
  * Composition of all layers: Canvas background, SVG world, DOM HUD.
+ * Performance: Simulation tick is slow (1s), visual animations use CSS.
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -10,50 +11,41 @@ import { Msg, update } from "./update";
 import { generateWorld } from "./generate";
 import { CanvasBackground } from "./render/Canvas";
 import { Garden } from "./render/Garden";
-import { Tutorial } from "./ui/Tutorial";
-import { DebugPanel } from "./ui/DebugPanel";
+import { HUD } from "./ui/HUD";
 import { useCamera } from "./hooks/useCamera";
 
 const INITIAL_SEED = 42;
+const SIM_TICK_MS = 1000;
 
 export default function App() {
   const [world, setWorld] = useState<World>(() => generateWorld(INITIAL_SEED));
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Dispatch function for messages
   const dispatch = useCallback((msg: Msg): void => {
     setWorld((w: World): World => update(msg, w));
   }, []);
 
-  // Regenerate world with new seed
   const handleRegenerate = useCallback((seed: number): void => {
     setWorld(generateWorld(seed));
   }, []);
 
-  // Camera controls
   const camera = useCamera({ dispatch, containerRef });
 
-  // Animation loop for simulation tick
+  // Simulation tick - slow rate for game logic
   useEffect(() => {
-    let lastTime = performance.now();
-    let animationId: number;
+    if (world.time.paused || world.debug.freezeTime) return;
 
-    const tick = (currentTime: number): void => {
-      const dt = currentTime - lastTime;
-      lastTime = currentTime;
+    const interval = setInterval(() => {
+      dispatch({ type: "tick", dt: SIM_TICK_MS });
+    }, SIM_TICK_MS);
 
-      dispatch({ type: "tick", dt });
-      animationId = requestAnimationFrame(tick);
-    };
-
-    animationId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animationId);
-  }, [dispatch]);
+    return () => clearInterval(interval);
+  }, [dispatch, world.time.paused, world.debug.freezeTime]);
 
   return (
     <div
       ref={containerRef}
-      className="garden-container cursor-grab"
+      className="garden-container"
       style={{
         position: "fixed",
         top: 0,
@@ -62,24 +54,15 @@ export default function App() {
         height: "100vh",
         overflow: "hidden",
         touchAction: "none",
+        cursor: "grab",
       }}
       onPointerDown={camera.handlePointerDown}
       onPointerMove={camera.handlePointerMove}
       onPointerUp={camera.handlePointerUp}
     >
-      {/* Layer 1: Canvas atmosphere */}
-      <CanvasBackground camera={world.camera} time={world.time.t} />
-
-      {/* Layer 2: SVG world */}
+      <CanvasBackground camera={world.camera} />
       <Garden world={world} dispatch={dispatch} />
-
-      {/* Layer 3: DOM HUD */}
-      <Tutorial world={world} dispatch={dispatch} />
-      <DebugPanel
-        world={world}
-        dispatch={dispatch}
-        onRegenerate={handleRegenerate}
-      />
+      <HUD world={world} dispatch={dispatch} onRegenerate={handleRegenerate} />
     </div>
   );
 }
