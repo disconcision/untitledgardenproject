@@ -1,13 +1,49 @@
 # Agent Workflow — Mandatory Process
 
-> **Every agent making changes MUST follow this workflow.**  
-> This applies to all feature work, bug fixes, and improvements.
+> **⚠️ STOP: Every agent making changes MUST follow this workflow.**  
+> This applies to all feature work, bug fixes, and improvements.  
+> **Skipping steps creates problems for future agents and the creator.**
+
+---
+
+## Phase 0: Parse the Request
+
+**Before doing anything else**, analyze what the user is asking for:
+
+### 1. Identify Distinct Tasks
+
+The creator may give you an "unstructured blob" of requests. Your first job is to separate these into distinct, atomic tasks:
+
+- Read through the entire request
+- List out each distinct fix, feature, or improvement
+- Note which tasks are related vs. truly orthogonal
+- Consider dependencies between tasks
+
+**Example**: "Fix the hover bug, also add a zoom indicator, and update the tutorial" becomes:
+1. `fix/hover-bug` — Fix the hover bug  
+2. `feat/zoom-indicator` — Add zoom indicator
+3. `docs/tutorial-update` — Update tutorial
+
+### 2. Plan Your Git Strategy
+
+For a single conversation with multiple tasks:
+
+| Scenario | Strategy |
+|----------|----------|
+| 2-3 small related fixes | One branch, separate commits per fix |
+| Multiple unrelated features | Separate branches, merge each before starting next |
+| One coherent feature | One branch, atomic commits |
+| Mix of fixes + feature | Fix branch first, merge, then feature branch |
+
+**Minimum standard**: One branch per conversation with descriptive commits for each logical change.
+
+**Preferred**: Separate branches for truly orthogonal work, so each can be reverted independently.
 
 ---
 
 ## Phase 1: Before Starting Work
 
-### 1. Understand Context
+### 3. Understand Context
 
 ```bash
 # Read the docs in order:
@@ -16,7 +52,7 @@ docs/TODO.md        # What's in progress, what's available
 SOURCE.md           # Vision, architecture, aesthetic (skim if familiar)
 ```
 
-### 2. Claim Your Task
+### 5. Claim Your Task
 
 In `docs/TODO.md`:
 
@@ -24,7 +60,7 @@ In `docs/TODO.md`:
 - Add date: `- [ ] **[YYYY-MM-DD]** Task description`
 - If the task doesn't exist, add it first
 
-### 3. Create a Feature Branch
+### 6. Create a Feature Branch
 
 ```bash
 git checkout main && git pull
@@ -42,19 +78,20 @@ Use descriptive names:
 
 ## Phase 2: During Work
 
-### 4. Make Focused Changes
+### 7. Make Focused Changes
 
 - **1–3 coherent improvements** per session, not scattered edits
 - Keep commits small and atomic
+- **Commit after each logical unit of work** — don't batch unrelated changes
 - If you notice unrelated issues, note them in TODO.md for later
 
-### 5. Test in Browser
+### 8. Test in Browser
 
 - Use Cursor's browser tools to verify changes work visually
 - Check console for errors
 - Verify the change does what you intended
 
-### 6. Check for Lint Errors
+### 9. Check for Lint Errors
 
 Run `read_lints` on modified files. Fix any issues you introduced.
 
@@ -62,7 +99,7 @@ Run `read_lints` on modified files. Fix any issues you introduced.
 
 ## Phase 3: After Completing Work
 
-### 7. Update Documentation
+### 10. Update Documentation
 
 | Change Type    | Update TODO.md? | Update CHECKPOINTS.md? | Update SOURCE.md? | Review Tutorial?     |
 | -------------- | --------------- | ---------------------- | ----------------- | -------------------- |
@@ -91,7 +128,7 @@ Run `read_lints` on modified files. Fix any issues you introduced.
 - New dependencies/libraries
 - UI/UX pattern changes
 
-### 8. Commit with Clear Message
+### 11. Commit with Clear Message
 
 ```bash
 git add -A
@@ -106,7 +143,13 @@ Use conventional commits:
 - `docs:` — Documentation only
 - `chore:` — Maintenance, cleanup
 
-### 9. Merge to Main
+**For multiple fixes in one branch**, commit each separately:
+```bash
+git add <files-for-fix-1> && git commit -m "fix: first issue"
+git add <files-for-fix-2> && git commit -m "fix: second issue"
+```
+
+### 12. Merge to Main
 
 ```bash
 git checkout main && git pull
@@ -116,7 +159,7 @@ git push
 
 Handle merge conflicts if they arise from parallel work.
 
-### 10. Delete the Feature Branch
+### 13. Delete the Feature Branch
 
 ```bash
 git branch -d feature/<branch-name>
@@ -126,9 +169,37 @@ git branch -d feature/<branch-name>
 
 ---
 
+## ⛔ STOP — Final Validation
+
+**Before returning to the user, verify you have completed the workflow:**
+
+### Git Checklist
+
+- [ ] Created a feature branch (not working directly on main)
+- [ ] Made atomic commits with clear messages
+- [ ] Merged branch to main
+- [ ] Pushed to origin
+- [ ] Deleted the feature branch
+
+### Documentation Checklist
+
+- [ ] TODO.md updated (task claimed at start, marked complete at end)
+- [ ] CHECKPOINTS.md updated (if significant feature)
+- [ ] Tutorial reviewed (if user-facing change)
+
+### Quality Checklist
+
+- [ ] Tested changes in browser
+- [ ] No lint errors (`read_lints` on modified files)
+- [ ] No console errors
+
+**If any of these are incomplete, do them now before responding to the user.**
+
+---
+
 ## Phase 4: Completion Report
 
-**Before ending your session, provide a completion report to the creator.**
+**After passing validation, provide a completion report to the creator.**
 
 ### Template
 
@@ -253,13 +324,39 @@ const handleToggle = (): void => {
 
 ## Special Cases
 
-### Multiple Orthogonal Changes
+### Multiple Tasks in One Conversation
 
-If you're asked to do two unrelated things:
+This is common — the creator often gives a batch of requests. Handle it systematically:
 
-- Create separate branches for each
-- Merge each independently
-- This keeps history clean for bisecting
+**Option A: One Branch, Multiple Commits** (for related or small fixes)
+```bash
+git checkout -b fix/session-2026-01-05
+# Fix issue 1
+git add <files> && git commit -m "fix: first issue"
+# Fix issue 2  
+git add <files> && git commit -m "fix: second issue"
+# Merge when all done
+git checkout main && git merge fix/session-2026-01-05
+```
+
+**Option B: Separate Branches** (for unrelated features)
+```bash
+# Feature 1
+git checkout -b feat/zoom-indicator
+# ... work ...
+git commit -m "feat: add zoom indicator"
+git checkout main && git merge feat/zoom-indicator && git branch -d feat/zoom-indicator
+
+# Feature 2
+git checkout -b fix/hover-bug
+# ... work ...
+git commit -m "fix: hover z-index"
+git checkout main && git merge fix/hover-bug && git branch -d fix/hover-bug
+```
+
+**When to use which:**
+- **Option A**: Fixes are small, won't need individual reverts
+- **Option B**: Changes are significant, might need to revert one without the other
 
 ### Long-Running Work
 
@@ -290,6 +387,11 @@ If another agent might be working simultaneously:
 ## Quick Reference
 
 ```
+PARSE:
+  # Read user request
+  # Identify distinct tasks
+  # Plan git strategy (one branch? multiple?)
+
 START:
   git checkout main && git pull
   git checkout -b feature/xxx
@@ -297,13 +399,20 @@ START:
 
 WORK:
   # Make changes
+  # Commit each logical unit separately
   # Test in browser
   # Check lints
+
+VALIDATE (before responding!):
+  ☐ Branch created?
+  ☐ Commits made?
+  ☐ TODO.md updated?
+  ☐ Tutorial reviewed (if UI change)?
+  ☐ Tested in browser?
 
 FINISH:
   # Update TODO.md — mark complete
   # Update CHECKPOINTS.md if significant
-  git add -A && git commit -m "feat: xxx"
   git checkout main && git pull
   git merge feature/xxx
   git push
@@ -313,4 +422,4 @@ FINISH:
 
 ---
 
-_This workflow exists to prevent context loss and enable parallel work. Follow it consistently._
+_This workflow exists to prevent context loss and enable parallel work. **Following it is not optional.**_

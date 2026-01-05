@@ -1,17 +1,24 @@
 # Hanging Garden — Documentation Index
 
-> **Agents: Start here.** This is your entry point to the project.
+> **⚠️ Agents: Start here.** This is your entry point to the project.
 
 ## Quick Start for Agents
 
-Before doing any work:
+**Before doing any work, you MUST read the workflow documentation:**
 
 ```
-1. Read this file (docs/README.md)
-2. Read docs/AGENT-WORKFLOW.md for the mandatory process
-3. Check docs/TODO.md for current tasks and what's in progress
-4. Skim SOURCE.md for project vision and architecture
+1. Read this file (docs/README.md) — you're here
+2. Read docs/AGENT-WORKFLOW.md — MANDATORY, contains git process
+3. Check docs/TODO.md — claim your task before starting
+4. Skim SOURCE.md — project vision and architecture
 ```
+
+### Why This Matters
+
+- Multiple agents may work on this project in parallel
+- Proper git hygiene prevents conflicts and enables clean reverts
+- The creator needs a comprehensible commit history
+- **Skipping the workflow creates problems for everyone**
 
 ## Documentation Map
 
@@ -46,11 +53,22 @@ If the agent didn't provide this, ask: "Give me your completion report."
 
 ## Key Principles
 
-1. **Small, focused commits** — Easy to bisect and revert
-2. **Claim tasks before starting** — Prevents parallel conflicts
-3. **Update docs as you go** — Not as an afterthought
-4. **Leave the codebase better than you found it** — Clean up stale branches, fix small issues you notice
+1. **Always use feature branches** — Never commit directly to main
+2. **Small, focused commits** — One logical change per commit
+3. **Separate unrelated work** — Different fixes get different commits (or branches)
+4. **Claim tasks before starting** — Prevents parallel conflicts
+5. **Update docs as you go** — Not as an afterthought
+6. **Validate before responding** — Check the workflow checklist before ending
+
+## Non-Negotiables
+
+These are not suggestions. Every session must include:
+
+- [ ] Feature branch created
+- [ ] Branch merged and deleted when done
+- [ ] TODO.md updated
+- [ ] Completion report provided
 
 ---
 
-_This file is the first thing agents should read. Keep it concise and actionable._
+_This file is the first thing agents should read. The workflow is mandatory, not optional._
