@@ -6,7 +6,14 @@
  */
 
 import { useState, memo, useCallback } from "react";
-import { Compass, Settings, X, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import {
+  Compass,
+  Settings,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
 import { World, TutorialSection } from "../model";
 import { Msg } from "../update";
 import "./HUD.css";
@@ -20,7 +27,10 @@ type HUDProps = {
 };
 
 // Helper to count all steps across sections
-function countSteps(sections: TutorialSection[]): { completed: number; total: number } {
+function countSteps(sections: TutorialSection[]): {
+  completed: number;
+  total: number;
+} {
   let completed = 0;
   let total = 0;
   for (const section of sections) {
@@ -51,7 +61,9 @@ const TutorialSectionView = memo(function TutorialSectionView({
   return (
     <div className={`tutorial-section ${section.isNew ? "is-new" : ""}`}>
       <button
-        className={`tutorial-section-header ${sectionCompleted ? "completed" : ""}`}
+        className={`tutorial-section-header ${
+          sectionCompleted ? "completed" : ""
+        }`}
         onClick={() => toggleSection(section.id)}
       >
         <span className="section-toggle">
@@ -72,11 +84,11 @@ const TutorialSectionView = memo(function TutorialSectionView({
           {section.steps.map((step) => (
             <li
               key={step.id}
-              className={`${step.completed ? "completed" : ""} ${step.isNew ? "is-new" : ""}`}
+              className={`${step.completed ? "completed" : ""} ${
+                step.isNew ? "is-new" : ""
+              }`}
             >
-              <span className="step-check">
-                {step.completed ? "✓" : "○"}
-              </span>
+              <span className="step-check">{step.completed ? "✓" : "○"}</span>
               <span className="step-text">{step.instruction}</span>
             </li>
           ))}
@@ -93,6 +105,14 @@ export const HUD = memo(function HUD({
 }: HUDProps) {
   const [debugOpen, setDebugOpen] = useState(false);
   const { tutorial, debug, seed, camera } = world;
+
+  const handleDebugToggle = useCallback((): void => {
+    const willOpen = !debugOpen;
+    setDebugOpen(willOpen);
+    if (willOpen) {
+      dispatch({ type: "panel/openDebug" });
+    }
+  }, [debugOpen, dispatch]);
 
   // Initialize expanded sections based on defaultExpanded and isNew
   const [expandedSections, setExpandedSections] = useState<Set<string>>(() => {
@@ -117,13 +137,19 @@ export const HUD = memo(function HUD({
     });
   }, []);
 
-  const { completed: completedCount, total: totalCount } = countSteps(tutorial.sections);
+  const { completed: completedCount, total: totalCount } = countSteps(
+    tutorial.sections
+  );
 
   return (
     <>
       {/* Top-left: Tutorial */}
       <div className="hud-corner hud-top-left">
-        <div className={`hud-panel-wrapper tutorial-panel ${tutorial.visible ? "open" : ""}`}>
+        <div
+          className={`hud-panel-wrapper tutorial-panel ${
+            tutorial.visible ? "open" : ""
+          }`}
+        >
           {/* Icon/Close button - always in corner position */}
           <button
             className="hud-corner-btn"
@@ -168,7 +194,7 @@ export const HUD = memo(function HUD({
           {/* Icon/Close button - always in corner position */}
           <button
             className="hud-corner-btn"
-            onClick={() => setDebugOpen(!debugOpen)}
+            onClick={handleDebugToggle}
             title={debugOpen ? "Close" : "Debug panel"}
           >
             {debugOpen ? <X size={ICON_SIZE} /> : <Settings size={ICON_SIZE} />}

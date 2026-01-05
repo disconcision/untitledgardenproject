@@ -62,6 +62,14 @@ export const TimeConfig = memo(function TimeConfig({
   const phase = getDayPhase(dayCycle.timeOfDay);
   const timeStr = formatTimeOfDay(dayCycle.timeOfDay);
 
+  const handleToggle = (): void => {
+    const willOpen = !isOpen;
+    setIsOpen(willOpen);
+    if (willOpen) {
+      dispatch({ type: "panel/openTime" });
+    }
+  };
+
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = parseFloat(e.target.value);
     dispatch({ type: "dayCycle/setTime", timeOfDay: value });
@@ -89,7 +97,7 @@ export const TimeConfig = memo(function TimeConfig({
         {/* Icon/Close button - always in corner position */}
         <button
           className="hud-corner-btn"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleToggle}
           title={isOpen ? "Close" : "Time settings"}
         >
           {isOpen ? <X size={ICON_SIZE} /> : <Clock size={ICON_SIZE} />}
@@ -106,7 +114,9 @@ export const TimeConfig = memo(function TimeConfig({
             <button
               className="time-play-pause"
               onClick={toggleRunning}
-              title={dayCycle.running ? "Pause simulation" : "Resume simulation"}
+              title={
+                dayCycle.running ? "Pause simulation" : "Resume simulation"
+              }
             >
               {dayCycle.running ? <Pause size={14} /> : <Play size={14} />}
             </button>

@@ -64,18 +64,26 @@ Run `read_lints` on modified files. Fix any issues you introduced.
 
 ### 7. Update Documentation
 
-| Change Type   | Update TODO.md? | Update CHECKPOINTS.md? | Update SOURCE.md? |
-| ------------- | --------------- | ---------------------- | ----------------- |
-| Any change    | ✓ Always        | If significant         | If architectural  |
-| New feature   | ✓               | ✓ (with tour path)     | Maybe             |
-| Bug fix       | ✓               | Optional               | No                |
-| Refactoring   | ✓               | No                     | Maybe             |
-| Visual polish | ✓               | Optional               | No                |
+| Change Type    | Update TODO.md? | Update CHECKPOINTS.md? | Update SOURCE.md? | Review Tutorial?     |
+| -------------- | --------------- | ---------------------- | ----------------- | -------------------- |
+| Any change     | ✓ Always        | If significant         | If architectural  | If user-facing       |
+| New feature    | ✓               | ✓ (with tour path)     | Maybe             | ✓ (add steps)        |
+| Bug fix        | ✓               | Optional               | No                | If affects UI        |
+| Refactoring    | ✓               | No                     | Maybe             | No                   |
+| Visual polish  | ✓               | Optional               | No                | Maybe                |
+| UI interaction | ✓               | Optional               | No                | ✓ (add/update steps) |
 
 **CHECKPOINTS.md** — Add entry if this is a notable feature:
 
 - Tour path (2-5 verification steps)
 - Architecture notes (why, not just what)
+
+**Tutorial (src/core/model.ts)** — Review if you added user-facing features:
+
+- Add new tutorial steps for new interactions
+- Remove `isNew` flags from steps that are no longer new
+- Ensure tutorial steps have corresponding completion hooks in `update.ts`
+- Verify steps actually complete when the user performs the action
 
 **SOURCE.md** — Update if you made:
 
@@ -196,6 +204,50 @@ Run through this mentally before providing your completion report:
 5. **Did I test the changes in the browser?**
 6. **Are there any stale branches I should clean up?**
 7. **Is there anything the creator needs to do manually?**
+
+---
+
+## Tutorial Maintenance
+
+The tutorial pane (`src/core/model.ts`) needs to stay in sync with actual features. When you add or modify user-facing interactions:
+
+### Adding New Features
+
+1. **Add tutorial step** in `createInitialWorld()` → `tutorial.sections`
+2. **Add completion hook** in `update.ts` for the relevant message type
+3. **Mark as `isNew: true`** to highlight the feature (section and/or step)
+
+### After Your Changes
+
+1. **Remove `isNew` flags** from steps that were previously marked new (by you or earlier agents)
+2. **Verify completion works** — test in browser that the step checks off when performed
+3. **Clean up stale steps** — if a feature was removed, remove its tutorial step
+
+### Completion Hook Pattern
+
+Tutorial steps complete via `completeTutorialStep()` in message handlers:
+
+```typescript
+case "someAction": {
+  return {
+    ...world,
+    // ... other state changes ...
+    tutorial: completeTutorialStep(world.tutorial, "step-id"),
+  };
+}
+```
+
+For panel-based steps, dispatch a panel open message when the panel opens:
+
+```typescript
+const handleToggle = (): void => {
+  const willOpen = !isOpen;
+  setIsOpen(willOpen);
+  if (willOpen) {
+    dispatch({ type: "panel/openSomething" });
+  }
+};
+```
 
 ---
 

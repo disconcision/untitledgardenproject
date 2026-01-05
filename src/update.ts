@@ -52,6 +52,11 @@ export type Msg =
   | { type: "debug/toggleHitTargets" }
   | { type: "debug/toggleFreeze" }
   | { type: "debug/regenerate"; seed: number }
+
+  // Panels
+  | { type: "panel/openInspector" }
+  | { type: "panel/openDebug" }
+  | { type: "panel/openTime" }
   
   // Day Cycle
   | { type: "dayCycle/setTime"; timeOfDay: number }
@@ -281,7 +286,10 @@ export function update(msg: Msg, world: World): World {
         const budToSprout = budsToSprout[Math.floor(Math.random() * budsToSprout.length)];
         const sproutResult = sproutBud(result, budToSprout);
         if (sproutResult) {
-          result = sproutResult;
+          result = {
+            ...sproutResult,
+            tutorial: completeTutorialStep(sproutResult.tutorial, "watch-grow"),
+          };
         }
       }
 
@@ -337,6 +345,23 @@ export function update(msg: Msg, world: World): World {
     case "debug/regenerate":
       return world;
 
+    // === Panels ===
+    case "panel/openInspector":
+      return {
+        ...world,
+        tutorial: completeTutorialStep(world.tutorial, "inspector"),
+      };
+
+    case "panel/openDebug":
+      return {
+        ...world,
+        tutorial: completeTutorialStep(world.tutorial, "debug"),
+      };
+
+    case "panel/openTime":
+      // Opening the time panel doesn't complete a step itself, but is a prerequisite
+      return world;
+
     // === Day Cycle ===
     case "dayCycle/setTime": {
       return {
@@ -345,6 +370,7 @@ export function update(msg: Msg, world: World): World {
           ...world.dayCycle,
           timeOfDay: Math.max(0, Math.min(1, msg.timeOfDay)),
         },
+        tutorial: completeTutorialStep(world.tutorial, "time-scrub"),
       };
     }
 
@@ -367,6 +393,7 @@ export function update(msg: Msg, world: World): World {
           ...world.dayCycle,
           running: !world.dayCycle.running,
         },
+        tutorial: completeTutorialStep(world.tutorial, "time-pause"),
       };
     }
 
@@ -614,13 +641,75 @@ function branchFromNode(world: World, nodeId: Id): World | null {
   // Create a new branch bud
   const branchBudId = genId("node");
   
-  // Pick a random side and angle offset
+  // Get existing children and their angles
   const existingChildren = targetPlant.adjacency.get(nodeId) || [];
-  // Try to go the opposite side from existing branches
-  let branchSide = Math.random() > 0.5 ? 1 : -1;
+  const childAngles: number[] = [];
   
-  // Offset from parent angle
-  const branchAngle = node.angle + branchSide * (0.5 + Math.random() * 0.6);
+  for (const childId of existingChildren) {
+    const child = world.entities.get(childId);
+    if (child && child.kind === "plantNode") {
+      childAngles.push(child.angle);
+    }
+  }
+  
+  // Find the best angle for the new branch - maximize distance from existing branches
+  let branchAngle: number;
+  
+  if (childAngles.length === 0) {
+    // No existing children, pick a random side perpendicular-ish to parent angle
+    const branchSide = Math.random() > 0.5 ? 1 : -1;
+    branchAngle = node.angle + branchSide * (0.5 + Math.random() * 0.5);
+  } else {
+    // Find the largest angular gap from existing children
+    // Consider angles in a range around the parent's angle (roughly ±120 degrees)
+    const minAngle = node.angle - Math.PI * 0.7;
+    const maxAngle = node.angle + Math.PI * 0.7;
+    
+    // Normalize child angles to be relative to parent
+    const normalizedAngles = childAngles.map(a => {
+      // Bring angle into range relative to node.angle
+      let diff = a - node.angle;
+      while (diff > Math.PI) diff -= 2 * Math.PI;
+      while (diff < -Math.PI) diff += 2 * Math.PI;
+      return node.angle + diff;
+    }).filter(a => a >= minAngle && a <= maxAngle);
+    
+    // Sort angles
+    normalizedAngles.sort((a, b) => a - b);
+    
+    // Find the largest gap
+    let bestAngle = node.angle + (Math.random() > 0.5 ? 0.6 : -0.6);
+    let largestGap = 0;
+    
+    // Check gap from minAngle to first child
+    if (normalizedAngles.length > 0) {
+      const gapToFirst = normalizedAngles[0] - minAngle;
+      if (gapToFirst > largestGap) {
+        largestGap = gapToFirst;
+        bestAngle = minAngle + gapToFirst / 2;
+      }
+      
+      // Check gaps between consecutive children
+      for (let i = 0; i < normalizedAngles.length - 1; i++) {
+        const gap = normalizedAngles[i + 1] - normalizedAngles[i];
+        if (gap > largestGap) {
+          largestGap = gap;
+          bestAngle = normalizedAngles[i] + gap / 2;
+        }
+      }
+      
+      // Check gap from last child to maxAngle
+      const gapFromLast = maxAngle - normalizedAngles[normalizedAngles.length - 1];
+      if (gapFromLast > largestGap) {
+        largestGap = gapFromLast;
+        bestAngle = normalizedAngles[normalizedAngles.length - 1] + gapFromLast / 2;
+      }
+    }
+    
+    // Add a small random offset to avoid perfectly mechanical placement
+    branchAngle = bestAngle + (Math.random() - 0.5) * 0.2;
+  }
+  
   const branchLength = Math.max(10, 18 - parentDepth * 1.5) + Math.random() * 8;
 
   const branchBud: PlantNode = {

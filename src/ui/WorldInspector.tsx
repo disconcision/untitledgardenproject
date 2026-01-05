@@ -363,6 +363,14 @@ export const WorldInspector = memo(function WorldInspector({
   const [open, setOpen] = useState(false);
   const tree = useWorldTree(world);
 
+  const handleToggle = (): void => {
+    const willOpen = !open;
+    setOpen(willOpen);
+    if (willOpen) {
+      dispatch({ type: "panel/openInspector" });
+    }
+  };
+
   const handleSelect = useCallback(
     (id: Id | null): void => {
       dispatch({ type: "select", id });
@@ -394,7 +402,7 @@ export const WorldInspector = memo(function WorldInspector({
       >
         <button
           className="hud-corner-btn"
-          onClick={() => setOpen((prev: boolean): boolean => !prev)}
+          onClick={handleToggle}
           title={open ? "Close" : "World Inspector"}
         >
           {open ? <X size={ICON_SIZE} /> : <TreeDeciduous size={ICON_SIZE} />}

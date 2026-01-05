@@ -268,25 +268,21 @@ export function createInitialWorld(seed: number): World {
           id: "simulation",
           title: "Simulation",
           defaultExpanded: true,
-          isNew: true,
           steps: [
             {
               id: "time-pause",
               instruction: "Open the clock panel (⏱) and pause/play to control time",
               completed: false,
-              isNew: true,
             },
             {
               id: "time-scrub",
               instruction: "Drag the time slider to jump to any time of day",
               completed: false,
-              isNew: true,
             },
             {
               id: "watch-grow",
               instruction: "Watch plants grow automatically when simulation runs",
               completed: false,
-              isNew: true,
             },
           ],
         },
