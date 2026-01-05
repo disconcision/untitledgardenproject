@@ -636,6 +636,9 @@ Agent may decide, but **must document in Design Decisions Log**:
 | 2026-01-04 | CSS animations for sway     | Ambient motion via CSS, not React state; better performance              |
 | 2026-01-04 | 1s simulation tick          | Slow tick for logic, CSS for visuals; 60fps re-renders eliminated        |
 | 2026-01-04 | Plants grow from rocks      | Rocks are anchors; plants reach into sky, not buried in islands          |
+| 2026-01-04 | CSS vs SVG transform bug    | CSS animation transform overrides SVG transform attr; removed CSS sway   |
+| 2026-01-04 | Recursive branching         | Plants have Y-forks, sub-branches; more buds per plant                   |
+| 2026-01-04 | UI panel expand animation   | Icon in corner, panel expands from it; × replaces icon when open         |
 
 ---
 

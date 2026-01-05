@@ -54,6 +54,50 @@ This file logs development checkpoints. Each checkpoint includes:
 
 ---
 
+## CP-004: Positioning Bug Fix + Branching + UI Animation
+
+**Date**: 2026-01-04  
+**Seed**: 42  
+**Commit**: fed5408
+
+### What Changed
+
+**Critical Bug Fix**:
+
+- CSS animation `transform` property was overriding SVG `transform` attributes
+- All islands/rocks were rendering at position (0,0) instead of their correct positions
+- Plants appeared to float disconnected from rocks (they were actually at rock positions, but rocks were invisible)
+- Fix: Removed CSS transform animations that conflicted with SVG positioning
+
+**Visual Improvements**:
+
+- Islands larger (40-70px radius) and more visible with subtle stroke
+- Rocks bigger (25-50px) with visible stroke
+- Recursive plant branching: Y-forks, sub-branches, more buds
+- Plant roots start at rock edge, growing outward into sky
+- Tighter island spread (all 4 visible in initial viewport)
+
+**UI Animation**:
+
+- Panel expand from corner icon
+- × button appears in same position as icon when open
+- Fixed collapsed state properly hiding content with `display: none`
+
+### Tour Path
+
+1. **Load** — See 4 island+rock clusters spread across viewport
+2. **Observe** — Each plant emerges from a rock on its island
+3. **Click buds** — Watch Y-branching sprout new stems + leaves
+4. **Toggle tutorial** — See panel expand from ? icon
+5. **Toggle debug** — See panel expand from ⚙ icon
+
+### Notes
+
+- CSS transforms override SVG transform attributes — be careful!
+- For ambient sway, would need nested elements or different approach
+
+---
+
 ## CP-003: Performance + Visual Overhaul + Sprout/Prune
 
 **Date**: 2026-01-04  
