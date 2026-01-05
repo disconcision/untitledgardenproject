@@ -96,6 +96,16 @@ These roles can flex — the creator might implement, the agent might propose vi
   - `view(model) → JSX`
 - Pure functions for: growth rules, layout, rendering decisions
 - Side effects isolated: animation frames, timers, pointer events
+- **Exhaustive switch matching**: The update function uses TypeScript's `never` type trick to ensure all message types are handled at compile time
+
+### Linting & Formatting
+
+- **ESLint**: TypeScript-first rules, explicit return types on exports, `type` over `interface`
+- **Prettier**: Consistent formatting (2-space indent, trailing commas)
+- **Scripts**:
+  - `npm run lint` — check for issues
+  - `npm run format` — auto-format code
+  - `npm run check` — full check (tsc + lint + format + test)
 
 ---
 
@@ -725,6 +735,11 @@ Agent may decide, but **must document in Design Decisions Log**:
 | 2026-01-04 | Seeds from flowers          | Flowers release seeds that float (brownian + wind), can land and root into plants |
 | 2026-01-04 | Firefly day-night behavior  | Fireflies spawn at dusk, glow/fly at night, attracted to lights, land during day  |
 | 2026-01-04 | Buds become flowers         | Deep buds have chance to flower instead of continuing growth; terminal nodes      |
+| 2026-01-05 | ESLint + Prettier           | Consistent code style; explicit return types on exports; TypeScript-first linting |
+| 2026-01-05 | type over interface         | Consistent with discriminated unions; all types use `type` keyword                |
+| 2026-01-05 | Exhaustive switch matching  | Uses `never` type in default case to catch unhandled message types at compile time|
+| 2026-01-05 | Modular update.ts split     | Actions, simulation, tutorial extracted to `core/` submodules; keeps update.ts thin|
+| 2026-01-05 | Git worktree for parallel   | Agents working simultaneously use separate worktrees to avoid cross-contamination |
 
 ---
 
@@ -823,22 +838,28 @@ The agent should internalize these not as constraints but as **taste anchors**�
 │   └── transcripts/       # Conversation transcripts (creator-maintained)
 │       └── README.md      # How to save transcripts
 ├── scripts/               # CLI tools for agent use (Node, no browser)
-│   ├── generate.ts        # Generate world, print summary
-│   ├── validate.ts        # Quick invariant checks
-│   └── inspect.ts         # Inspect specific entities
+│   └── generate.ts        # Generate world, print summary
 ├── src/
 │   ├── core/              # Pure logic (no React/DOM — runs in Node or browser)
-│   │   ├── model.ts       # Types + World
-│   │   ├── update.ts      # Messages + update function
+│   │   ├── index.ts       # Re-exports all core modules
+│   │   ├── model.ts       # Types + World + vec2 helpers
 │   │   ├── generate.ts    # Procedural garden generation
-│   │   └── sim/
-│   │       └── tick.ts    # Simulation rules
+│   │   ├── tutorial.ts    # Tutorial step completion
+│   │   ├── actions/       # Pure action functions
+│   │   │   ├── index.ts
+│   │   │   └── plant.ts   # sproutBud, pruneNode, branchFromNode
+│   │   └── simulation/    # Simulation tick logic
+│   │       ├── index.ts
+│   │       └── particles.ts # Seeds, fireflies, lifecycle
+│   ├── update.ts          # Msg type + update dispatcher (thin, delegates to core/)
 │   ├── render/            # React/DOM/SVG (browser only)
 │   │   ├── Canvas.tsx     # Background layer (atmosphere)
 │   │   ├── Garden.tsx     # SVG world layer
 │   │   └── paths.ts       # Bezier/polyline path utilities
 │   ├── theme/
 │   │   ├── colors.ts      # Palette constants
+│   │   ├── dayNightScheme.ts # OKLCH interpolation
+│   │   ├── oklch.ts       # Color space utilities
 │   │   └── global.css     # CSS custom properties
 │   ├── ui/
 │   │   ├── HUD.tsx        # Tutorial + Debug corner docks
@@ -850,10 +871,12 @@ The agent should internalize these not as constraints but as **taste anchors**�
 │   │   └── useCamera.ts
 │   └── App.tsx            # Main composition
 ├── tests/                 # Vitest tests
-│   ├── core/
-│   │   ├── generate.test.ts
-│   │   └── model.test.ts
-│   └── setup.ts
+│   └── core/
+│       ├── actions.test.ts    # Plant action tests
+│       ├── generate.test.ts   # Generation tests
+│       └── model.test.ts      # Model + vec2 tests
+├── eslint.config.js       # ESLint flat config (TS, React hooks)
+├── .prettierrc            # Prettier config
 ├── index.html
 ├── vite.config.ts
 ├── vitest.config.ts
