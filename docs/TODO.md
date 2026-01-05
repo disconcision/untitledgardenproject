@@ -46,6 +46,16 @@ High-priority tasks ready to be claimed:
 - [ ] UI chrome as tree nodes in the projective paradigm
 - [ ] Comparison views (side-by-side worlds, branching)
 
+### Entity System Unification
+
+- [ ] Rocks as node meshes with attachment points (corners, edges, interior Voronoi)
+- [ ] Seeds/fireflies clickable and selectable in world view
+- [ ] Seeds/fireflies appear in world tree hierarchy
+- [ ] Particle containment transitions (landing = join new parent structure)
+- [ ] Selection sync between world view and tree menu (click in one = select in other)
+- [ ] Entity inspector panel showing properties of selected object
+- [ ] Fireflies interact more with plants (land on nodes, orbit specific features)
+
 ### Stretch / Opportunistic
 
 - [ ] Growth grammar editor
@@ -72,6 +82,11 @@ _Move completed items here with date._
   - Seeds use sinusoidal wind patterns with rotation tracking
   - Curved seed tails with secondary wisps
   - Brighter firefly glow with layered effects
+- [x] Particle refinements
+  - Day length presets now logarithmic: 5s, 15s, 1 min, 5 min
+  - Seeds drift much farther between islands with stronger wind
+  - Fireflies spawn more frequently and land during day
+  - Slightly smaller firefly glow for subtlety
 
 ### 2026-01-05
 
