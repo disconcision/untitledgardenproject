@@ -70,10 +70,14 @@ describe("createInitialWorld", () => {
     expect(world.camera.zoom).toBe(1);
   });
 
-  it("starts with tutorial visible", () => {
+  it("starts with tutorial visible and has sections", () => {
     const world = createInitialWorld(42);
     expect(world.tutorial.visible).toBe(true);
-    expect(world.tutorial.steps.length).toBeGreaterThan(0);
+    expect(world.tutorial.sections.length).toBeGreaterThan(0);
+    // Each section should have steps
+    for (const section of world.tutorial.sections) {
+      expect(section.steps.length).toBeGreaterThan(0);
+    }
   });
 });
 
