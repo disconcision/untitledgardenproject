@@ -183,27 +183,50 @@ export function update(msg: Msg, world: World): World {
         return world;
       }
 
-      // Charge buds slowly
-      const newEntities = new Map(world.entities);
-      let changed = false;
+      let result = world;
+
+      // Charge buds and occasionally auto-sprout
+      const newEntities = new Map(result.entities);
+      let entitiesChanged = false;
+      const budsToSprout: Id[] = [];
 
       for (const [id, entity] of newEntities) {
         if (entity.kind === "plantNode" && entity.nodeKind === "bud") {
           const currentCharge = entity.charge ?? 0;
           if (currentCharge < 1) {
-            const newCharge = Math.min(1, currentCharge + 0.1);
+            // Slow charge: ~0.02 per tick (50 ticks = ~50 seconds to full)
+            const chargeRate = 0.02 + Math.random() * 0.01;
+            const newCharge = Math.min(1, currentCharge + chargeRate);
             newEntities.set(id, { ...entity, charge: newCharge });
-            changed = true;
+            entitiesChanged = true;
+          } else {
+            // Fully charged buds have a small chance to auto-sprout
+            // ~5% per tick when charged
+            if (Math.random() < 0.05) {
+              budsToSprout.push(id);
+            }
           }
         }
       }
 
+      if (entitiesChanged) {
+        result = { ...result, entities: newEntities };
+      }
+
+      // Auto-sprout charged buds (max 1 per tick to avoid chaos)
+      if (budsToSprout.length > 0) {
+        const budToSprout = budsToSprout[Math.floor(Math.random() * budsToSprout.length)];
+        const sproutResult = sproutBud(result, budToSprout);
+        if (sproutResult) {
+          result = sproutResult;
+        }
+      }
+
       return {
-        ...world,
-        entities: changed ? newEntities : world.entities,
+        ...result,
         time: {
-          ...world.time,
-          t: world.time.t + msg.dt,
+          ...result.time,
+          t: result.time.t + msg.dt,
           dt: msg.dt,
         },
       };
@@ -280,10 +303,13 @@ function sproutBud(world: World, budId: Id): World | null {
   }
   if (!targetPlant) return null;
 
+  // Depth tracking - new nodes are deeper than parent
+  const parentDepth = bud.depth ?? 0;
+
   // Create new entities map
   const newEntities = new Map(world.entities);
 
-  // Convert bud to stem
+  // Convert bud to stem (keeps same depth)
   const stemNode: PlantNode = {
     ...bud,
     nodeKind: "stem",
@@ -293,8 +319,9 @@ function sproutBud(world: World, budId: Id): World | null {
 
   // Create new bud extending from this stem
   const newBudId = genId("node");
-  const growthAngle = bud.angle + (Math.random() - 0.5) * 0.3;
-  const growthLength = 18 + Math.random() * 12;
+  const growthAngle = bud.angle + (Math.random() - 0.5) * 0.4;
+  // Segment length decreases with depth (like bark effect)
+  const growthLength = Math.max(8, 20 - parentDepth * 2) + Math.random() * 10;
 
   const newBud: PlantNode = {
     kind: "plantNode",
@@ -310,18 +337,20 @@ function sproutBud(world: World, budId: Id): World | null {
     ),
     angle: growthAngle,
     charge: 0,
+    depth: parentDepth + 1,
   };
   newEntities.set(newBudId, newBud);
 
-  // Maybe add a leaf too
-  const addLeaf = Math.random() > 0.4;
+  // Maybe add a leaf too (more likely at deeper levels)
+  const leafChance = 0.4 + parentDepth * 0.1;
+  const addLeaf = Math.random() < leafChance;
   let newLeafId: Id | null = null;
 
   if (addLeaf) {
     newLeafId = genId("node");
     const leafSide = Math.random() > 0.5 ? 1 : -1;
-    const leafAngle = bud.angle + leafSide * (0.5 + Math.random() * 0.4);
-    const leafDist = 12 + Math.random() * 8;
+    const leafAngle = bud.angle + leafSide * (0.5 + Math.random() * 0.5);
+    const leafDist = 10 + Math.random() * 8;
 
     const newLeaf: PlantNode = {
       kind: "plantNode",
@@ -333,17 +362,47 @@ function sproutBud(world: World, budId: Id): World | null {
         scaleVec2(vec2(Math.cos(leafAngle), Math.sin(leafAngle)), leafDist)
       ),
       angle: leafAngle,
+      depth: parentDepth + 1,
     };
     newEntities.set(newLeafId, newLeaf);
+  }
+
+  // Sometimes add a second bud (branching) - less likely at deeper levels
+  const branchChance = Math.max(0.1, 0.4 - parentDepth * 0.1);
+  const addBranch = Math.random() < branchChance;
+  let branchBudId: Id | null = null;
+
+  if (addBranch) {
+    branchBudId = genId("node");
+    const branchSide = Math.random() > 0.5 ? 1 : -1;
+    const branchAngle = bud.angle + branchSide * (0.6 + Math.random() * 0.4);
+    const branchLength = growthLength * (0.6 + Math.random() * 0.3);
+
+    const branchBud: PlantNode = {
+      kind: "plantNode",
+      id: branchBudId,
+      plantId: bud.plantId,
+      nodeKind: "bud",
+      localPos: addVec2(
+        bud.localPos,
+        scaleVec2(vec2(Math.cos(branchAngle), Math.sin(branchAngle)), branchLength)
+      ),
+      angle: branchAngle,
+      charge: 0.2, // Branch buds start with some charge
+      depth: parentDepth + 1,
+    };
+    newEntities.set(branchBudId, branchBud);
   }
 
   // Update plant adjacency
   const newAdjacency = new Map(targetPlant.adjacency);
   const children = [...(newAdjacency.get(budId) || []), newBudId];
   if (newLeafId) children.push(newLeafId);
+  if (branchBudId) children.push(branchBudId);
   newAdjacency.set(budId, children);
   newAdjacency.set(newBudId, []);
   if (newLeafId) newAdjacency.set(newLeafId, []);
+  if (branchBudId) newAdjacency.set(branchBudId, []);
 
   const newPlants = new Map(world.plants);
   newPlants.set(targetPlant.id, { ...targetPlant, adjacency: newAdjacency });

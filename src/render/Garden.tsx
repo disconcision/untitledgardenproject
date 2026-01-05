@@ -295,8 +295,8 @@ const RockRenderer = memo(function RockRenderer({
                 isHovered
                   ? "var(--color-rock-light)"
                   : idx === 0
-                    ? "var(--color-rock-mid)"
-                    : "var(--color-rock-dark)"
+                  ? "var(--color-rock-mid)"
+                  : "var(--color-rock-dark)"
               }
               stroke="var(--color-rock-darkest)"
               strokeWidth={0.3}
@@ -332,7 +332,12 @@ const RockRenderer = memo(function RockRenderer({
       )}
 
       {showId && (
-        <text x={0} y={-hitRadius - 4} textAnchor="middle" className="debug-label">
+        <text
+          x={0}
+          y={-hitRadius - 4}
+          textAnchor="middle"
+          className="debug-label"
+        >
           {rock.id}
         </text>
       )}
