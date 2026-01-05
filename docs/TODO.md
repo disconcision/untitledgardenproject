@@ -63,11 +63,6 @@ _Workstream: Visual | Dependency: None | Parallelizable: Yes_
 - [ ] **Prune animation**: Animate subtree removal (fade/collapse before removing)
 - [ ] **Animation timing audit**: Standardize durations (150ms hovers, 300ms growth) per SOURCE.md spec
 
-### 🐛 UI Bug Fixes
-_Workstream: UI | Dependency: None | Parallelizable: Yes_
-
-- [ ] **Two-finger scroll event capture**: When hovering over scrollable menus (WorldInspector, Tutorial), two-finger scroll zooms the canvas instead of scrolling the menu
-- [ ] **Padding/margin inconsistency on menu boxes**: Time box has no top padding; audit and unify spacing across all corner dock panels
 
 ### 🎨 Scene Depth & Atmosphere
 _Workstream: Visual | Dependency: None | Parallelizable: Yes_
@@ -171,9 +166,9 @@ _Low priority, pick when inspired_
 
 - [x] UI Panel Fixes batch:
   - Padding/margin inconsistency on menu boxes (unified to 12px all sides)
-  - Two-finger scroll event capture (wheel events stopped on scrollable panels)
+  - Two-finger scroll event capture (camera wheel handler skips hud-corner elements)
   - Tutorial menu scrolling (max-height 50vh + overflow)
-  - Z-index focus system (clicking panel brings to front)
+  - Z-index focus system (click anywhere on panel brings to front)
   - CSS cleanup (removed duplicate rules in WorldInspector.css)
 - [x] Workflow documentation improvements
 - [x] Tutorial completion hooks for simulation and panel steps
