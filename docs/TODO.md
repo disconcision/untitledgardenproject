@@ -56,6 +56,30 @@ High-priority tasks ready to be claimed:
 - [ ] Entity inspector panel showing properties of selected object
 - [ ] Fireflies interact more with plants (land on nodes, orbit specific features)
 
+### UI / Menu System
+
+#### Bugs
+
+- [ ] **Two-finger scroll event capture**: When hovering over scrollable menus (WorldInspector, Tutorial), two-finger scroll zooms the canvas instead of scrolling the menu. The scroll event should not propagate to the canvas when over a scrollable menu.
+
+- [ ] **Padding/margin inconsistency on menu boxes**:
+  - Time box has no top padding
+  - Some boxes reserve title space where titles aren't needed
+  - Audit and unify padding/spacing across all corner dock panels
+  - Close button (×) should have consistent spacing; content can flow into same line as × if appropriate
+
+#### Improvements
+
+- [ ] **Tutorial menu scrolling**: Add scroll behavior to Tutorial menu when content exceeds threshold (similar to WorldInspector)
+
+- [ ] **Z-index focus system for overlapping menus**: When multiple menus (WorldInspector, Tutorial, etc.) are open and overlapping, clicking one should bring it to front. Focus-dependent z-index.
+
+- [ ] **Smart menu space sharing**: 
+  - Track on-screen extent of expandable menus
+  - When two scrollable menus would overlap, adjust positioning so they share space (don't require overlap)
+  - Fixed-size menus (like TimeConfig) can stay fixed; this applies to dynamically-sized scrollable menus
+  - When one is small and the other large, space doesn't need to be split equally
+
 ### Stretch / Opportunistic
 
 - [ ] Growth grammar editor
