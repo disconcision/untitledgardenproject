@@ -365,4 +365,47 @@ This is the first step toward **projective UI**:
 
 ---
 
+## CP-008: Multiple Clusters with Fog/Distance Rendering
+
+**Date**: 2026-01-04
+**Seed**: 42
+**Commit**: 3957a29
+
+### What Changed
+
+**Generation**:
+- World now generates 3-5 clusters (1 main + 2-4 distant)
+- Main cluster: 4-6 islands, 1-2 rocks each, 70% plant chance
+- Distant clusters: 2-3 islands, 1 rock each, 50% plant chance
+- Clusters positioned at varying distances (600+ units for distant)
+
+**Rendering with Fog**:
+- Clusters sorted by distance (painters algorithm: far to near)
+- Fog effect based on distance from origin:
+  - < 200 units: fully visible
+  - 200-1200 units: progressive fade (up to 85% opacity reduction)
+  - Plus CSS blur filter proportional to fog
+- Distant clusters: larger glyphs to remain visible through fog
+- Distant clusters: non-interactive (no hover/click handlers)
+
+**Tests**:
+- Updated to expect 3-5 clusters with 6-30 total islands
+
+### Tour Path
+
+1. **Load app** — See main cluster at center with full detail
+2. **Zoom out** (scroll) — Observe distant clusters fade into view
+3. **Pan around** — Find distant clusters at edges, note fog effect
+4. **Try clicking distant cluster** — No interaction (non-interactive)
+5. **Interact with main cluster** — Works normally
+
+### Architecture Notes
+
+- `clusterData` computed in Garden: sorts clusters, calculates fog per cluster
+- `getFogOpacity(distance)`: linear interpolation between fogStart/fogEnd
+- Fog applied via CSS opacity and blur filter on cluster group
+- Distant clusters still grow plants (simulation runs), just not interactive
+
+---
+
 _Add new checkpoints above this line._
