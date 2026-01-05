@@ -1,0 +1,36 @@
+---
+description: Essential checklist for all agent work. Always visible.
+globs:
+alwaysApply: true
+---
+
+# Agent Checklist
+
+**Before responding to user, verify:**
+
+## Git
+
+- [ ] On feature branch (not main)
+- [ ] Atomic commits with conventional prefixes (feat/fix/refactor/docs/chore)
+- [ ] Branch merged to main when complete
+- [ ] Feature branch deleted
+
+## Docs
+
+- [ ] TODO.md updated (claimed → complete)
+- [ ] SOURCE.md updated if architectural change
+
+## Tutorial
+
+- [ ] If user-facing change: Added/updated tutorial step
+- [ ] New steps marked `isNew: true`
+
+## Quality
+
+- [ ] Tested in browser (use browser tools)
+- [ ] No lint errors (run `read_lints`)
+
+---
+
+**Start sessions with Plan Mode** (`Shift+Tab`) for complex tasks.
+Use built-in `todo_write` tool to track subtasks during work.

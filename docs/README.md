@@ -1,6 +1,6 @@
 # Hanging Garden — Documentation
 
-> **Agents: Start here.** This is your entry point.
+> **Agents: Start here.** A checklist is auto-loaded from `.cursor/rules/checklist.mdc`.
 
 ---
 
@@ -16,47 +16,33 @@ A browser-based software toy: a floating garden of algorithmic plants, soil clum
 
 ## Documentation Map
 
-| File | What It Is | Read If... |
-|------|-----------|------------|
-| **docs/README.md** | This file — entry point | You're starting here ✓ |
-| **docs/AGENT-WORKFLOW.md** | Git process, completion reports | You're about to do work |
-| **docs/TODO.md** | Tasks, milestones, backlog | You need something to work on |
-| **SOURCE.md** | Vision, architecture, aesthetics | You need design context |
-| **docs/CHECKPOINTS.md** | Feature history, tour paths | You need to understand past work |
+| File | What It Is |
+|------|-----------|
+| **docs/README.md** | This file — entry point |
+| **docs/AGENT-WORKFLOW.md** | Git process, completion reports |
+| **docs/TODO.md** | Tasks, milestones, backlog |
+| **SOURCE.md** | Vision, architecture, aesthetics |
+| **.cursor/rules/checklist.mdc** | Always-on checklist (auto-injected) |
 
 ---
 
 ## Quick Start for Agents
 
-### Before Any Work
+### For Complex Sessions: Use Plan Mode
+
+1. Press `Shift+Tab` in agent input before describing task
+2. Answer clarifying questions
+3. Review generated plan
+4. Execute (plan can be saved to `docs/sessions/` if useful)
+
+### For Simple Tasks
 
 ```bash
-# 1. Read docs
-cat docs/README.md        # You're here
-cat docs/AGENT-WORKFLOW.md  # Mandatory process
-cat docs/TODO.md          # Find/claim a task
-
-# 2. Skim SOURCE.md if unfamiliar with project vision
-
-# 3. Create a branch
 git checkout main && git pull
 git checkout -b feature/<descriptive-name>
-
-# 4. Claim task in docs/TODO.md
-```
-
-### After Work
-
-```bash
-# 1. Update TODO.md (mark complete)
-# 2. Commit with clear message
-git add -A && git commit -m "feat: description"
-
-# 3. Merge and clean up
-git checkout main && git merge feature/<branch-name>
-git branch -d feature/<branch-name>
-
-# 4. Provide completion report (see AGENT-WORKFLOW.md)
+# Claim task in docs/TODO.md
+# Do work
+# Update TODO.md, merge, delete branch
 ```
 
 ---
@@ -64,14 +50,15 @@ git branch -d feature/<branch-name>
 ## For the Creator (Human)
 
 **Your loop**:
-1. Tell agent "Read docs/README.md"
-2. Give feedback while viewing the garden
-3. After session: export transcript to `docs/transcripts/`
+1. Tell agent "Read docs/README.md" (or it reads automatically)
+2. For complex work: Ask agent to use Plan Mode (`Shift+Tab`)
+3. Give feedback while viewing the garden
+4. After session: optionally export transcript to `docs/transcripts/`
 
 **What to check when agent finishes**:
 - [ ] Code committed + merged?
 - [ ] TODO.md updated?
-- [ ] Completion report provided?
+- [ ] Brief completion report provided?
 
 ---
 
@@ -94,13 +81,13 @@ src/
 
 Every agent session must:
 - [ ] Create a feature branch (not work on main)
-- [ ] Claim task in TODO.md before starting
 - [ ] Commit changes with clear messages
 - [ ] Merge branch and delete it
 - [ ] Provide completion report
+- [ ] Update TODO.md
 
-**Why?** Clean git history enables easy reverts. Claimed tasks prevent conflicts.
+These are in `.cursor/rules/checklist.mdc` — always visible.
 
 ---
 
-_Read docs/AGENT-WORKFLOW.md next for full process details._
+_Read docs/AGENT-WORKFLOW.md for more detail if needed._

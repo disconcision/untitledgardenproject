@@ -454,13 +454,14 @@ Console log:
 - `Freeze time` (pause simulation)
 - `Seed` input + `Regenerate` button
 
-### Checkpoints
+### Checkpoints (Archived)
 
-Separate file: `CHECKPOINTS.md`
+Historical checkpoints (CP-001 through CP-015) are in `docs/archive/CHECKPOINTS.md`.
 
-- Format: `CP-###: [date] [seed] [description]`
-- Include "tour path": 2–5 actions demonstrating new feature
-- Keep checkpoints small, reversible
+This system was replaced by a simpler workflow. New work uses:
+- Git commits with conventional prefixes
+- TODO.md for task tracking
+- `.cursor/rules/checklist.mdc` for always-on checklist
 
 ---
 
@@ -796,13 +797,16 @@ for (edge of edges) {
 ```
 /
 ├── SOURCE.md              # This file — vision, architecture, aesthetic
+├── .cursor/
+│   └── rules/
+│       └── checklist.mdc  # Always-on agent checklist (auto-injected)
 ├── docs/                  # All project documentation
 │   ├── README.md          # Entry point for agents — read first!
-│   ├── AGENT-WORKFLOW.md  # Mandatory process (git, docs, completion reports)
+│   ├── AGENT-WORKFLOW.md  # Git process, completion reports
 │   ├── TODO.md            # Active task tracking — claim before working
-│   ├── CHECKPOINTS.md     # Tour paths for significant features
+│   ├── archive/           # Historical docs (CHECKPOINTS.md, etc.)
+│   ├── sessions/          # Optional: Plan Mode output files
 │   └── transcripts/       # Conversation transcripts (creator-maintained)
-│       └── README.md      # How to save transcripts
 ├── scripts/               # CLI tools for agent use (Node, no browser)
 │   └── generate.ts        # Generate world, print summary
 ├── src/
