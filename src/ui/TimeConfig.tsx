@@ -28,12 +28,12 @@ type TimeConfigProps = {
   dispatch: (msg: Msg) => void;
 };
 
-// Day length presets in milliseconds
+// Day length presets in milliseconds (logarithmic scale)
 const DAY_LENGTH_PRESETS = [
+  { label: "5s", value: 5000 },
+  { label: "15s", value: 15000 },
   { label: "1 min", value: 60000 },
-  { label: "3 min", value: 180000 },
   { label: "5 min", value: 300000 },
-  { label: "10 min", value: 600000 },
 ];
 
 function PhaseIcon({

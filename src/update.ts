@@ -391,8 +391,8 @@ export function update(msg: Msg, world: World): World {
     }
 
     case "dayCycle/setDayLength": {
-      // Clamp between 30 seconds and 30 minutes
-      const clamped = Math.max(30000, Math.min(1800000, msg.dayLengthMs));
+      // Clamp between 5 seconds and 30 minutes
+      const clamped = Math.max(5000, Math.min(1800000, msg.dayLengthMs));
       return {
         ...world,
         dayCycle: {
@@ -898,17 +898,18 @@ function tickSeedFast(
   }
 
   // Continuous wind based on world time (smooth sinusoidal)
+  // Stronger wind to carry seeds between islands
   const time = particle.age * 0.05; // Slow oscillation
-  const windX = Math.sin(time * 0.7) * 8 + Math.sin(time * 1.3) * 4;
-  const windY = Math.cos(time * 0.5) * 3 + Math.sin(time * 0.9) * 2;
+  const windX = Math.sin(time * 0.7) * 25 + Math.sin(time * 1.3) * 12;
+  const windY = Math.cos(time * 0.5) * 8 + Math.sin(time * 0.9) * 5;
   
   // Brownian noise (per-particle variation using position as seed)
   const noisePhase = particle.pos.x * 0.01 + particle.pos.y * 0.01;
-  const brownianX = Math.sin(time * 3 + noisePhase) * 2;
-  const brownianY = Math.cos(time * 2.7 + noisePhase * 1.3) * 1.5;
+  const brownianX = Math.sin(time * 3 + noisePhase) * 6;
+  const brownianY = Math.cos(time * 2.7 + noisePhase * 1.3) * 4;
   
-  // Gravity (gentle downward drift)
-  const gravity = 1;
+  // Very light gravity - seeds mostly float on wind
+  const gravity = 0.3;
 
   // Update velocity with smooth forces
   const targetVelX = windX + brownianX;
@@ -919,9 +920,9 @@ function tickSeedFast(
   const newVelX = particle.velocity.x + (targetVelX - particle.velocity.x) * velLerp;
   const newVelY = particle.velocity.y + (targetVelY - particle.velocity.y) * velLerp;
   
-  // Cap speed
+  // Cap speed - allow higher speeds for longer drifts
   const speed = Math.sqrt(newVelX * newVelX + newVelY * newVelY);
-  const maxSpeed = 15;
+  const maxSpeed = 35;
   const cappedVelX = speed > maxSpeed ? (newVelX / speed) * maxSpeed : newVelX;
   const cappedVelY = speed > maxSpeed ? (newVelY / speed) * maxSpeed : newVelY;
   
@@ -947,14 +948,15 @@ function tickSeedFast(
   const wobble = Math.sin(time * 4 + noisePhase * 2) * 0.02;
   const newAngularVel = particle.angularVelocity * 0.95 + wobble;
 
-  // Check for landing (with probability per fast tick)
+  // Check for landing (low probability - seeds should drift far)
   for (const spot of landingSpots) {
     const dx = newPos.x - spot.pos.x;
     const dy = newPos.y - spot.pos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const landingRadius = spot.kind === "rock" ? 40 : 60;
+    const landingRadius = spot.kind === "rock" ? 30 : 45;
     
-    if (distance < landingRadius && Math.random() < 0.001) {
+    // Very low chance - seeds should mostly drift past
+    if (distance < landingRadius && Math.random() < 0.0002) {
       return {
         ...updated,
         state: "landed",
@@ -1016,24 +1018,34 @@ function tickFireflyFast(
 
   // Flying behavior
   if (particle.state === "floating") {
-    // During day, try to land
-    if (!isNight && !isDusk && Math.random() < 0.002) {
+    // During day, actively try to land (higher probability)
+    if (!isNight && !isDusk) {
+      // Find nearest landing spot
+      let nearestSpot: { id: Id; pos: Vec2; kind: "rock" | "island" } | null = null;
+      let nearestDist = Infinity;
+      
       for (const spot of landingSpots) {
         const dx = particle.pos.x - spot.pos.x;
         const dy = particle.pos.y - spot.pos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 150) {
-          return {
-            ...updated,
-            state: "landed",
-            pos: spot.pos,
-            velocity: vec2(0, 0),
-            landedOn: spot.id,
-            glow: 0,
-            rotation: 0,
-            angularVelocity: 0,
-          };
+        if (distance < nearestDist) {
+          nearestDist = distance;
+          nearestSpot = spot;
         }
+      }
+      
+      // Higher chance to land when close to a spot during day
+      if (nearestSpot && nearestDist < 80 && Math.random() < 0.02) {
+        return {
+          ...updated,
+          state: "landed",
+          pos: nearestSpot.pos,
+          velocity: vec2(0, 0),
+          landedOn: nearestSpot.id,
+          glow: 0,
+          rotation: 0,
+          angularVelocity: 0,
+        };
       }
     }
 
@@ -1305,11 +1317,11 @@ function tickFireflySpawning(world: World): World {
     }
   }
 
-  // Max 15 fireflies
-  if (fireflyCount >= 15) return world;
+  // Max 20 fireflies
+  if (fireflyCount >= 20) return world;
 
-  // Spawn chance per tick during dusk/night (~5% per tick)
-  if (Math.random() > 0.05) return world;
+  // Spawn chance per tick during dusk/night (~15% per tick)
+  if (Math.random() > 0.15) return world;
 
   // Spawn from a random rock or plant
   const spawnCandidates: Vec2[] = [];

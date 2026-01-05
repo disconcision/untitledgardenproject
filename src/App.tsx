@@ -21,7 +21,7 @@ import { interpolateScheme, applySchemeToDOM } from "./theme/dayNightScheme";
 const INITIAL_SEED = 42;
 const SIM_TICK_MS = 1000;
 const DAY_CYCLE_TICK_MS = 100; // Update colors every 100ms for smooth transitions
-const PARTICLE_TICK_MS = 50;  // Smooth particle movement at 20fps
+const PARTICLE_TICK_MS = 50; // Smooth particle movement at 20fps
 
 export default function App() {
   const [world, setWorld] = useState<World>(() => generateWorld(INITIAL_SEED));

@@ -989,10 +989,10 @@ const ParticleRenderer = memo(function ParticleRenderer({
     // Seeds are small, golden/tan colored, with wispy tails
     // Use the rotation property for smooth tail rotation
     const rotationDeg = (rotation * 180) / Math.PI;
-    
+
     // Dynamic tail length that breathes gently
     const tailLength = state === "floating" ? 12 + Math.sin(age * 0.1) * 4 : 0;
-    
+
     // Secondary wisp for more organic look
     const secondaryLength = tailLength * 0.6;
     const secondaryAngle = 0.3; // Slight offset from main tail
@@ -1008,7 +1008,9 @@ const ParticleRenderer = memo(function ParticleRenderer({
           <g transform={`rotate(${rotationDeg})`}>
             {/* Primary tail strand */}
             <path
-              d={`M 0 0 Q ${-tailLength * 0.4} ${-tailLength * 0.2} ${0} ${-tailLength}`}
+              d={`M 0 0 Q ${-tailLength * 0.4} ${
+                -tailLength * 0.2
+              } ${0} ${-tailLength}`}
               stroke="var(--color-earth-tan)"
               strokeWidth={0.8}
               strokeLinecap="round"
@@ -1017,7 +1019,9 @@ const ParticleRenderer = memo(function ParticleRenderer({
             />
             {/* Secondary tail strand */}
             <path
-              d={`M 0 0 Q ${tailLength * 0.3} ${-secondaryLength * 0.3} ${Math.sin(secondaryAngle) * 3} ${-secondaryLength}`}
+              d={`M 0 0 Q ${tailLength * 0.3} ${-secondaryLength * 0.3} ${
+                Math.sin(secondaryAngle) * 3
+              } ${-secondaryLength}`}
               stroke="var(--color-earth-tan)"
               strokeWidth={0.4}
               strokeLinecap="round"
@@ -1050,9 +1054,9 @@ const ParticleRenderer = memo(function ParticleRenderer({
   }
 
   if (particleKind === "firefly") {
-    // Fireflies are small points that glow brightly at night
-    const glowRadius = 8 + glow * 12; // Larger glow
-    const bodySize = 2.5;
+    // Fireflies are small points that glow at night
+    const glowRadius = 6 + glow * 8; // Moderate glow size
+    const bodySize = 2;
 
     // Pulse animation
     const pulse = 1 + Math.sin(age * 0.12) * 0.15;
@@ -1078,7 +1082,7 @@ const ParticleRenderer = memo(function ParticleRenderer({
             filter="url(#firefly-glow)"
           />
         )}
-        
+
         {/* Inner glow (brighter core) */}
         {glow > 0.1 && (
           <circle
