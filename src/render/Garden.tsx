@@ -6,10 +6,17 @@
  */
 
 import { useMemo, memo } from "react";
-import { World, Island, Rock, PlantNode, Plant, Vec2, addVec2 } from "../model";
+import { World, Cluster, Island, Rock, PlantNode, Plant, Vec2, addVec2 } from "../model";
 import { Msg } from "../update";
 import { blobPath, leafPath } from "./paths";
 import "./Garden.css";
+
+// Helper: compute island world position from cluster
+function getIslandWorldPos(island: Island, clusters: Map<string, Cluster>): Vec2 {
+  const cluster = clusters.get(island.clusterId);
+  if (!cluster) return island.localPos;
+  return addVec2(cluster.pos, island.localPos);
+}
 
 type GardenProps = {
   world: World;
@@ -17,7 +24,7 @@ type GardenProps = {
 };
 
 export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
-  const { camera, entities, plants, hover, selection, debug } = world;
+  const { camera, clusters, entities, plants, hover, selection, debug } = world;
 
   // Group entities by type
   const { islands, rocks } = useMemo(() => {
@@ -74,31 +81,54 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+
+        {/* Glyph glow */}
+        <filter id="glyph-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
       <g transform={transform}>
-        {/* Islands - subtle, small soil patches */}
-        {islands.map((island: Island) => (
-          <IslandRenderer
-            key={island.id}
-            island={island}
-            isHovered={hover === island.id}
-            isSelected={selection === island.id}
+        {/* Cluster glyphs (behind everything) */}
+        {Array.from(clusters.values()).map((cluster: Cluster) => (
+          <ClusterGlyphRenderer
+            key={cluster.id}
+            cluster={cluster}
             showId={debug.showIds}
-            showHitTarget={debug.showHitTargets}
-            dispatch={dispatch}
           />
         ))}
+
+        {/* Islands - subtle, small soil patches */}
+        {islands.map((island: Island) => {
+          const worldPos = getIslandWorldPos(island, clusters);
+          return (
+            <IslandRenderer
+              key={island.id}
+              island={island}
+              worldPos={worldPos}
+              isHovered={hover === island.id}
+              isSelected={selection === island.id}
+              showId={debug.showIds}
+              showHitTarget={debug.showHitTargets}
+              dispatch={dispatch}
+            />
+          );
+        })}
 
         {/* Rocks - the primary anchors */}
         {rocks.map((rock: Rock) => {
           const island = entities.get(rock.islandId) as Island | undefined;
           if (!island) return null;
+          const islandWorldPos = getIslandWorldPos(island, clusters);
           return (
             <RockRenderer
               key={rock.id}
               rock={rock}
-              islandPos={island.pos}
+              islandPos={islandWorldPos}
               isHovered={hover === rock.id}
               showId={debug.showIds}
               showHitTarget={debug.showHitTargets}
@@ -111,6 +141,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
         {Array.from(plants.values()).map((plant: Plant) => {
           const island = entities.get(plant.islandId) as Island | undefined;
           if (!island) return null;
+          const islandWorldPos = getIslandWorldPos(island, clusters);
 
           const nodes = Array.from(plant.adjacency.keys())
             .map((id: string) => entities.get(id) as PlantNode | undefined)
@@ -121,7 +152,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
               key={plant.id}
               plant={plant}
               nodes={nodes}
-              islandPos={island.pos}
+              islandPos={islandWorldPos}
               hover={hover}
               showIds={debug.showIds}
               showHitTargets={debug.showHitTargets}
@@ -134,11 +165,115 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
   );
 });
 
+// === Cluster Glyph Renderer ===
+// Central visual anchor for each cluster
+
+type ClusterGlyphRendererProps = {
+  cluster: Cluster;
+  showId: boolean;
+};
+
+const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
+  cluster,
+  showId,
+}: ClusterGlyphRendererProps) {
+  const { pos, glyphKind, rotation } = cluster;
+
+  // Different glyph shapes
+  const renderGlyph = () => {
+    switch (glyphKind) {
+      case "seed":
+        // Seed: small filled circle with radiating lines
+        return (
+          <>
+            <circle cx={0} cy={0} r={4} fill="var(--color-earth-mid)" />
+            {[0, 1, 2, 3, 4, 5].map((i: number) => {
+              const angle = rotation + (i / 6) * Math.PI * 2;
+              const x1 = Math.cos(angle) * 6;
+              const y1 = Math.sin(angle) * 6;
+              const x2 = Math.cos(angle) * 12;
+              const y2 = Math.sin(angle) * 12;
+              return (
+                <line
+                  key={i}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="var(--color-earth-tan)"
+                  strokeWidth={1}
+                  strokeLinecap="round"
+                  opacity={0.5}
+                />
+              );
+            })}
+          </>
+        );
+      case "node":
+        // Node: concentric circles
+        return (
+          <>
+            <circle
+              cx={0}
+              cy={0}
+              r={10}
+              fill="none"
+              stroke="var(--color-rock-pale)"
+              strokeWidth={0.5}
+              opacity={0.3}
+            />
+            <circle
+              cx={0}
+              cy={0}
+              r={6}
+              fill="none"
+              stroke="var(--color-rock-mid)"
+              strokeWidth={0.5}
+              opacity={0.4}
+            />
+            <circle cx={0} cy={0} r={2} fill="var(--color-rock-dark)" opacity={0.5} />
+          </>
+        );
+      case "sigil":
+        // Sigil: abstract symbol
+        return (
+          <g transform={`rotate(${(rotation * 180) / Math.PI})`}>
+            <path
+              d="M0,-8 L4,4 L-4,4 Z"
+              fill="none"
+              stroke="var(--color-green-moss)"
+              strokeWidth={0.5}
+              opacity={0.4}
+            />
+            <circle cx={0} cy={0} r={3} fill="var(--color-green-deepForest)" opacity={0.4} />
+          </g>
+        );
+    }
+  };
+
+  return (
+    <g
+      transform={`translate(${pos.x}, ${pos.y})`}
+      className="cluster-glyph"
+      filter="url(#glyph-glow)"
+    >
+      {renderGlyph()}
+
+      {showId && (
+        <text x={0} y={-20} textAnchor="middle" className="debug-label">
+          {cluster.id}
+        </text>
+      )}
+    </g>
+  );
+});
+
 // === Island Renderer ===
 // Smaller, more subtle soil patches
 
 type IslandRendererProps = {
   island: Island;
+  worldPos: Vec2; // Computed from cluster.pos + island.localPos
   isHovered: boolean;
   isSelected: boolean;
   showId: boolean;
@@ -148,6 +283,7 @@ type IslandRendererProps = {
 
 const IslandRenderer = memo(function IslandRenderer({
   island,
+  worldPos,
   isHovered,
   isSelected,
   showId,
@@ -157,18 +293,18 @@ const IslandRenderer = memo(function IslandRenderer({
   const pathData = blobPath(island.shape);
 
   // CSS animation delay based on position for variety
-  const animDelay = `${(island.pos.x * 0.001 + island.pos.y * 0.002) % 1}s`;
+  const animDelay = `${(worldPos.x * 0.001 + worldPos.y * 0.002) % 1}s`;
 
   return (
     <g
       className="island-group"
       style={{ "--anim-delay": animDelay } as React.CSSProperties}
-      transform={`translate(${island.pos.x}, ${island.pos.y})`}
+      transform={`translate(${worldPos.x}, ${worldPos.y})`}
       data-entity-id={island.id}
       onPointerEnter={() => dispatch({ type: "hover", id: island.id })}
       onPointerLeave={() => dispatch({ type: "hover", id: null })}
       onDoubleClick={() =>
-        dispatch({ type: "camera/focus", target: island.pos, zoom: 1.5 })
+        dispatch({ type: "camera/focus", target: worldPos, zoom: 1.5 })
       }
     >
       {/* Soft shadow */}

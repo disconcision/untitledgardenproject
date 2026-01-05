@@ -14,12 +14,25 @@ export type Vec2 = {
   y: number;
 };
 
+// === Cluster ===
+// A cluster is a grouping of islands/rocks/plants with a central glyph
+
+export type Cluster = {
+  id: Id;
+  pos: Vec2; // World position of cluster center
+  glyphKind: "seed" | "node" | "sigil"; // Visual representation
+  // Optional: rotation for slow orbital drift
+  rotation: number;
+  // All islands in this cluster are positioned relative to this
+};
+
 // === Entities ===
 
 export type Island = {
   kind: "island";
   id: Id;
-  pos: Vec2;
+  clusterId: Id; // Which cluster this belongs to
+  localPos: Vec2; // Position relative to cluster center
   radius: number;
   shape: Vec2[];
   depth: number;
@@ -98,6 +111,7 @@ export type TutorialStep = {
 // === World State ===
 
 export type World = {
+  clusters: Map<Id, Cluster>;
   entities: Map<Id, Entity>;
   plants: Map<Id, Plant>;
   camera: Camera;
@@ -163,6 +177,7 @@ export function resetIdCounter(value: number = 0): void {
 
 export function createInitialWorld(seed: number): World {
   return {
+    clusters: new Map(),
     entities: new Map(),
     plants: new Map(),
     camera: {
@@ -219,6 +234,7 @@ export function createInitialWorld(seed: number): World {
 
 export function summarizeWorld(world: World): {
   seed: number;
+  clusterCount: number;
   entityCount: number;
   islandCount: number;
   plantCount: number;
@@ -245,6 +261,7 @@ export function summarizeWorld(world: World): {
 
   return {
     seed: world.seed,
+    clusterCount: world.clusters.size,
     entityCount: world.entities.size,
     islandCount,
     plantCount: world.plants.size,

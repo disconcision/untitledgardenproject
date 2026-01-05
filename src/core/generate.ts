@@ -7,12 +7,14 @@
 
 import {
   World,
+  Cluster,
   Island,
   Rock,
   Boulder,
   PlantNode,
   Plant,
   Vec2,
+  Id,
   vec2,
   genId,
   resetIdCounter,
@@ -49,15 +51,39 @@ function generateBlobShape(
   return shape;
 }
 
+// === Cluster Generation ===
+// Central glyph with orbiting islands/rocks
+
+function generateCluster(
+  rng: () => number,
+  index: number,
+  totalClusters: number
+): Cluster {
+  // For now, main cluster at center, others positioned outward
+  const spreadRadius = index === 0 ? 0 : 600 + totalClusters * 100;
+  const angle = index === 0 ? 0 : (index / totalClusters) * Math.PI * 2 + (rng() - 0.5) * 0.3;
+  const distance = spreadRadius * (0.7 + rng() * 0.3);
+
+  const glyphKinds: Array<"seed" | "node" | "sigil"> = ["seed", "node", "sigil"];
+
+  return {
+    id: genId("cluster"),
+    pos: vec2(Math.cos(angle) * distance, Math.sin(angle) * distance),
+    glyphKind: glyphKinds[Math.floor(rng() * glyphKinds.length)],
+    rotation: rng() * Math.PI * 2,
+  };
+}
+
 // === Island Generation ===
 // Smaller, more interstitial - dirt between rocks
 
 function generateIsland(
   rng: () => number,
+  clusterId: Id,
   index: number,
   totalIslands: number
 ): Island {
-  const spreadRadius = 160 + totalIslands * 25;
+  const spreadRadius = 120 + totalIslands * 20;
   const angle = (index / totalIslands) * Math.PI * 2 + (rng() - 0.5) * 0.4;
   const distance = spreadRadius * (0.5 + rng() * 0.4);
 
@@ -67,7 +93,8 @@ function generateIsland(
   return {
     kind: "island",
     id: genId("island"),
-    pos: vec2(Math.cos(angle) * distance, Math.sin(angle) * distance),
+    clusterId,
+    localPos: vec2(Math.cos(angle) * distance, Math.sin(angle) * distance),
     radius,
     shape: generateBlobShape(rng, radius, 0.25 + rng() * 0.2),
     depth: 0.8 + rng() * 0.4,
@@ -304,22 +331,34 @@ export function generateWorld(seed: number): World {
   const rng = createRng(seed);
   const world = createInitialWorld(seed);
 
-  // 3-5 island clusters
-  const islandCount = 3 + Math.floor(rng() * 3);
-  const islands: Island[] = [];
-  const allRocks: { rock: Rock; island: Island }[] = [];
+  // For now: 1 main cluster (later: multiple distant clusters)
+  const clusterCount = 1;
+  const clusters: Cluster[] = [];
 
-  for (let i = 0; i < islandCount; i++) {
-    const island = generateIsland(rng, i, islandCount);
-    islands.push(island);
-    world.entities.set(island.id, island);
+  for (let c = 0; c < clusterCount; c++) {
+    const cluster = generateCluster(rng, c, clusterCount);
+    clusters.push(cluster);
+    world.clusters.set(cluster.id, cluster);
+  }
 
-    // 1-2 rock formations per island
-    const rockCount = 1 + Math.floor(rng() * 2);
-    for (let j = 0; j < rockCount; j++) {
-      const rock = generateRockFormation(rng, island, j, rockCount);
-      world.entities.set(rock.id, rock);
-      allRocks.push({ rock, island });
+  // Generate islands within each cluster
+  const allRocks: { rock: Rock; island: Island; cluster: Cluster }[] = [];
+
+  for (const cluster of clusters) {
+    // 3-5 islands per cluster
+    const islandCount = 3 + Math.floor(rng() * 3);
+
+    for (let i = 0; i < islandCount; i++) {
+      const island = generateIsland(rng, cluster.id, i, islandCount);
+      world.entities.set(island.id, island);
+
+      // 1-2 rock formations per island
+      const rockCount = 1 + Math.floor(rng() * 2);
+      for (let j = 0; j < rockCount; j++) {
+        const rock = generateRockFormation(rng, island, j, rockCount);
+        world.entities.set(rock.id, rock);
+        allRocks.push({ rock, island, cluster });
+      }
     }
   }
 
