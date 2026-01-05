@@ -210,4 +210,105 @@ The agent can now:
 
 ---
 
+## CP-005: Compound Rock Formations + Bark-like Stems
+
+**Date**: 2026-01-04
+**Seed**: 42
+**Commit**: 509eb35
+
+### What Changed
+
+**Model**:
+- `Rock` now has `boulders` array (compound structure) and `cracks` array
+- `PlantNode` has `depth` property for bark-like thickness gradient
+- `Boulder` type added with size, rotation, sides, irregularity
+
+**Generation**:
+- Rock formations: 2-4 boulders clustered together
+- Plants grow from cracks between boulders or edges
+- More branching, depth-tracked nodes
+
+**Rendering**:
+- Each boulder rendered as smooth-edged polygon (7-12 sides)
+- Subtle highlight strokes for 3D glacial feel
+- Stem strokeWidth based on depth (thicker=root, thinner=tips)
+- Softer dirt color (earth.tan instead of earth.mid)
+
+### Tour Path
+
+1. Observe rock formations — Multiple boulders per rock
+2. Observe plant stems — Thicker near roots, thinner at tips
+3. Observe plants growing from cracks/edges of rocks
+
+---
+
+## CP-006: Autonomous Plant Growth Simulation
+
+**Date**: 2026-01-04
+**Seed**: 42
+**Commit**: 8c68745
+
+### What Changed
+
+**Simulation**:
+- Buds charge slowly over time (~0.02 per tick)
+- Fully charged buds have ~5% chance to auto-sprout per tick
+- Sprouting creates new bud + optional leaf + optional branch
+- Branch chance decreases with depth (natural tapering)
+- Segment length decreases with depth (bark effect)
+- Leaves more likely at deeper levels
+
+**Depth Tracking**:
+- All new nodes track their depth from root
+- Depth affects segment length, branch probability
+- Connects to bark-like stem thickness in renderer
+
+### Tour Path
+
+1. Wait 10-20 seconds — Watch plants grow automatically
+2. Observe buds charging (turning gold)
+3. See new branches/leaves appear
+4. Notice thinner stems on newer growth
+
+---
+
+## CP-007: Cluster Abstraction with Central Glyph
+
+**Date**: 2026-01-04
+**Seed**: 42
+**Commit**: 227ae00
+
+### What Changed
+
+**Model**:
+- Added `Cluster` type with pos, glyphKind, rotation
+- `Island` now has `clusterId` + `localPos` (relative to cluster)
+- `World.clusters` map added
+
+**Generation**:
+- `generateCluster` creates clusters (1 main for now)
+- Islands positioned relative to cluster center
+- Glyph kinds: seed, node, sigil
+
+**Rendering**:
+- `ClusterGlyphRenderer` renders central glyph
+- Three glyph styles (seed=radiating, node=concentric, sigil=triangle)
+- Island worldPos computed from cluster.pos + island.localPos
+- All downstream positions updated to use worldPos
+
+### Tour Path
+
+1. Observe central glyph — Subtle concentric circles at center
+2. Note islands orbiting around cluster center
+3. All entity positioning still works correctly
+
+### Architecture
+
+This sets the foundation for:
+- Multi-cluster world (distant clusters in fog)
+- Each cluster as an independent grouping
+- Cluster-relative positioning for all entities
+
+---
+
 _Add new checkpoints above this line._

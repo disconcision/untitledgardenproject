@@ -599,6 +599,14 @@ Example:
 - [x] Debug toggles: show IDs, hit targets, freeze time, regenerate _(CP-001)_
 - [x] Canvas background gradient + grain _(CP-001)_
 - [x] Create `CHECKPOINTS.md` _(CP-001)_
+- [x] Compound rock formations (glacial erratic aesthetic) _(CP-005)_
+- [x] Bark-like stem thickness (depth gradient) _(CP-005)_
+- [x] Autonomous plant growth simulation _(CP-006)_
+- [x] Cluster abstraction with central glyph _(CP-007)_
+- [ ] Smooth animated camera focus transition
+- [ ] Isometric projection + depth-based z-ordering
+- [ ] Multiple clusters with fog/distance rendering
+- [ ] Background scale layers (mountains, giant trees)
 
 ---
 
