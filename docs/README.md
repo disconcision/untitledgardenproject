@@ -1,117 +1,106 @@
-# Hanging Garden — Documentation Index
+# Hanging Garden — Documentation
 
-> **⚠️ Agents: Start here.** This is your entry point to the project.
+> **Agents: Start here.** This is your entry point.
 
 ---
 
-## ⛔ CRITICAL: Git Workflow Required
+## What Is This?
 
-**DO NOT make any changes without following git workflow.**
+A browser-based software toy: a floating garden of algorithmic plants, soil clumps, and stones drifting in airy space. The garden is an **editor** — the visual form _is_ the syntax. You grow plants by interacting with them directly.
 
-Every agent session MUST:
+**Current state**: Plants grow autonomously, day/night cycle, multiple floating clusters, particles (seeds, fireflies). Core interactions work. Audio system not yet implemented.
 
-```bash
-# 1. START with a feature branch
-git checkout main && git pull
-git checkout -b feature/<descriptive-name>
+**Aesthetic**: Temperate rainforest. Dense, quiet, textural. Rich greens, volcanic grays, warm earth tones. Not dark by default — this is a garden, not a terminal.
 
-# 2. CLAIM your task in docs/TODO.md (move to "In Progress")
+---
 
-# 3. DO your work, commit after each logical unit
-git add -A && git commit -m "feat: description"
+## Documentation Map
 
-# 4. MERGE when done
-git checkout main && git pull
-git merge feature/<branch-name>
-git push
-
-# 5. DELETE the branch
-git branch -d feature/<branch-name>
-
-# 6. PROVIDE completion report to creator
-```
-
-**Why?** Branches keep a clean git history and allow easy reverts if something goes wrong.
+| File | What It Is | Read If... |
+|------|-----------|------------|
+| **docs/README.md** | This file — entry point | You're starting here ✓ |
+| **docs/AGENT-WORKFLOW.md** | Git process, completion reports | You're about to do work |
+| **docs/TODO.md** | Tasks, milestones, backlog | You need something to work on |
+| **SOURCE.md** | Vision, architecture, aesthetics | You need design context |
+| **docs/CHECKPOINTS.md** | Feature history, tour paths | You need to understand past work |
 
 ---
 
 ## Quick Start for Agents
 
-**Before doing any work, you MUST read the workflow documentation:**
+### Before Any Work
 
+```bash
+# 1. Read docs
+cat docs/README.md        # You're here
+cat docs/AGENT-WORKFLOW.md  # Mandatory process
+cat docs/TODO.md          # Find/claim a task
+
+# 2. Skim SOURCE.md if unfamiliar with project vision
+
+# 3. Create a branch
+git checkout main && git pull
+git checkout -b feature/<descriptive-name>
+
+# 4. Claim task in docs/TODO.md
 ```
-1. Read this file (docs/README.md) — you're here
-2. Read docs/AGENT-WORKFLOW.md — MANDATORY, full git process details
-3. Check docs/TODO.md — claim your task before starting
-4. Skim SOURCE.md — project vision and architecture
+
+### After Work
+
+```bash
+# 1. Update TODO.md (mark complete)
+# 2. Commit with clear message
+git add -A && git commit -m "feat: description"
+
+# 3. Merge and clean up
+git checkout main && git merge feature/<branch-name>
+git branch -d feature/<branch-name>
+
+# 4. Provide completion report (see AGENT-WORKFLOW.md)
 ```
-
-### Why This Matters
-
-- Proper git hygiene prevents conflicts and enables clean reverts
-- The creator needs a comprehensible commit history
-- **Skipping the workflow creates problems for everyone**
-
-## Documentation Map
-
-| File                       | Purpose                                                    | When to Update                       |
-| -------------------------- | ---------------------------------------------------------- | ------------------------------------ |
-| **docs/README.md**         | This index; entry point for agents                         | When doc structure changes           |
-| **docs/AGENT-WORKFLOW.md** | Mandatory workflow, git practices, completion checklist    | When process changes                 |
-| **docs/TODO.md**           | Active tasks, in-progress work, backlog                    | Every session (claim/complete tasks) |
-| **docs/CHECKPOINTS.md**    | Tour paths and architecture notes for significant changes  | Major features only                  |
-| **docs/transcripts/**      | Conversation transcripts (creator-maintained)              | Creator exports after sessions       |
-| **SOURCE.md**              | Project vision, design, architecture, aesthetic references | Architectural decisions              |
-
-## For the Creator (Human)
-
-### Your Process
-
-1. **Starting a session**: Tell the agent "Read docs/README.md" (or it may already be in context)
-2. **During work**: Give feedback, steer direction
-3. **After session**: Export conversation transcript to `docs/transcripts/YYYY-MM-DD-topic.md`
-
-### What to Check When Agent Finishes
-
-The agent should provide a **Completion Report** at the end of work. Look for:
-
-- [ ] Code changes committed?
-- [ ] Branch merged and deleted?
-- [ ] TODO.md updated?
-- [ ] CHECKPOINTS.md updated (if significant feature)?
-- [ ] Any manual steps for you?
-
-If the agent didn't provide this, ask: "Give me your completion report."
-
-## Key Principles
-
-1. **Always use feature branches** — Never commit directly to main
-2. **Small, focused commits** — One logical change per commit
-3. **Separate unrelated work** — Different fixes get different commits (or branches)
-4. **Claim tasks before starting** — Prevents parallel conflicts
-5. **Update docs as you go** — Not as an afterthought
-6. **Validate before responding** — Check the workflow checklist before ending
-
-## Non-Negotiables
-
-These are not suggestions. Every session must include:
-
-- [ ] **Feature branch created** — `git checkout -b feature/xxx`
-- [ ] **TODO.md updated** — claim task at start, mark complete at end
-- [ ] **Changes committed** — `git add -A && git commit -m "..."`
-- [ ] **Branch merged to main** — `git checkout main && git merge feature/xxx`
-- [ ] **Branch deleted** — `git branch -d feature/xxx`
-- [ ] **Completion report provided** — tell the creator what you did
-
-### Common Mistakes
-
-| Mistake | Why It's Bad | Prevention |
-|---------|--------------|------------|
-| Working directly on main | Other agents can't see your work until merged; no clean revert | Always create a branch first |
-| Not claiming task in TODO.md | Other agents might work on the same thing | Claim before starting |
-| Forgetting to merge/delete branch | Stale branches accumulate; work isn't in main | Follow the git commands above |
-| Making docs-only changes without git | These are still changes that can conflict | ALL changes need branches |
 
 ---
 
-_This file is the first thing agents should read. The workflow is mandatory, not optional._
+## For the Creator (Human)
+
+**Your loop**:
+1. Tell agent "Read docs/README.md"
+2. Give feedback while viewing the garden
+3. After session: export transcript to `docs/transcripts/`
+
+**What to check when agent finishes**:
+- [ ] Code committed + merged?
+- [ ] TODO.md updated?
+- [ ] Completion report provided?
+
+---
+
+## Key Files
+
+```
+src/
+├── core/           # Pure logic (runs in Node or browser)
+│   ├── model.ts    # Types, World state
+│   ├── generate.ts # Procedural generation
+│   └── actions/    # sprout, prune, branch
+├── render/         # React/SVG (browser only)
+├── ui/             # HUD, panels, menus
+└── theme/          # Colors, day/night scheme
+```
+
+---
+
+## Non-Negotiables
+
+Every agent session must:
+- [ ] Create a feature branch (not work on main)
+- [ ] Claim task in TODO.md before starting
+- [ ] Commit changes with clear messages
+- [ ] Merge branch and delete it
+- [ ] Provide completion report
+
+**Why?** Clean git history enables easy reverts. Claimed tasks prevent conflicts.
+
+---
+
+_Read docs/AGENT-WORKFLOW.md next for full process details._

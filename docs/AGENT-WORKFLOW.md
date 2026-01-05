@@ -53,7 +53,7 @@ docs/TODO.md        # What's in progress, what's available
 SOURCE.md           # Vision, architecture, aesthetic (skim if familiar)
 ```
 
-### 5. Claim Your Task
+### 4. Claim Your Task
 
 In `docs/TODO.md`:
 
@@ -61,7 +61,7 @@ In `docs/TODO.md`:
 - Add date: `- [ ] **[YYYY-MM-DD]** Task description`
 - If the task doesn't exist, add it first
 
-### 6. Create a Feature Branch
+### 5. Create a Feature Branch
 
 ```bash
 git checkout main && git pull
@@ -79,20 +79,20 @@ Use descriptive names:
 
 ## Phase 2: During Work
 
-### 7. Make Focused Changes
+### 6. Make Focused Changes
 
 - **1–3 coherent improvements** per session, not scattered edits
 - Keep commits small and atomic
 - **Commit after each logical unit of work** — don't batch unrelated changes
 - If you notice unrelated issues, note them in TODO.md for later
 
-### 8. Test in Browser
+### 7. Test in Browser
 
 - Use Cursor's browser tools to verify changes work visually
 - Check console for errors
 - Verify the change does what you intended
 
-### 9. Check for Lint Errors
+### 8. Check for Lint Errors
 
 Run `read_lints` on modified files. Fix any issues you introduced.
 
@@ -100,7 +100,7 @@ Run `read_lints` on modified files. Fix any issues you introduced.
 
 ## Phase 3: After Completing Work
 
-### 10. Update Documentation
+### 9. Update Documentation
 
 | Change Type    | Update TODO.md? | Update CHECKPOINTS.md? | Update SOURCE.md? | Review Tutorial?     |
 | -------------- | --------------- | ---------------------- | ----------------- | -------------------- |
@@ -129,7 +129,7 @@ Run `read_lints` on modified files. Fix any issues you introduced.
 - New dependencies/libraries
 - UI/UX pattern changes
 
-### 11. Commit with Clear Message
+### 10. Commit with Clear Message
 
 ```bash
 git add -A
@@ -151,7 +151,7 @@ git add <files-for-fix-1> && git commit -m "fix: first issue"
 git add <files-for-fix-2> && git commit -m "fix: second issue"
 ```
 
-### 12. Merge to Main
+### 11. Merge to Main
 
 ```bash
 git checkout main && git pull
@@ -161,7 +161,7 @@ git push
 
 Handle merge conflicts if they arise from parallel work.
 
-### 13. Delete the Feature Branch
+### 12. Delete the Feature Branch
 
 ```bash
 git branch -d feature/<branch-name>

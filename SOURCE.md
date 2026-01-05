@@ -2,20 +2,7 @@
 
 A browser-based software toy: a dense, tactile, explorable _floating garden_ of algorithmic, multi-scale structures. Plants, soil clumps, stones, and attachments drift in airy space. The underlying data stays close to what you see—the garden _is_ the syntax.
 
----
-
-## ⚠️ Agents: Start Here
-
-**Before doing any work, read the docs:**
-
-```
-1. docs/README.md          ← Entry point, documentation map
-2. docs/AGENT-WORKFLOW.md  ← Mandatory process (git, docs, completion report)
-3. docs/TODO.md            ← Current tasks, claim before starting
-4. SOURCE.md (this file)   ← Vision, architecture, aesthetic (skim if familiar)
-```
-
-**The full workflow (branching, testing, documentation, completion reports) is in `docs/AGENT-WORKFLOW.md`.**
+> **Agents**: This file is for vision, architecture, and aesthetics. For process/workflow, see `docs/AGENT-WORKFLOW.md`. For tasks, see `docs/TODO.md`.
 
 ---
 
@@ -479,47 +466,14 @@ Separate file: `CHECKPOINTS.md`
 
 ## 14. Milestones
 
-### M1 — MVP Garden
+**See `docs/TODO.md` for current milestone status and all task tracking.**
 
-- [ ] Vite + React + TS scaffold
-- [ ] Camera pan/zoom
-- [ ] Procedural generator (seeded): islands + plants
-- [ ] SVG render: stems, leaves, islands, rocks
-- [ ] Hover + selection highlighting
-- [ ] Click bud → sprout; click leaf → prune
-- [ ] Tutorial overlay v1
-- [ ] Canvas background (gradient + grain)
-
-### M2 — Polished Tactility
-
-- [x] Refined hit testing + hover states (CP-010, CP-014: all entities have hover effects)
-- [ ] Smooth transitions: focus, sprout animation, prune collapse
-- [ ] Background particles (canvas)
-- [ ] Debug panel: IDs, hit targets, freeze, regenerate
-- [ ] Animation timing audit (150ms hovers, 300ms growth, etc.)
-
-### M3 — Space Lens Mechanic
-
-Add one nontrivial exploration mechanic:
-
-- **Option A**: Focus lens—hovering cluster expands spacing, increases detail
-- **Option B**: Neighborhood unfold—double-click node expands its neighborhood
-- [ ] Implement chosen mechanic
-- [ ] Update tutorial
-
-### M4 — Ecosystem Hooks
-
-- [ ] Humidity/crowding fields
-- [ ] Growth rate varies by conditions
-- [ ] Visible field visualization (very subtle)
-- [ ] Tutorial updated
-
-### M5 — Baroque Growth
-
-- [ ] Multiple plant varieties (grammar-based generation)
-- [ ] Cross-links/vines forming loops
-- [ ] Deeper layered rendering
-- [ ] Sound (optional)
+Summary:
+- **M1 (MVP Garden)**: ✅ Complete
+- **M2 (Polished Tactility)**: 🟡 Mostly complete — animation polish remains
+- **M3 (Space Lens)**: ⬜ Not started — exploration mechanic TBD
+- **M4 (Ecosystem)**: ⬜ Not started — environmental factors
+- **M5 (Baroque Growth)**: ⬜ Not started — plant varieties, deeper structure
 
 ---
 
@@ -552,32 +506,13 @@ Pick opportunistically:
 
 ## 17. Agent Operating Instructions
 
-**Full workflow details are in `docs/AGENT-WORKFLOW.md`.**
+**See `docs/AGENT-WORKFLOW.md` for the full workflow.**
 
-### Quick Reference
-
-1. **Read docs first**: `docs/README.md` → `docs/AGENT-WORKFLOW.md` → `docs/TODO.md`
-2. **Claim task** in `docs/TODO.md` before starting
-3. **Create feature branch**: `git checkout -b feature/xxx`
-4. **Make 1–3 coherent improvements** (not scattered edits)
-5. **Test in browser**, check lints
-6. **Update docs**: TODO.md (always), CHECKPOINTS.md (if significant)
-7. **Commit, merge, delete branch**
-8. **Provide completion report** to creator
-
-### Preferences
-
+Key principles:
 - Prefer changes that increase visual cohesion, interaction clarity, shallow discoverability
 - If experiment looks worse: revert quickly, note what failed
 - Keep commits small and atomic for easy bisecting
-
-### Long autonomous runs
-
-Choose a single theme and produce:
-
-- 1–3 checkpoints (not 20)
-- Updated tutorial if relevant
-- Completion report summarizing all changes
+- Long autonomous runs: 1–3 checkpoints, not 20
 
 ---
 
@@ -589,35 +524,25 @@ The agent (Claude, running in Cursor) benefits from tools beyond just the browse
 
 The core logic (model, update, generate, simulation) is **pure TypeScript** with no React/DOM dependencies. This enables:
 
-- **Headless generation**: `npx tsx scripts/generate.ts --seed 42` → prints world summary
-- **Validation**: `npx tsx scripts/validate.ts` → checks invariants, runs quick tests
-- **Inspection**: `npx tsx scripts/inspect.ts --id island-3` → prints entity details
+- **Headless generation**: `npm run generate -- --seed 42` → prints world summary
+- **Unit tests**: `npm test` → runs Vitest tests on core logic
 
-These tools are **primarily for the agent** to use during development:
-
-- Quick hypothesis validation without spinning up the browser
-- Test logic changes before visual verification
-- Get structured output (JSON, counts, diffs) for comparison
-
-If these tools don't meaningfully help the agent iterate, they can be simplified or removed. The goal is tighter loops, not infrastructure for its own sake.
+These tools help the agent validate changes without spinning up the browser.
 
 ### Directory Structure
 
 ```
 scripts/
-├── generate.ts   # CLI: generate world, print summary
-├── validate.ts   # CLI: run quick invariant checks
-└── inspect.ts    # CLI: inspect specific entities
+└── generate.ts   # CLI: generate world, print summary
 src/
 ├── core/         # Pure logic (no React)
 │   ├── model.ts
-│   ├── update.ts
 │   ├── generate.ts
-│   └── sim/
-│       └── tick.ts
+│   ├── actions/  # sprout, prune, branch
+│   └── simulation/
 ├── render/       # React/DOM/SVG (browser only)
 ├── ui/           # React components
-└── ...
+└── theme/        # Colors, day/night scheme
 ```
 
 ---
@@ -855,19 +780,8 @@ The agent should internalize these not as constraints but as **taste anchors**�
 │   │   └── simulation/    # Simulation tick logic
 │   │       ├── index.ts
 │   │       └── particles.ts # Seeds, fireflies, lifecycle
-│   ├── audio/             # Audio system (browser only, Tone.js + Howler.js)
-│   │   ├── index.ts       # AudioSystem init, re-exports
-│   │   ├── engine.ts      # AudioEngine: context lifecycle, master volume
-│   │   ├── mixer.ts       # LayerMixer: adjusts volumes based on World state
-│   │   ├── ambient/       # Continuous audio layers
-│   │   │   ├── voidDrone.ts
-│   │   │   ├── dayNightShift.ts
-│   │   │   └── clusterVoice.ts
-│   │   └── discrete/      # One-shot sounds
-│   │       ├── actionSounds.ts
-│   │       ├── uiSounds.ts
-│   │       └── particleSounds.ts
 │   ├── update.ts          # Msg type + update dispatcher (thin, delegates to core/)
+│   # NOTE: src/audio/ planned but not yet implemented — see section 25
 │   ├── render/            # React/DOM/SVG (browser only)
 │   │   ├── Canvas.tsx     # Background layer (atmosphere)
 │   │   ├── Garden.tsx     # SVG world layer
@@ -903,7 +817,9 @@ The agent should internalize these not as constraints but as **taste anchors**�
 
 ## 25. Audio System Architecture
 
-The garden has a Proteus-inspired audio system: sounds and music emerge from what's visible and nearby rather than from composed tracks. The audio should feel as organic as the visuals—a mix of breathy, natural textures and crystalline, synthetic tones.
+> **Status**: Planned, not yet implemented. The hooks (`onAudioEvent`) exist in `update.ts`. See `docs/TODO.md` for implementation tasks.
+
+The garden will have a Proteus-inspired audio system: sounds and music emerge from what's visible and nearby rather than from composed tracks. The audio should feel as organic as the visuals—a mix of breathy, natural textures and crystalline, synthetic tones.
 
 ### Audio References + Vibe
 

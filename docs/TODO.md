@@ -2,156 +2,181 @@
 
 > **Agents: Check this before starting work.** Claim a task, do it, mark it done.
 
+---
+
+## Milestone Status
+
+| Milestone | Status | Notes |
+|-----------|--------|-------|
+| **M1 — MVP Garden** | ✅ Complete | Core viewport, camera, generation, rendering, basic interactions |
+| **M2 — Polished Tactility** | 🟡 Mostly Complete | Hover states done; transitions and timing audit remain |
+| **M3 — Space Lens Mechanic** | ⬜ Not Started | Choose and implement exploration mechanic |
+| **M4 — Ecosystem Hooks** | ⬜ Not Started | Environmental factors affecting growth |
+| **M5 — Baroque Growth** | ⬜ Not Started | Multiple plant varieties, deeper structure |
+
+---
+
+## Parallelization Guide
+
+These workstreams can be worked on independently by different agents:
+
+| Workstream | Dependencies | Notes |
+|------------|--------------|-------|
+| **Audio System** | None | Completely independent; hooks already exist in `update.ts` |
+| **UI/UX Bug Fixes** | None | Isolated fixes to existing panels |
+| **Visual Polish (M2)** | None | Animations, transitions, timing |
+| **Scene Depth** | None | Fog, layers, atmosphere |
+| **Space Lens (M3)** | Benefits from M2 polish | Core exploration feature |
+| **Ecosystem (M4)** | None | New simulation mechanics |
+| **Entity System** | None | Infrastructure improvement |
+| **Projective UI** | Basic UI stability | Builds on WorldInspector |
+
+**Strong dependencies to note:**
+- Audio Phase 2/3 → requires Audio MVP complete
+- M5 (Baroque Growth) → should wait for M3/M4 patterns to stabilize
+
+---
+
 ## In Progress
 
 _Tasks currently being worked on. Include session date or identifier._
 
 _(none currently)_
 
-## Up Next
+---
 
-High-priority tasks ready to be claimed:
+## Up Next (Priority Order)
 
-### Audio System MVP
+### 🔊 Audio System MVP
+_Workstream: Audio | Dependency: None | Parallelizable: Yes_
 
 - [ ] **Audio engine scaffold**: Create `src/audio/` structure, install Tone.js + Howler.js, AudioEngine class with context lifecycle
 - [ ] **User gesture activation**: Start audio on first interaction (click/pan), add speaker toggle icon to HUD
 - [ ] **Action sounds (synthesized)**: Discrete sounds for sprout, prune, branch, trim — hook into existing AudioEvent system
 - [ ] **Void drone**: Basic airy ambient pad using Tone.js oscillators/filters, always playing at low volume
 
-### Other
+### ✨ Visual Polish (M2 Completion)
+_Workstream: Visual | Dependency: None | Parallelizable: Yes_
 
-- [ ] Smooth animated camera focus transition
-- [ ] Isometric projection + depth-based z-ordering
-- [ ] Multiple clusters with improved fog/distance rendering refinements
-- [ ] Background scale layers (mountains, giant trees in distance)
+- [ ] **Smooth camera focus transition**: Animate pan/zoom when double-clicking to focus (currently instant)
+- [ ] **Sprout animation**: Animate new branch appearing (scale up, unfurl)
+- [ ] **Prune animation**: Animate subtree removal (fade/collapse before removing)
+- [ ] **Animation timing audit**: Standardize durations (150ms hovers, 300ms growth) per SOURCE.md spec
+
+### 🐛 UI Bug Fixes
+_Workstream: UI | Dependency: None | Parallelizable: Yes_
+
+- [ ] **Two-finger scroll event capture**: When hovering over scrollable menus (WorldInspector, Tutorial), two-finger scroll zooms the canvas instead of scrolling the menu
+- [ ] **Padding/margin inconsistency on menu boxes**: Time box has no top padding; audit and unify spacing across all corner dock panels
+
+### 🎨 Scene Depth & Atmosphere
+_Workstream: Visual | Dependency: None | Parallelizable: Yes_
+
+- [ ] **Isometric projection + depth-based z-ordering**
+- [ ] **Multiple clusters with improved fog/distance rendering**
+- [ ] **Background scale layers**: Mountains, giant trees in distance for depth cues
+
+---
 
 ## Backlog
 
 ### M3 — Space Lens Mechanic
+_Dependency: Benefits from M2 polish | Parallelizable: Yes_
 
-- [ ] Choose mechanic: focus lens vs neighborhood unfold
-- [ ] Implement chosen mechanic
-- [ ] Update tutorial for new mechanic
+- [ ] **Choose mechanic**: Focus lens vs neighborhood unfold (design decision)
+- [ ] **Implement chosen mechanic**
+- [ ] **Update tutorial for new mechanic**
 
 ### M4 — Ecosystem Hooks
+_Dependency: None | Parallelizable with M3: Yes_
 
-- [ ] Humidity/crowding fields
-- [ ] Growth rate varies by conditions
-- [ ] Visible field visualization (very subtle)
-- [ ] Tutorial updated for ecosystem
+- [ ] **Humidity/crowding fields**: Per-island environmental factors
+- [ ] **Growth rate varies by conditions**
+- [ ] **Visible field visualization**: Very subtle overlays
+- [ ] **Tutorial updated for ecosystem**
 
 ### M5 — Baroque Growth
+_Dependency: M3 and M4 patterns established_
 
-- [ ] Multiple plant varieties (grammar-based generation)
-- [ ] Cross-links/vines forming loops
-- [ ] Deeper layered rendering
+- [ ] **Multiple plant varieties**: Grammar-based generation
+- [ ] **Cross-links/vines forming loops**
+- [ ] **Deeper layered rendering**
 
-### Audio System — Phase 2 (Proximity & Layers)
+### 🔊 Audio Phase 2 — Proximity & Layers
+_Dependency: Audio MVP complete_
 
-See `SOURCE.md` section 25 for full architecture. This builds on MVP audio.
-
-- [ ] **Day/night ambient shift**: Drone harmonic palette changes based on `timeOfDay` (warmer day, cooler night)
-- [ ] **Firefly sounds**: Subtle high-pitched tones when fireflies are visible/glowing at night
+- [ ] **Day/night ambient shift**: Drone harmonic palette changes based on `timeOfDay`
+- [ ] **Firefly sounds**: Subtle high-pitched tones when fireflies are visible
 - [ ] **Seed whispers**: Very soft "puff" sounds when seeds spawn or land
-- [ ] **Cluster voice system**: Each cluster gets deterministic (seed-based) harmonic voice/chord
-- [ ] **Proximity mixer**: Fade cluster voices in/out based on camera distance to cluster center
-- [ ] **Zoom-level mixing**: Zoomed out = broader ambient; zoomed in = more discrete detail sounds
-- [ ] **Stereo positioning**: Sounds from entities pan left/right based on screen position
+- [ ] **Cluster voice system**: Each cluster gets deterministic (seed-based) harmonic voice
+- [ ] **Proximity mixer**: Fade cluster voices in/out based on camera distance
+- [ ] **Zoom-level mixing**: Zoomed out = broader ambient; zoomed in = more detail
+- [ ] **Stereo positioning**: Sounds pan left/right based on screen position
 
-### Audio System — Phase 3 (Generative & Polish)
+### 🔊 Audio Phase 3 — Generative & Polish
+_Dependency: Audio Phase 2 complete_
 
 - [ ] **Island variation**: Islands within a cluster have subtle harmonic variations
 - [ ] **Procedural melodic fragments**: Occasional simple note sequences from flowers/buds
 - [ ] **Temporal layers**: Different music palettes for dawn/noon/dusk/midnight
-- [ ] **Sample assets**: Record/source high-quality samples for action sounds (snip, sprout)
-- [ ] **Audio settings panel**: User control for master volume, layer balance, music on/off
-- [ ] **Entity leitmotifs**: Specific large plants or features get unique musical phrases
+- [ ] **Sample assets**: Record/source high-quality samples for action sounds
+- [ ] **Audio settings panel**: User control for master volume, layer balance
+- [ ] **Entity leitmotifs**: Specific large plants or features get unique phrases
 
-### Projective UI
+### 🧩 Entity System Unification
+_Dependency: None | Parallelizable: Yes_
 
-- [ ] Inline rendering of subtrees within inspector
-- [ ] Situated inspection (pop open inspector anchored to world position)
-- [ ] UI chrome as tree nodes in the projective paradigm
-- [ ] Comparison views (side-by-side worlds, branching)
+- [ ] **Rocks as node meshes**: Attachment points at corners, edges, interior Voronoi
+- [ ] **Particles selectable**: Seeds/fireflies clickable in world view
+- [ ] **Particles in hierarchy**: Seeds/fireflies appear in WorldInspector tree
+- [ ] **Containment transitions**: Landing = join new parent structure
+- [ ] **Selection sync**: WorldInspector ↔ world view (bidirectional)
+- [ ] **Entity inspector panel**: Show properties of selected object
+- [ ] **Firefly-plant interaction**: Fireflies land on nodes, orbit features
 
-### Entity System Unification
+### 📐 Projective UI
+_Dependency: Basic UI stability | Parallelizable: Yes_
 
-- [ ] Rocks as node meshes with attachment points (corners, edges, interior Voronoi)
-- [ ] Seeds/fireflies clickable and selectable in world view
-- [ ] Seeds/fireflies appear in world tree hierarchy
-- [ ] Particle containment transitions (landing = join new parent structure)
-- [ ] Selection sync between world view and tree menu (click in one = select in other)
-- [ ] Entity inspector panel showing properties of selected object
-- [ ] Fireflies interact more with plants (land on nodes, orbit specific features)
+- [ ] **Inline rendering of subtrees**: Miniature graphics within inspector tree
+- [ ] **Situated inspection**: Pop open inspector anchored to world position
+- [ ] **UI chrome as tree nodes**: Menus, config in projective paradigm
+- [ ] **Comparison views**: Side-by-side worlds, branching
 
-### UI / Menu System
+### 🖥️ UI Improvements
+_Dependency: None | Parallelizable: Yes_
 
-#### Bugs
+- [ ] **Tutorial menu scrolling**: Add scroll behavior when content exceeds threshold
+- [ ] **Z-index focus system**: Clicking overlapping menus brings to front
+- [ ] **Smart menu space sharing**: Adjust menu positions to avoid overlap
 
-- [ ] **Two-finger scroll event capture**: When hovering over scrollable menus (WorldInspector, Tutorial), two-finger scroll zooms the canvas instead of scrolling the menu. The scroll event should not propagate to the canvas when over a scrollable menu.
+### 🛠️ Infrastructure & Meta Features
+_Various dependencies — see notes_
 
-- [ ] **Padding/margin inconsistency on menu boxes**:
-  - Time box has no top padding
-  - Some boxes reserve title space where titles aren't needed
-  - Audit and unify padding/spacing across all corner dock panels
-  - Close button (×) should have consistent spacing; content can flow into same line as × if appropriate
+- [ ] **Undo/redo stack**: Enable reverting actions (requires action log)
+- [ ] **Action log/replay**: Record actions for time-lapse and debugging
+- [ ] **Save/load (LocalStorage)**: Persist garden state, JSON export
+- [ ] **Seed sharing**: Export/import garden seeds for reproducibility
 
-#### Improvements
+### 🎨 Stretch / Opportunistic
+_Low priority, pick when inspired_
 
-- [ ] **Tutorial menu scrolling**: Add scroll behavior to Tutorial menu when content exceeds threshold (similar to WorldInspector)
-
-- [ ] **Z-index focus system for overlapping menus**: When multiple menus (WorldInspector, Tutorial, etc.) are open and overlapping, clicking one should bring it to front. Focus-dependent z-index.
-
-- [ ] **Smart menu space sharing**: 
-  - Track on-screen extent of expandable menus
-  - When two scrollable menus would overlap, adjust positioning so they share space (don't require overlap)
-  - Fixed-size menus (like TimeConfig) can stay fixed; this applies to dynamically-sized scrollable menus
-  - When one is small and the other large, space doesn't need to be split equally
-
-### Stretch / Opportunistic
-
-- [ ] Growth grammar editor
-- [ ] Alternate skins (botanical / coral / circuitry / crystal)
-- [ ] Time-lapse replay (action log playback)
-- [ ] Sandbox tools (sprinkle seeds, place rocks, carve soil)
-- [ ] Save/load (LocalStorage snapshots, JSON export)
+- [ ] **Growth grammar editor**: Drag rules to change plant generation
+- [ ] **Alternate skins**: Botanical / coral / circuitry / crystal
+- [ ] **Time-lapse replay**: Action log playback as animation
+- [ ] **Sandbox tools**: Sprinkle seeds, place rocks, carve soil
 
 ---
 
 ## Completed
 
-_Move completed items here with date._
-
-### 2026-01-04
-
-- [x] Particle system: seeds/pollen and fireflies
-  - Particle entity type with floating/landed/rooting states
-  - Seeds spawn from flowers, float with brownian motion + wind, can land and take root
-  - Fireflies spawn at dusk, glow at night, attracted to flowers and buds
-  - Plants can now flower (buds turn into flowers at deeper depths)
-- [x] Particle movement smoothness improvements
-  - Fast particle tick (50ms) for continuous smooth movement
-  - Seeds use sinusoidal wind patterns with rotation tracking
-  - Curved seed tails with secondary wisps
-  - Brighter firefly glow with layered effects
-- [x] Particle refinements
-  - Day length presets now logarithmic: 5s, 15s, 1 min, 5 min
-  - Seeds drift much farther between islands with stronger wind
-  - Fireflies spawn more frequently and land during day
-  - Slightly smaller firefly glow for subtlety
-
 ### 2026-01-05
 
-- [x] Workflow documentation improvements (Phase 0, validation checklist, git strategy guidance)
-- [x] Tutorial completion hooks for simulation and panel steps (time-pause, time-scrub, watch-grow, inspector, debug)
-- [x] Tutorial maintenance documentation in AGENT-WORKFLOW.md
-- [x] Unified simulation model: day cycle pause also pauses plant growth
+- [x] Workflow documentation improvements
+- [x] Tutorial completion hooks for simulation and panel steps
+- [x] Unified simulation model: day cycle pause pauses plant growth
 - [x] TimeConfig panel restyled to match HUD corner dock pattern
 - [x] All UI panels sync with day/night color scheme
-- [x] Removed "World" header from WorldInspector
-- [x] Hierarchical tutorial with sections (Navigation, Plants, Simulation, Panels)
-- [x] New features highlighted with "NEW" badge in tutorial
+- [x] Hierarchical tutorial with sections
 - [x] Pie menu for plant node actions (branch/trim/center)
 - [x] Day/night cycle with perceptual color interpolation
 - [x] Lucide icons + corner panel alignment
@@ -160,6 +185,9 @@ _Move completed items here with date._
 
 ### 2026-01-04
 
+- [x] Particle system: seeds/pollen and fireflies
+- [x] Particle movement smoothness improvements
+- [x] Particle refinements (day length presets, drift, spawn rates)
 - [x] Scaffold Vite + React + TS (CP-001)
 - [x] Reorganize into core/ and render/ (CP-002)
 - [x] Add Vitest + unit tests (CP-002)
@@ -182,6 +210,12 @@ _Move completed items here with date._
 
 ## How to Use This File
 
+### Picking Work
+
+1. **Check "In Progress"** — don't duplicate someone else's work
+2. **Consider parallelization** — workstreams can be worked independently
+3. **Respect dependencies** — don't start work that depends on incomplete items
+
 ### Claiming a Task
 
 1. Move task from "Up Next" or "Backlog" to "In Progress"
@@ -196,8 +230,8 @@ _Move completed items here with date._
 
 ### Adding New Tasks
 
-- Small fixes/improvements: Add to "Up Next"
-- Larger features: Add under appropriate milestone in "Backlog"
+- Small fixes/improvements: Add to "Up Next" with workstream tag
+- Larger features: Add under appropriate section in "Backlog"
 - Urgent bugs: Add to top of "Up Next" with `**URGENT**` prefix
 
 ---
