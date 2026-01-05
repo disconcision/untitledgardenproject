@@ -401,7 +401,6 @@ export const WorldInspector = memo(function WorldInspector({
         </button>
 
         <div className="hud-panel-content inspector-content">
-          <div className="inspector-header">World</div>
           <div className="inspector-tree">
             {Array.from(tree.clusters.values()).map(
               (cluster: Cluster, clusterIndex: number) => {

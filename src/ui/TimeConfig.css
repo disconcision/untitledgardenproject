@@ -1,74 +1,28 @@
 /**
  * Time Configuration Panel Styles
  * 
- * Bottom-right corner dock for day/night cycle controls.
+ * Uses the HUD panel pattern from HUD.css.
+ * This file contains only time-panel-specific styles.
  */
 
-.time-config-corner {
-  position: fixed;
-  bottom: var(--space-md);
-  right: var(--space-md);
-  z-index: 100;
+/* === Time Panel Specific === */
+
+.time-panel.open {
+  max-width: 240px;
 }
 
-.time-config-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.time-config-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--color-panel-border);
-  background: var(--color-panel-bg);
-  color: var(--color-text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--duration-normal) var(--easing-out);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.time-config-btn:hover {
-  background: var(--bg-pale);
-  transform: scale(1.05);
-}
-
-.time-config-content {
-  position: absolute;
-  bottom: 40px;
-  right: 0;
-  width: 220px;
-  padding: var(--space-md);
-  background: var(--color-panel-bg);
-  border: 1px solid var(--color-panel-border);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-
-  /* Hidden by default */
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(8px);
-  transition: all var(--duration-normal) var(--easing-out);
-}
-
-.time-config-wrapper.open .time-config-content {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+.time-content {
+  min-width: 200px;
 }
 
 /* Time display */
 .time-display {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--color-panel-border);
-  margin-bottom: var(--space-sm);
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-ui-border);
+  margin-bottom: 8px;
 }
 
 .time-phase {
@@ -79,49 +33,49 @@
 
 .time-clock {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text-primary);
   flex: 1;
 }
 
 .time-play-pause {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--color-panel-border);
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--color-ui-border);
   background: transparent;
-  color: var(--color-text);
+  color: var(--color-text-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--duration-fast);
+  transition: all 100ms ease-out;
 }
 
 .time-play-pause:hover {
-  background: var(--color-selection-glow);
+  background: rgba(0, 0, 0, 0.05);
   border-color: var(--color-selection);
 }
 
 /* Time scrubber */
 .time-scrubber {
-  margin-bottom: var(--space-md);
+  margin-bottom: 12px;
 }
 
 .time-scrubber label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: var(--space-xs);
+  margin-bottom: 4px;
 }
 
 .scrubber-track {
   position: relative;
-  height: 24px;
+  height: 20px;
 }
 
 .scrubber-gradient {
@@ -129,24 +83,24 @@
   top: 50%;
   left: 0;
   right: 0;
-  height: 8px;
+  height: 6px;
   transform: translateY(-50%);
-  border-radius: 4px;
+  border-radius: 3px;
   background: linear-gradient(
     to right,
     #1a1f2a 0%,
-    /* Midnight - deep blue */ #2a3040 10%,
-    /* Late night */ #4a3a50 18%,
-    /* Pre-dawn purple */ #d4726a 22%,
-    /* Dawn pink */ #ffb060 26%,
-    /* Sunrise gold */ #e8eff1 35%,
-    /* Morning */ #d8e2e5 50%,
-    /* Noon */ #e8eff1 65%,
-    /* Afternoon */ #ffb060 74%,
-    /* Sunset gold */ #d4726a 78%,
-    /* Dusk pink */ #4a3a50 82%,
-    /* Twilight purple */ #2a3040 90%,
-    /* Evening */ #1a1f2a 100% /* Midnight */
+    #2a3040 10%,
+    #4a3a50 18%,
+    #d4726a 22%,
+    #ffb060 26%,
+    #e8eff1 35%,
+    #d8e2e5 50%,
+    #e8eff1 65%,
+    #ffb060 74%,
+    #d4726a 78%,
+    #4a3a50 82%,
+    #2a3040 90%,
+    #1a1f2a 100%
   );
   pointer-events: none;
 }
@@ -155,7 +109,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  height: 24px;
+  height: 20px;
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -165,12 +119,12 @@
 .time-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: white;
   border: 2px solid var(--color-selection);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   cursor: grab;
 }
 
@@ -180,58 +134,58 @@
 }
 
 .time-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: white;
   border: 2px solid var(--color-selection);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   cursor: grab;
 }
 
 .scrubber-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 9px;
   margin-top: 2px;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 /* Day length */
 .day-length {
-  margin-bottom: var(--space-md);
+  margin-bottom: 10px;
 }
 
 .day-length label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: var(--space-xs);
+  margin-bottom: 4px;
 }
 
 .day-length-presets {
   display: flex;
-  gap: 4px;
+  gap: 3px;
 }
 
 .preset-btn {
   flex: 1;
-  padding: 4px 8px;
-  font-size: 11px;
+  padding: 3px 6px;
+  font-size: 10px;
   font-family: var(--font-mono);
-  border: 1px solid var(--color-panel-border);
-  border-radius: 4px;
+  border: 1px solid var(--color-ui-border);
+  border-radius: 3px;
   background: transparent;
-  color: var(--color-text);
+  color: var(--color-text-primary);
   cursor: pointer;
-  transition: all var(--duration-fast);
+  transition: all 100ms ease-out;
 }
 
 .preset-btn:hover {
-  background: var(--bg-pale);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .preset-btn.active {
@@ -244,25 +198,25 @@
 .time-jumps {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
+  gap: 3px;
 }
 
 .time-jumps button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 6px 8px;
-  font-size: 11px;
-  border: 1px solid var(--color-panel-border);
-  border-radius: 4px;
+  gap: 3px;
+  padding: 4px 6px;
+  font-size: 10px;
+  border: 1px solid var(--color-ui-border);
+  border-radius: 3px;
   background: transparent;
-  color: var(--color-text);
+  color: var(--color-text-primary);
   cursor: pointer;
-  transition: all var(--duration-fast);
+  transition: all 100ms ease-out;
 }
 
 .time-jumps button:hover {
-  background: var(--color-selection-glow);
+  background: rgba(0, 0, 0, 0.05);
   border-color: var(--color-selection);
 }

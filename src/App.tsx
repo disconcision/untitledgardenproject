@@ -36,25 +36,32 @@ export default function App() {
 
   const camera = useCamera({ dispatch, containerRef });
 
-  // Simulation tick - slow rate for game logic
+  // Unified simulation control:
+  // - dayCycle.running is the master "simulation running" toggle
+  // - debug.freezeTime freezes everything (for debugging)
+  const simulationRunning = world.dayCycle.running && !world.debug.freezeTime;
+
+  // Simulation tick - slow rate for game logic (plant growth)
   useEffect(() => {
-    if (world.time.paused || world.debug.freezeTime) return;
+    if (!simulationRunning) return;
 
     const interval = setInterval(() => {
       dispatch({ type: "tick", dt: SIM_TICK_MS });
     }, SIM_TICK_MS);
 
     return () => clearInterval(interval);
-  }, [dispatch, world.time.paused, world.debug.freezeTime]);
+  }, [dispatch, simulationRunning]);
 
   // Day cycle tick - faster for smooth color transitions
   useEffect(() => {
+    if (!simulationRunning) return;
+
     const interval = setInterval(() => {
       dispatch({ type: "dayCycle/tick", dtMs: DAY_CYCLE_TICK_MS });
     }, DAY_CYCLE_TICK_MS);
 
     return () => clearInterval(interval);
-  }, [dispatch]);
+  }, [dispatch, simulationRunning]);
 
   // Apply color scheme based on time of day
   useEffect(() => {

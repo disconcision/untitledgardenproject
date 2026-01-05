@@ -28,11 +28,19 @@
   right: 16px;
 }
 
+/* Bottom-right expands left and up — button anchored to bottom-right */
+.hud-bottom-right .hud-panel-wrapper {
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  transform-origin: bottom right;
+}
+
 /* === Panel Wrapper — handles expand animation === */
 
 .hud-panel-wrapper {
   display: flex;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-panel-border);
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -175,6 +183,97 @@
   text-align: right;
   color: var(--color-text-muted);
   font-size: 10px;
+}
+
+/* === Tutorial Sections === */
+
+.tutorial-panel.open {
+  max-width: 280px;
+}
+
+.tutorial-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tutorial-section {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tutorial-section.is-new {
+  background: rgba(111, 176, 117, 0.08);
+}
+
+.tutorial-section-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 6px;
+  border: none;
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--color-text-primary);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 80ms ease-out;
+  border-radius: 3px;
+}
+
+.tutorial-section-header:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.tutorial-section-header.completed {
+  color: var(--color-text-muted);
+}
+
+.section-toggle {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.section-title {
+  flex: 1;
+  text-align: left;
+}
+
+.section-new-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--color-green-fern);
+  color: white;
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.section-progress {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-text-muted);
+}
+
+.tutorial-section .hud-steps {
+  padding-left: 16px;
+  padding-top: 2px;
+  padding-bottom: 4px;
+}
+
+.tutorial-section .hud-steps li.is-new {
+  background: rgba(111, 176, 117, 0.1);
+  border-radius: 2px;
+  margin-left: -4px;
+  padding-left: 4px;
 }
 
 /* === Debug Controls === */

@@ -117,6 +117,15 @@ export type TutorialStep = {
   instruction: string;
   completed: boolean;
   focusTarget?: Id;
+  isNew?: boolean; // Highlights recently added features
+};
+
+export type TutorialSection = {
+  id: string;
+  title: string;
+  steps: TutorialStep[];
+  defaultExpanded: boolean;
+  isNew?: boolean; // Entire section is new
 };
 
 // === Context Menu ===
@@ -139,7 +148,6 @@ export type World = {
   time: {
     t: number;
     dt: number;
-    paused: boolean;
   };
   dayCycle: DayCycle;
   selection: Id | null;
@@ -147,7 +155,7 @@ export type World = {
   contextMenu: ContextMenu;
   tutorial: {
     visible: boolean;
-    steps: TutorialStep[];
+    sections: TutorialSection[];
   };
   debug: {
     showIds: boolean;
@@ -210,38 +218,94 @@ export function createInitialWorld(seed: number): World {
     time: {
       t: 0,
       dt: 0,
-      paused: false,
     },
     selection: null,
     hover: null,
     contextMenu: null,
     tutorial: {
       visible: true,
-      steps: [
+      sections: [
         {
-          id: "pan",
-          instruction: "Drag the background to pan around the garden",
-          completed: false,
+          id: "navigation",
+          title: "Navigation",
+          defaultExpanded: true,
+          steps: [
+            {
+              id: "pan",
+              instruction: "Drag the background to pan around the garden",
+              completed: false,
+            },
+            {
+              id: "zoom",
+              instruction: "Scroll to zoom in and out",
+              completed: false,
+            },
+            {
+              id: "focus",
+              instruction: "Double-click an island to focus on it",
+              completed: false,
+            },
+          ],
         },
         {
-          id: "zoom",
-          instruction: "Scroll to zoom in and out",
-          completed: false,
+          id: "plants",
+          title: "Plants",
+          defaultExpanded: true,
+          steps: [
+            {
+              id: "sprout",
+              instruction: "Click a glowing bud to sprout a new branch",
+              completed: false,
+            },
+            {
+              id: "context",
+              instruction: "Right-click a stem to branch or trim",
+              completed: false,
+            },
+          ],
         },
         {
-          id: "sprout",
-          instruction: "Click a glowing bud to sprout a new branch",
-          completed: false,
+          id: "simulation",
+          title: "Simulation",
+          defaultExpanded: true,
+          isNew: true,
+          steps: [
+            {
+              id: "time-pause",
+              instruction: "Open the clock panel (⏱) and pause/play to control time",
+              completed: false,
+              isNew: true,
+            },
+            {
+              id: "time-scrub",
+              instruction: "Drag the time slider to jump to any time of day",
+              completed: false,
+              isNew: true,
+            },
+            {
+              id: "watch-grow",
+              instruction: "Watch plants grow automatically when simulation runs",
+              completed: false,
+              isNew: true,
+            },
+          ],
         },
         {
-          id: "context",
-          instruction: "Right-click a stem to branch or trim",
-          completed: false,
-        },
-        {
-          id: "focus",
-          instruction: "Double-click an island to focus on it",
-          completed: false,
+          id: "panels",
+          title: "Panels",
+          defaultExpanded: false,
+          steps: [
+            {
+              id: "inspector",
+              instruction: "Open the tree panel (🌳) to inspect world structure",
+              completed: false,
+            },
+            {
+              id: "debug",
+              instruction: "Open the settings panel (⚙️) for debug options",
+              completed: false,
+            },
+          ],
         },
       ],
     },

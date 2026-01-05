@@ -297,6 +297,12 @@ export function applySchemeToDOM(scheme: ColorScheme): void {
   root.style.setProperty('--color-panel-bg', scheme.panelBg);
   root.style.setProperty('--color-panel-border', scheme.panelBorder);
   
+  // UI aliases for consistency
+  root.style.setProperty('--color-text-primary', scheme.text);
+  root.style.setProperty('--color-text-secondary', scheme.textMuted);
+  root.style.setProperty('--color-ui-border', scheme.panelBorder);
+  root.style.setProperty('--color-ui-bg', scheme.bgPale);
+  
   root.style.setProperty('--color-hover', scheme.hover);
   root.style.setProperty('--color-selection', scheme.selection);
   root.style.setProperty('--color-selection-glow', scheme.selectionGlow);

@@ -5,9 +5,9 @@
  * Close button appears in same position as the icon.
  */
 
-import { useState, memo } from "react";
-import { Compass, Settings, X } from "lucide-react";
-import { World } from "../model";
+import { useState, memo, useCallback } from "react";
+import { Compass, Settings, X, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import { World, TutorialSection } from "../model";
 import { Msg } from "../update";
 import "./HUD.css";
 
@@ -19,6 +19,73 @@ type HUDProps = {
   onRegenerate: (seed: number) => void;
 };
 
+// Helper to count all steps across sections
+function countSteps(sections: TutorialSection[]): { completed: number; total: number } {
+  let completed = 0;
+  let total = 0;
+  for (const section of sections) {
+    for (const step of section.steps) {
+      total++;
+      if (step.completed) completed++;
+    }
+  }
+  return { completed, total };
+}
+
+// Collapsible section component
+type TutorialSectionViewProps = {
+  section: TutorialSection;
+  expandedSections: Set<string>;
+  toggleSection: (id: string) => void;
+};
+
+const TutorialSectionView = memo(function TutorialSectionView({
+  section,
+  expandedSections,
+  toggleSection,
+}: TutorialSectionViewProps) {
+  const isExpanded = expandedSections.has(section.id);
+  const sectionCompleted = section.steps.every((s) => s.completed);
+  const sectionProgress = section.steps.filter((s) => s.completed).length;
+
+  return (
+    <div className={`tutorial-section ${section.isNew ? "is-new" : ""}`}>
+      <button
+        className={`tutorial-section-header ${sectionCompleted ? "completed" : ""}`}
+        onClick={() => toggleSection(section.id)}
+      >
+        <span className="section-toggle">
+          {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        </span>
+        <span className="section-title">{section.title}</span>
+        {section.isNew && (
+          <span className="section-new-badge">
+            <Sparkles size={10} /> New
+          </span>
+        )}
+        <span className="section-progress">
+          {sectionProgress}/{section.steps.length}
+        </span>
+      </button>
+      {isExpanded && (
+        <ul className="hud-steps">
+          {section.steps.map((step) => (
+            <li
+              key={step.id}
+              className={`${step.completed ? "completed" : ""} ${step.isNew ? "is-new" : ""}`}
+            >
+              <span className="step-check">
+                {step.completed ? "✓" : "○"}
+              </span>
+              <span className="step-text">{step.instruction}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+});
+
 export const HUD = memo(function HUD({
   world,
   dispatch,
@@ -27,14 +94,36 @@ export const HUD = memo(function HUD({
   const [debugOpen, setDebugOpen] = useState(false);
   const { tutorial, debug, seed, camera } = world;
 
-  const completedCount = tutorial.steps.filter((s) => s.completed).length;
-  const totalCount = tutorial.steps.length;
+  // Initialize expanded sections based on defaultExpanded and isNew
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(() => {
+    const initial = new Set<string>();
+    for (const section of tutorial.sections) {
+      if (section.defaultExpanded || section.isNew) {
+        initial.add(section.id);
+      }
+    }
+    return initial;
+  });
+
+  const toggleSection = useCallback((id: string) => {
+    setExpandedSections((prev: Set<string>) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const { completed: completedCount, total: totalCount } = countSteps(tutorial.sections);
 
   return (
     <>
       {/* Top-left: Tutorial */}
       <div className="hud-corner hud-top-left">
-        <div className={`hud-panel-wrapper ${tutorial.visible ? "open" : ""}`}>
+        <div className={`hud-panel-wrapper tutorial-panel ${tutorial.visible ? "open" : ""}`}>
           {/* Icon/Close button - always in corner position */}
           <button
             className="hud-corner-btn"
@@ -56,18 +145,18 @@ export const HUD = memo(function HUD({
                 style={{ width: `${(completedCount / totalCount) * 100}%` }}
               />
             </div>
-            <ul className="hud-steps">
-              {tutorial.steps.map((step) => (
-                <li key={step.id} className={step.completed ? "completed" : ""}>
-                  <span className="step-check">
-                    {step.completed ? "✓" : "○"}
-                  </span>
-                  <span className="step-text">{step.instruction}</span>
-                </li>
+            <div className="tutorial-sections">
+              {tutorial.sections.map((section) => (
+                <TutorialSectionView
+                  key={section.id}
+                  section={section}
+                  expandedSections={expandedSections}
+                  toggleSection={toggleSection}
+                />
               ))}
-            </ul>
+            </div>
             <div className="hud-footer">
-              {completedCount}/{totalCount}
+              {completedCount}/{totalCount} completed
             </div>
           </div>
         </div>

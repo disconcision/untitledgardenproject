@@ -66,6 +66,12 @@ _Move completed items here with date._
 
 ### 2026-01-05
 
+- [x] Unified simulation model: day cycle pause also pauses plant growth
+- [x] TimeConfig panel restyled to match HUD corner dock pattern
+- [x] All UI panels sync with day/night color scheme
+- [x] Removed "World" header from WorldInspector
+- [x] Hierarchical tutorial with sections (Navigation, Plants, Simulation, Panels)
+- [x] New features highlighted with "NEW" badge in tutorial
 - [x] Pie menu for plant node actions (branch/trim/center)
 - [x] Day/night cycle with perceptual color interpolation
 - [x] Lucide icons + corner panel alignment

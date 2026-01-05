@@ -718,6 +718,9 @@ Agent may decide, but **must document in Design Decisions Log**:
 | 2026-01-05 | Pie menu for node actions   | Right-click on plant nodes opens radial menu with trim/branch actions      |
 | 2026-01-05 | Trim action removes subtree | Pruning from any non-root node removes entire subtree below it             |
 | 2026-01-05 | Branch action on stems      | Creates new bud branching from stem; enables player-directed growth        |
+| 2026-01-05 | Unified simulation control  | dayCycle.running is master toggle; pausing time pauses plant growth too    |
+| 2026-01-05 | Hierarchical tutorial       | Collapsible sections; new features highlighted; serves as both guide + changelog |
+| 2026-01-05 | Consistent corner dock UI   | All four corner panels use same HUD pattern; icon→panel expansion          |
 
 ---
 

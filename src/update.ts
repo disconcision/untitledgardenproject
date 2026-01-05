@@ -41,8 +41,6 @@ export type Msg =
 
   // Simulation
   | { type: "tick"; dt: number }
-  | { type: "pause" }
-  | { type: "resume" }
 
   // Tutorial
   | { type: "tutorial/complete"; stepId: string }
@@ -246,10 +244,8 @@ export function update(msg: Msg, world: World): World {
 
     // === Simulation ===
     case "tick": {
-      if (world.time.paused || world.debug.freezeTime) {
-        return world;
-      }
-
+      // Note: Pausing is now handled at the effect level in App.tsx
+      // Both dayCycle.running and debug.freezeTime control simulation
       let result = world;
 
       // Charge buds and occasionally auto-sprout
@@ -298,12 +294,6 @@ export function update(msg: Msg, world: World): World {
         },
       };
     }
-
-    case "pause":
-      return { ...world, time: { ...world.time, paused: true } };
-
-    case "resume":
-      return { ...world, time: { ...world.time, paused: false } };
 
     // === Tutorial ===
     case "tutorial/complete": {
@@ -670,16 +660,27 @@ function completeTutorialStep(
   tutorial: World["tutorial"],
   stepId: string
 ): World["tutorial"] {
-  const stepIndex = tutorial.steps.findIndex((s) => s.id === stepId);
-  if (stepIndex < 0 || tutorial.steps[stepIndex].completed) {
-    return tutorial;
+  // Find the step in any section
+  for (let sectionIndex = 0; sectionIndex < tutorial.sections.length; sectionIndex++) {
+    const section = tutorial.sections[sectionIndex];
+    const stepIndex = section.steps.findIndex((s) => s.id === stepId);
+    
+    if (stepIndex >= 0) {
+      if (section.steps[stepIndex].completed) {
+        return tutorial; // Already completed
+      }
+      
+      const newSections = [...tutorial.sections];
+      const newSteps = [...section.steps];
+      newSteps[stepIndex] = { ...newSteps[stepIndex], completed: true };
+      newSections[sectionIndex] = { ...section, steps: newSteps };
+      
+      return {
+        ...tutorial,
+        sections: newSections,
+      };
+    }
   }
-
-  const newSteps = [...tutorial.steps];
-  newSteps[stepIndex] = { ...newSteps[stepIndex], completed: true };
-
-  return {
-    ...tutorial,
-    steps: newSteps,
-  };
+  
+  return tutorial; // Step not found
 }

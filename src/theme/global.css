@@ -68,6 +68,12 @@
   --color-text-muted: var(--color-rock-mid);
   --color-panel-bg: rgba(240, 235, 227, 0.93);
   --color-panel-border: var(--color-earth-sand);
+  
+  /* UI aliases for consistency */
+  --color-text-primary: var(--color-text);
+  --color-text-secondary: var(--color-text-muted);
+  --color-ui-border: var(--color-panel-border);
+  --color-ui-bg: var(--bg-pale);
 
   /* === Typography === */
   --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;

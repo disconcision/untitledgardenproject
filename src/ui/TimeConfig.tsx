@@ -84,11 +84,11 @@ export const TimeConfig = memo(function TimeConfig({
   };
 
   return (
-    <div className="time-config-corner">
-      <div className={`time-config-wrapper ${isOpen ? "open" : ""}`}>
-        {/* Corner button */}
+    <div className="hud-corner hud-bottom-right">
+      <div className={`hud-panel-wrapper time-panel ${isOpen ? "open" : ""}`}>
+        {/* Icon/Close button - always in corner position */}
         <button
-          className="time-config-btn"
+          className="hud-corner-btn"
           onClick={() => setIsOpen(!isOpen)}
           title={isOpen ? "Close" : "Time settings"}
         >
@@ -96,7 +96,7 @@ export const TimeConfig = memo(function TimeConfig({
         </button>
 
         {/* Panel content */}
-        <div className="time-config-content">
+        <div className="hud-panel-content time-content">
           {/* Current time display */}
           <div className="time-display">
             <span className="time-phase">
@@ -106,7 +106,7 @@ export const TimeConfig = memo(function TimeConfig({
             <button
               className="time-play-pause"
               onClick={toggleRunning}
-              title={dayCycle.running ? "Pause" : "Play"}
+              title={dayCycle.running ? "Pause simulation" : "Resume simulation"}
             >
               {dayCycle.running ? <Pause size={14} /> : <Play size={14} />}
             </button>
