@@ -1,7 +1,8 @@
 /**
  * Hanging Garden — HUD
  *
- * Minimal corner-based UI. Icons expand to panels.
+ * Corner-based UI. Icons expand to panels with animation.
+ * Close button appears in same position as the icon.
  */
 
 import { useState, memo } from "react";
@@ -15,7 +16,11 @@ type HUDProps = {
   onRegenerate: (seed: number) => void;
 };
 
-export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps) {
+export const HUD = memo(function HUD({
+  world,
+  dispatch,
+  onRegenerate,
+}: HUDProps) {
   const [debugOpen, setDebugOpen] = useState(false);
   const { tutorial, debug, seed, camera } = world;
 
@@ -26,14 +31,18 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
     <>
       {/* Top-left: Tutorial */}
       <div className="hud-corner hud-top-left">
-        {tutorial.visible ? (
-          <div className="hud-panel">
-            <button
-              className="hud-close"
-              onClick={() => dispatch({ type: "tutorial/dismiss" })}
-            >
-              ×
-            </button>
+        <div className={`hud-panel-wrapper ${tutorial.visible ? "open" : ""}`}>
+          {/* Icon/Close button - always in corner position */}
+          <button
+            className="hud-corner-btn"
+            onClick={() => dispatch({ type: "tutorial/toggle" })}
+            title={tutorial.visible ? "Close" : "Show tutorial"}
+          >
+            {tutorial.visible ? "×" : "?"}
+          </button>
+
+          {/* Panel content */}
+          <div className="hud-panel-content">
             <div className="hud-progress">
               <div
                 className="hud-progress-bar"
@@ -43,32 +52,34 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
             <ul className="hud-steps">
               {tutorial.steps.map((step) => (
                 <li key={step.id} className={step.completed ? "completed" : ""}>
-                  <span className="step-check">{step.completed ? "✓" : "○"}</span>
+                  <span className="step-check">
+                    {step.completed ? "✓" : "○"}
+                  </span>
                   <span className="step-text">{step.instruction}</span>
                 </li>
               ))}
             </ul>
-            <div className="hud-footer">{completedCount}/{totalCount}</div>
+            <div className="hud-footer">
+              {completedCount}/{totalCount}
+            </div>
           </div>
-        ) : (
-          <button
-            className="hud-icon"
-            onClick={() => dispatch({ type: "tutorial/toggle" })}
-            title="Show tutorial"
-          >
-            ?
-          </button>
-        )}
+        </div>
       </div>
 
       {/* Top-right: Debug */}
       <div className="hud-corner hud-top-right">
-        {debugOpen ? (
-          <div className="hud-panel">
-            <button className="hud-close" onClick={() => setDebugOpen(false)}>
-              ×
-            </button>
+        <div className={`hud-panel-wrapper ${debugOpen ? "open" : ""}`}>
+          {/* Icon/Close button - always in corner position */}
+          <button
+            className="hud-corner-btn"
+            onClick={() => setDebugOpen(!debugOpen)}
+            title={debugOpen ? "Close" : "Debug panel"}
+          >
+            {debugOpen ? "×" : "⚙"}
+          </button>
 
+          {/* Panel content */}
+          <div className="hud-panel-content">
             <label className="hud-toggle">
               <input
                 type="checkbox"
@@ -118,17 +129,8 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
               <div>{world.entities.size} entities</div>
             </div>
           </div>
-        ) : (
-          <button
-            className="hud-icon"
-            onClick={() => setDebugOpen(true)}
-            title="Debug panel"
-          >
-            ⚙
-          </button>
-        )}
+        </div>
       </div>
     </>
   );
 });
-

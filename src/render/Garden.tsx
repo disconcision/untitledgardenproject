@@ -44,7 +44,9 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
   return (
     <svg
       className="garden-svg"
-      viewBox={`${-window.innerWidth / 2} ${-window.innerHeight / 2} ${window.innerWidth} ${window.innerHeight}`}
+      viewBox={`${-window.innerWidth / 2} ${-window.innerHeight / 2} ${
+        window.innerWidth
+      } ${window.innerHeight}`}
     >
       <defs>
         {/* Subtle blur for soft shadows */}
@@ -52,7 +54,12 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps) {
           <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
           <feOffset in="blur" dx="0" dy="3" result="offsetBlur" />
           <feFlood floodColor="#3a3a3a" floodOpacity="0.15" result="color" />
-          <feComposite in="color" in2="offsetBlur" operator="in" result="shadow" />
+          <feComposite
+            in="color"
+            in2="offsetBlur"
+            operator="in"
+            result="shadow"
+          />
           <feMerge>
             <feMergeNode in="shadow" />
             <feMergeNode in="SourceGraphic" />
@@ -164,19 +171,20 @@ const IslandRenderer = memo(function IslandRenderer({
         dispatch({ type: "camera/focus", target: island.pos, zoom: 1.5 })
       }
     >
-      {/* Soft shadow - diffuse blur, no hard edge */}
+      {/* Soft shadow */}
       <path
         d={pathData}
-        fill="rgba(60, 50, 40, 0.12)"
-        transform="translate(0, 4) scale(0.95)"
-        style={{ filter: "blur(4px)" }}
+        fill="rgba(60, 50, 40, 0.2)"
+        transform="translate(2, 4)"
+        style={{ filter: "blur(3px)" }}
       />
 
-      {/* Main island shape - no stroke, subtle fill */}
+      {/* Main island shape */}
       <path
         d={pathData}
         fill="var(--color-earth-mid)"
-        opacity={0.7}
+        stroke="var(--color-earth-dark)"
+        strokeWidth={1}
         className={isHovered || isSelected ? "island-highlighted" : ""}
       />
 
@@ -194,7 +202,12 @@ const IslandRenderer = memo(function IslandRenderer({
       )}
 
       {showId && (
-        <text x={0} y={-island.radius - 8} textAnchor="middle" className="debug-label">
+        <text
+          x={0}
+          y={-island.radius - 8}
+          textAnchor="middle"
+          className="debug-label"
+        >
           {island.id}
         </text>
       )}
@@ -231,7 +244,8 @@ const RockRenderer = memo(function RockRenderer({
     (_: unknown, i: number): string => {
       const baseAngle = rock.rotation + (i / numSides) * Math.PI * 2;
       // Vary radius more for angular, faceted look
-      const variance = Math.sin(i * 3.7 + rock.size) * 0.35 + Math.cos(i * 2.1) * 0.15;
+      const variance =
+        Math.sin(i * 3.7 + rock.size) * 0.35 + Math.cos(i * 2.1) * 0.15;
       const r = rock.size * (0.6 + variance);
       return `${Math.cos(baseAngle) * r},${Math.sin(baseAngle) * r}`;
     }
@@ -251,15 +265,17 @@ const RockRenderer = memo(function RockRenderer({
       {/* Shadow */}
       <polygon
         points={points}
-        fill="rgba(40, 40, 40, 0.1)"
+        fill="rgba(40, 40, 40, 0.15)"
         transform="translate(1, 2)"
         style={{ filter: "blur(2px)" }}
       />
 
-      {/* Rock body - flat color, no gradient */}
+      {/* Rock body */}
       <polygon
         points={points}
         fill={isHovered ? "var(--color-rock-light)" : "var(--color-rock-mid)"}
+        stroke="var(--color-rock-dark)"
+        strokeWidth={0.5}
         className="rock-shape"
       />
 
@@ -277,7 +293,12 @@ const RockRenderer = memo(function RockRenderer({
       )}
 
       {showId && (
-        <text x={0} y={-rock.size - 4} textAnchor="middle" className="debug-label">
+        <text
+          x={0}
+          y={-rock.size - 4}
+          textAnchor="middle"
+          className="debug-label"
+        >
           {rock.id}
         </text>
       )}
@@ -306,38 +327,42 @@ const PlantRenderer = memo(function PlantRenderer({
   showHitTargets,
   dispatch,
 }: PlantRendererProps) {
-  const nodeMap = new Map(nodes.map((n: PlantNode): [string, PlantNode] => [n.id, n]));
+  const nodeMap = new Map(
+    nodes.map((n: PlantNode): [string, PlantNode] => [n.id, n])
+  );
 
   return (
     <g className="plant-group">
       {/* Stems */}
-      {Array.from(plant.adjacency.entries()).map(([parentId, childIds]: [string, string[]]) => {
-        const parent = nodeMap.get(parentId);
-        if (!parent) return null;
+      {Array.from(plant.adjacency.entries()).map(
+        ([parentId, childIds]: [string, string[]]) => {
+          const parent = nodeMap.get(parentId);
+          if (!parent) return null;
 
-        return childIds.map((childId: string) => {
-          const child = nodeMap.get(childId);
-          if (!child) return null;
+          return childIds.map((childId: string) => {
+            const child = nodeMap.get(childId);
+            if (!child) return null;
 
-          const p1 = addVec2(islandPos, parent.localPos);
-          const p2 = addVec2(islandPos, child.localPos);
+            const p1 = addVec2(islandPos, parent.localPos);
+            const p2 = addVec2(islandPos, child.localPos);
 
-          const midX = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.12;
-          const midY = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.12;
+            const midX = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.12;
+            const midY = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.12;
 
-          return (
-            <path
-              key={`stem-${parentId}-${childId}`}
-              d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
-              fill="none"
-              stroke="var(--color-stem)"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              className="stem-path"
-            />
-          );
-        });
-      })}
+            return (
+              <path
+                key={`stem-${parentId}-${childId}`}
+                d={`M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`}
+                fill="none"
+                stroke="var(--color-stem)"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                className="stem-path"
+              />
+            );
+          });
+        }
+      )}
 
       {/* Nodes */}
       {nodes.map((node: PlantNode) => (
@@ -388,7 +413,8 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
   };
 
   // Hit target radius - generous for clickability
-  const hitRadius = node.nodeKind === "bud" ? 14 : node.nodeKind === "leaf" ? 16 : 8;
+  const hitRadius =
+    node.nodeKind === "bud" ? 14 : node.nodeKind === "leaf" ? 16 : 8;
 
   return (
     <g
@@ -401,7 +427,13 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
     >
       {/* Invisible hit target - always present for interactive nodes */}
       {isInteractive && (
-        <circle cx={0} cy={0} r={hitRadius} fill="transparent" className="hit-target" />
+        <circle
+          cx={0}
+          cy={0}
+          r={hitRadius}
+          fill="transparent"
+          className="hit-target"
+        />
       )}
 
       {node.nodeKind === "bud" && (
@@ -434,7 +466,9 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
         />
       )}
 
-      {node.nodeKind === "stem" && <circle cx={0} cy={0} r={3} fill="var(--color-stem)" />}
+      {node.nodeKind === "stem" && (
+        <circle cx={0} cy={0} r={3} fill="var(--color-stem)" />
+      )}
 
       {node.nodeKind === "flower" && (
         <circle
@@ -460,7 +494,12 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
       )}
 
       {showId && (
-        <text x={0} y={-hitRadius - 4} textAnchor="middle" className="debug-label">
+        <text
+          x={0}
+          y={-hitRadius - 4}
+          textAnchor="middle"
+          className="debug-label"
+        >
           {node.id}
         </text>
       )}

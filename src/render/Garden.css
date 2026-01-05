@@ -1,6 +1,7 @@
 /**
  * Garden SVG styles
- * CSS animations for ambient motion (no React re-renders)
+ * NOTE: CSS transforms override SVG transform attributes!
+ * Use CSS custom properties to preserve positioning while animating.
  */
 
 .garden-svg {
@@ -12,36 +13,13 @@
   overflow: visible;
 }
 
-/* === Ambient Sway Animation === */
+/* === Ambient Sway Animation ===
+ * We can't use transform for sway because it overrides SVG positioning.
+ * Instead, we animate a nested element or use filter/opacity effects.
+ * For now, disable the sway animation.
+ */
 
-@keyframes gentle-sway {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  25% {
-    transform: translate(1px, -0.5px);
-  }
-  50% {
-    transform: translate(0, 1px);
-  }
-  75% {
-    transform: translate(-1px, -0.5px);
-  }
-}
-
-.island-group,
-.rock-group {
-  animation: gentle-sway 8s ease-in-out infinite;
-  animation-delay: var(--anim-delay, 0s);
-}
-
-.plant-group {
-  animation: gentle-sway 6s ease-in-out infinite;
-  animation-delay: var(--anim-delay, 0.5s);
-}
-
-/* === Plant Nodes === */
-
+/* Plant nodes have CSS hover effects */
 .plant-node {
   cursor: default;
 }
@@ -52,11 +30,11 @@
 
 .plant-node.interactive:hover .bud,
 .plant-node.interactive:hover .leaf {
-  transform: scale(1.15);
+  filter: brightness(1.1);
 }
 
 .bud, .leaf, .flower {
-  transition: transform 100ms ease-out, fill 100ms ease-out;
+  transition: filter 100ms ease-out;
 }
 
 .bud.hovered {
@@ -72,11 +50,9 @@
 @keyframes pulse-glow {
   0%, 100% {
     opacity: 0.3;
-    transform: scale(1);
   }
   50% {
     opacity: 0.5;
-    transform: scale(1.1);
   }
 }
 
@@ -99,7 +75,7 @@
 /* === Island Highlight === */
 
 .island-highlighted {
-  opacity: 0.85;
+  filter: brightness(1.05);
 }
 
 /* === Debug === */
@@ -110,4 +86,3 @@
   pointer-events: none;
   user-select: none;
 }
-
