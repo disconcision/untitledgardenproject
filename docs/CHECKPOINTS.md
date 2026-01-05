@@ -709,21 +709,25 @@ This checkpoint documents the Center View feature that was included in the origi
 **Visual hover feedback for all plant node types**:
 
 1. **Stem hover effects**:
+
    - Glow circle (`.stem-hover-glow`) appears behind stem on hover
    - Stem circle grows from 3px → 5px radius
    - Color shifts from `--color-stem` to `--color-stem-highlight` (earth-tan)
 
 2. **Bud hover effects**:
+
    - Enhanced glow circle (larger radius when hovered vs charged)
    - Bud grows from 5px → 8px radius
    - Uses `--color-bud-highlight` when hovered
 
 3. **Leaf hover effects**:
+
    - Elliptical glow background aligned to leaf angle
    - Leaf shape grows slightly (16×8 → 18×10)
    - Brightness filter applied
 
 4. **Flower hover effects**:
+
    - Circular glow ring appears on hover
    - Flower grows from 8px → 10px radius
    - Uses `--color-flower-highlight`
@@ -734,6 +738,7 @@ This checkpoint documents the Center View feature that was included in the origi
    - `--color-flower-highlight`: coral color for flower hover
 
 **Technical notes**:
+
 - Hover state is synchronized bidirectionally: hovering in World Inspector highlights in garden, and vice versa
 - All plant nodes in interactive clusters (distance < 200 from camera) respond to hover
 - Distant cluster nodes don't have hover handlers (performance optimization)
