@@ -467,15 +467,15 @@ Produce:
 
 ## 17. Initial TODOs
 
-- [ ] Scaffold Vite + React + TS
-- [ ] Implement camera pan/zoom
-- [ ] Procedural generator (seeded) for islands + plants
-- [ ] SVG render stems/leaves + hover/selection
-- [ ] Click bud → sprout; click leaf → prune
-- [ ] Tutorial overlay v1
-- [ ] Debug toggles: show IDs, hit targets, freeze time, regenerate
-- [ ] Canvas background gradient + grain
-- [ ] Create `CHECKPOINTS.md`
+- [x] Scaffold Vite + React + TS *(CP-001)*
+- [x] Implement camera pan/zoom *(CP-001)*
+- [x] Procedural generator (seeded) for islands + plants *(CP-001)*
+- [x] SVG render stems/leaves + hover/selection *(CP-001)*
+- [ ] Click bud → sprout; click leaf → prune *(events wired, logic TODO)*
+- [x] Tutorial overlay v1 *(CP-001)*
+- [x] Debug toggles: show IDs, hit targets, freeze time, regenerate *(CP-001)*
+- [x] Canvas background gradient + grain *(CP-001)*
+- [x] Create `CHECKPOINTS.md` *(CP-001)*
 
 ---
 
