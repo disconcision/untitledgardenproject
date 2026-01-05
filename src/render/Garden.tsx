@@ -791,7 +791,11 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
               cx={0}
               cy={0}
               r={isHovered ? 14 : 10}
-              fill={isHovered ? "var(--color-bud-highlight)" : "var(--color-bud-charged)"}
+              fill={
+                isHovered
+                  ? "var(--color-bud-highlight)"
+                  : "var(--color-bud-charged)"
+              }
               opacity={isHovered ? 0.4 : 0.3}
               className="bud-glow"
             />
@@ -827,8 +831,15 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
             />
           )}
           <path
-            d={leafPath({ x: 0, y: 0 }, node.angle, isHovered ? 18 : 16, isHovered ? 10 : 8)}
-            fill={isHovered ? "var(--color-leaf-highlight)" : "var(--color-leaf)"}
+            d={leafPath(
+              { x: 0, y: 0 },
+              node.angle,
+              isHovered ? 18 : 16,
+              isHovered ? 10 : 8
+            )}
+            fill={
+              isHovered ? "var(--color-leaf-highlight)" : "var(--color-leaf)"
+            }
             stroke={isHovered ? "var(--color-green-moss)" : "none"}
             strokeWidth={isHovered ? 1 : 0}
             className={`leaf ${isHovered ? "hovered" : ""}`}
@@ -876,7 +887,11 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
             cx={0}
             cy={0}
             r={isHovered ? 10 : 8}
-            fill={isHovered ? "var(--color-flower-highlight)" : "var(--color-flower)"}
+            fill={
+              isHovered
+                ? "var(--color-flower-highlight)"
+                : "var(--color-flower)"
+            }
             className={`flower ${isHovered ? "hovered" : ""}`}
           />
         </>

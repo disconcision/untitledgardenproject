@@ -585,4 +585,36 @@ This is the first step toward **projective UI**:
 
 ---
 
+## CP-012: Center View Action in Pie Menu
+
+**Date**: 2026-01-05
+**Seed**: 42
+
+### What Changed
+
+**Pie Menu Enhancement**:
+
+1. **New "Center View" action**: Available on stem nodes; centers the camera on the selected node
+   - Uses the Crosshair icon from Lucide
+   - Positioned at the bottom of the pie menu (angle: π/2)
+   - Dispatches `camera/focus` with the node's world position
+   - Automatically closes the menu after action
+
+2. **Action layout**:
+   - Trim (Scissors): Upper left (-π * 0.75)
+   - Branch (GitBranch): Upper right (-π * 0.25)
+   - Center View (Crosshair): Bottom center (π * 0.5)
+
+### Tour Path
+
+1. **Right-click on a stem** → See pie menu with up to 3 options
+2. **Click the crosshair icon** (bottom) → Camera centers on that node
+3. **Right-click a different stem** → Center on it to navigate
+
+### Files Changed
+
+- `src/ui/PieMenu.tsx`: Added Crosshair import and centerView action
+
+---
+
 _Add new checkpoints above this line._
