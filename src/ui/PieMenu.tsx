@@ -4,9 +4,11 @@
  * Radial context menu for plant node actions.
  * Icons appear in a circle, offset from the node to avoid covering it.
  * Minimal, tasteful, icon-focused design.
+ *
+ * Features radial expand/contract animations on open/close.
  */
 
-import { memo, useEffect, useCallback } from "react";
+import { memo, useEffect, useCallback, useState, useRef } from "react";
 import { Scissors, GitBranch, Crosshair } from "lucide-react";
 import { World } from "../model";
 import { Msg } from "../update";
@@ -15,6 +17,7 @@ import "./PieMenu.css";
 const ICON_SIZE = 14;
 const MENU_RADIUS = 36; // Distance from center to icons
 const ITEM_SIZE = 28; // Size of each menu item button
+const ANIMATION_DURATION = 160; // Duration for expand/contract animations (ms)
 
 type PieMenuAction = {
   id: string;
@@ -33,15 +36,43 @@ type PieMenuProps = {
 
 export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) {
   const { contextMenu, entities, plants } = world;
+  const [isClosing, setIsClosing] = useState(false);
+  const closingTimeoutRef = useRef<number | null>(null);
 
-  // Close on escape or click outside
+  // Trigger the close animation, then dispatch the actual close
+  const triggerClose = useCallback((): void => {
+    if (isClosing) return; // Already closing
+    setIsClosing(true);
+    closingTimeoutRef.current = window.setTimeout(() => {
+      dispatch({ type: "contextMenu/close" });
+      setIsClosing(false);
+    }, ANIMATION_DURATION);
+  }, [isClosing, dispatch]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closingTimeoutRef.current) {
+        clearTimeout(closingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Reset closing state when menu opens (new contextMenu)
+  useEffect(() => {
+    if (contextMenu) {
+      setIsClosing(false);
+    }
+  }, [contextMenu]);
+
+  // Close on escape
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && contextMenu) {
-        dispatch({ type: "contextMenu/close" });
+      if (e.key === "Escape" && contextMenu && !isClosing) {
+        triggerClose();
       }
     },
-    [contextMenu, dispatch]
+    [contextMenu, isClosing, triggerClose]
   );
 
   useEffect(() => {
@@ -122,10 +153,10 @@ export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) 
   const handleBackdropClick = (e: React.MouseEvent): void => {
     // Only close if clicking directly on the backdrop, not on a menu item
     // This prevents accidentally closing when clicks bubble up
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !isClosing) {
       e.preventDefault();
       e.stopPropagation();
-      dispatch({ type: "contextMenu/close" });
+      triggerClose();
     }
   };
 
@@ -140,7 +171,7 @@ export const PieMenu = memo(function PieMenu({ world, dispatch }: PieMenuProps) 
 
       {/* Menu container with buttons - separate from backdrop to avoid event issues */}
       <div
-        className="pie-menu"
+        className={`pie-menu ${isClosing ? "is-closing" : ""}`}
         style={{
           left: contextMenu.screenPos.x,
           top: contextMenu.screenPos.y,

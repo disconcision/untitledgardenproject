@@ -2,8 +2,9 @@
  * Pie Menu Styles
  * 
  * Radial context menu for plant node actions.
- * Minimal, icon-focused, with radial expand animation.
- * Items burst outward from center node with slight spin.
+ * Minimal, icon-focused, with radial expand/contract animations.
+ * Items burst outward from center node with slight spin on open,
+ * and contract back to center on close.
  */
 
 .pie-menu-backdrop {
@@ -35,7 +36,12 @@
   background: var(--color-rock-mid);
   opacity: 0.5;
   /* Quick fade in for center dot */
-  animation: pie-center-appear 0.1s ease-out;
+  animation: pie-center-appear 0.1s ease-out forwards;
+}
+
+/* Center dot fades out when closing */
+.pie-menu.is-closing .pie-menu-center {
+  animation: pie-center-disappear 0.16s ease-in forwards;
 }
 
 @keyframes pie-center-appear {
@@ -44,6 +50,15 @@
   }
   to {
     opacity: 0.5;
+  }
+}
+
+@keyframes pie-center-disappear {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -70,7 +85,8 @@
 
   /* Animation: radial expand from center with spin */
   /* --final-x and --final-y are set inline from JS */
-  animation: pie-item-radial-expand 0.12s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  /* Duration: 160ms, slightly bouncy easing */
+  animation: pie-item-radial-expand 0.16s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 
   transition:
     background 0.15s ease,
@@ -93,17 +109,51 @@
   }
 }
 
+/* Radial contract animation: items return to center with reverse spin */
+@keyframes pie-item-radial-contract {
+  0% {
+    opacity: 1;
+    left: var(--final-x);
+    top: var(--final-y);
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%) rotate(90deg) scale(0.3);
+  }
+}
+
+/* Contract animation when menu is closing */
+.pie-menu.is-closing .pie-menu-item {
+  animation: pie-item-radial-contract 0.16s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+}
+
 /* Stagger the items slightly for a cascading burst effect */
 .pie-menu-item:nth-child(2) {
   animation-delay: 0ms;
 }
 
 .pie-menu-item:nth-child(3) {
-  animation-delay: 25ms;
+  animation-delay: 30ms;
 }
 
 .pie-menu-item:nth-child(4) {
-  animation-delay: 50ms;
+  animation-delay: 60ms;
+}
+
+/* Reverse stagger for closing (last items close first for a nice implosion) */
+.pie-menu.is-closing .pie-menu-item:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.pie-menu.is-closing .pie-menu-item:nth-child(3) {
+  animation-delay: 30ms;
+}
+
+.pie-menu.is-closing .pie-menu-item:nth-child(4) {
+  animation-delay: 0ms;
 }
 
 .pie-menu-item:hover {
