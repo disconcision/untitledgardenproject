@@ -35,7 +35,7 @@ These workstreams can be worked on independently by different agents:
 | **Multi-Cluster Focus** | None | Ability to select/focus different clusters |
 | **Constellations & Pathways** | Multi-Cluster Focus | Inter-cluster connections |
 | **Panspermia & Seeds** | Constellations for inter-cluster travel | Seed lifecycle, spreading life |
-| **Cut/Graft Mechanic** | None | Redesigned pruning with grafting |
+| ~~Cut/Graft Mechanic~~ | ~~None~~ | ✅ Complete |
 | **Unified Force Model** | Orbital Dynamics, Constellations | Physics system for entities |
 
 **Strong dependencies to note:**
@@ -49,27 +49,13 @@ These workstreams can be worked on independently by different agents:
 
 ## In Progress
 
-_Tasks currently being worked on. Include session date or identifier._
+_Tasks currently being worked on._
 
 _(none currently)_
 
 ---
 
-## Recently Completed
-
-### ✂️ Cut/Graft Mechanic MVP (Completed Jan 2026)
-
-- [x] **Cut attaches to cursor**: Subtree follows cursor, rendered ghostly
-- [x] **Release in void**: Clicking empty space releases subtree, pieces drift and fade
-- [x] **Graft to existing stem**: Clicking another stem grafts subtree with smart angle
-- [x] **Bug fix: Graft positioning**: Added offset so grafted subtree doesn't overlap target node
-- [x] **Bug fix: Graft click detection**: Use `closest()` for `data-entity-id` (SVG child elements)
-- [x] **Tutorial updated**: Added cut/graft/release steps with `isNew: true`
-- [x] **Regression tests**: Added tests for `cutSubtree` and `graftSubtree`
-
----
-
-## Up Next (Priority Order)
+## Available Tasks
 
 ### 🔊 Audio System MVP
 _Workstream: Audio | Dependency: None | Parallelizable: Yes_
@@ -314,21 +300,14 @@ _Dependency: Orbital Dynamics, Constellations | Parallelizable: No (integrative 
 ### ✂️ Cut/Graft Mechanic Redesign
 _Dependency: None | Parallelizable: Yes_
 
-**MVP: ✅ COMPLETE**
-- [x] **Cut attaches to cursor**: When cutting a plant subtree, it doesn't disappear
-  - Subtree attaches to cursor and follows it around
-  - Visual: subtree rendered at cursor position, slightly faded/ghostly
-  - Player is "carrying" the cut piece
-- [x] **Release in void**: Clicking in empty space releases the carried subtree
-  - Subtree floats like a seed
-  - Gradually drifts apart into pieces
-  - Pieces move independently, then fade out and disappear
-  - Creates satisfying "letting go" moment
-- [x] **Graft to existing stem**: Clicking on another plant's stem grafts the subtree
-  - Works like the branch feature: picks an appropriate angle
-  - Smart angle selection: avoid overlapping existing branches
-  - Subtree becomes part of the new plant
-  - Enables creative plant assembly by cutting and grafting
+**MVP: ✅ COMPLETE (Jan 2026)**
+- [x] **Cut attaches to cursor**: Subtree follows cursor, rendered ghostly
+- [x] **Release in void**: Clicking empty space releases subtree, pieces drift and fade
+- [x] **Graft to existing stem**: Clicking another stem grafts with smart angle selection
+- [x] **Bug fix: Graft positioning**: Added offset so grafted subtree doesn't overlap target
+- [x] **Bug fix: Graft click detection**: Use `closest()` for `data-entity-id` (SVG child elements)
+- [x] **Tutorial steps added**: Cut/graft/release steps with `isNew: true`
+- [x] **Regression tests**: Tests for `cutSubtree` and `graftSubtree`
 
 **Future / Exploratory:**
 - [ ] **Re-root to rock**: Optionally, clicking on a rock plants the cut subtree there
@@ -427,32 +406,10 @@ _Low priority, pick when inspired_
 
 ---
 
-## How to Use This File
+## For Agents
 
-### Picking Work
+1. Check "In Progress" before starting
+2. Mark tasks `[x]` when done
+3. Add notes to "Completed" section with date
 
-1. **Check "In Progress"** — don't duplicate someone else's work
-2. **Consider parallelization** — workstreams can be worked independently
-3. **Respect dependencies** — don't start work that depends on incomplete items
-
-### Claiming a Task
-
-1. Move task from "Up Next" or "Backlog" to "In Progress"
-2. Add date: `- [ ] **[2026-01-05]** Task description`
-3. Do the work
-
-### Completing a Task
-
-1. Move from "In Progress" to "Completed" under the current date
-2. Change `[ ]` to `[x]`
-3. Add checkpoint reference if relevant: `(CP-015)`
-
-### Adding New Tasks
-
-- Small fixes/improvements: Add to "Up Next" with workstream tag
-- Larger features: Add under appropriate section in "Backlog"
-- Urgent bugs: Add to top of "Up Next" with `**URGENT**` prefix
-
----
-
-_This file is the source of truth for what's being worked on. Update it every session._
+_Update this file every session._
