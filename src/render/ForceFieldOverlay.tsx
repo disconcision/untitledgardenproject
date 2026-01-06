@@ -14,12 +14,12 @@ type ForceFieldOverlayProps = {
   camera: { pan: Vec2; zoom: number };
 };
 
-// Grid spacing in world units
-const GRID_SPACING = 150;
+// Grid spacing in world units (smaller = denser sample points)
+const GRID_SPACING = 80;
 // Maximum arrow length in pixels
-const MAX_ARROW_LENGTH = 30;
+const MAX_ARROW_LENGTH = 25;
 // Minimum force magnitude to draw
-const MIN_FORCE_THRESHOLD = 0.5;
+const MIN_FORCE_THRESHOLD = 0.3;
 
 // Create the pathway force field for sampling
 const pathwayForce = createPathwayForce({

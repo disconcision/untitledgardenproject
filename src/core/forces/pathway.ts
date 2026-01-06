@@ -93,9 +93,9 @@ export type PathwayForceConfig = {
 
 const DEFAULT_CONFIG: PathwayForceConfig = {
   maxDistance: 300,
-  baseStrength: 15,
-  attractionWeight: 0.3,
-  directionWeight: 0.7,
+  baseStrength: 25, // Increased to compensate for cubic falloff
+  attractionWeight: 0.35,
+  directionWeight: 0.65,
 };
 
 /**
@@ -129,9 +129,9 @@ export function samplePathwayForce(
     // Skip if too far from pathway
     if (distance > config.maxDistance) continue;
 
-    // Force falls off with distance (inverse linear)
+    // Force falls off with distance (cubic for steeper falloff - stronger near, weaker far)
     const distanceFactor = 1 - distance / config.maxDistance;
-    const strength = config.baseStrength * distanceFactor * distanceFactor; // Quadratic falloff
+    const strength = config.baseStrength * distanceFactor * distanceFactor * distanceFactor; // Cubic falloff
 
     // Direction based on pathway direction property
     let flowDirection: Vec2;

@@ -302,6 +302,81 @@ function tickFireflyFast(
 
 // === Slow Tick (1s) — Lifecycle ===
 
+// === Seed Rooting Configuration ===
+// Controls how seeds avoid clustering with existing plants
+
+const SEED_ROOTING_CONFIG = {
+  /** Base probability of rooting per tick (when no plants nearby) */
+  baseRootProbability: 0.05,
+  /** Distance within which nearby plants reduce rooting probability */
+  plantProximityRadius: 80,
+  /** Probability multiplier when a plant is at distance 0 (stacked) */
+  minProximityMultiplier: 0.02,
+  /** Maximum plants on same island before rooting becomes very unlikely */
+  maxPlantsPerIsland: 4,
+  /** Probability multiplier when island has maxPlantsPerIsland */
+  crowdedIslandMultiplier: 0.1,
+};
+
+/**
+ * Calculate the probability of a seed rooting based on nearby plant density.
+ * Returns a multiplier (0-1) to apply to the base rooting probability.
+ */
+function calculateRootingProbability(seedPos: Vec2, islandId: Id, world: World): number {
+  const config = SEED_ROOTING_CONFIG;
+  let multiplier = 1.0;
+
+  // Count plants on this island and find nearest plant distance
+  let plantsOnIsland = 0;
+  let nearestPlantDistSq = Infinity;
+
+  for (const plant of world.plants.values()) {
+    if (plant.islandId !== islandId) continue;
+    plantsOnIsland++;
+
+    // Get root node position
+    const rootNode = world.entities.get(plant.rootId) as PlantNode | undefined;
+    if (!rootNode) continue;
+
+    // Get island world position
+    const island = world.entities.get(islandId) as Island | undefined;
+    if (!island) continue;
+    const cluster = world.clusters.get(island.clusterId);
+    if (!cluster) continue;
+
+    const plantWorldPos = addVec2(addVec2(cluster.pos, island.localPos), rootNode.localPos);
+    const dx = seedPos.x - plantWorldPos.x;
+    const dy = seedPos.y - plantWorldPos.y;
+    const distSq = dx * dx + dy * dy;
+
+    if (distSq < nearestPlantDistSq) {
+      nearestPlantDistSq = distSq;
+    }
+  }
+
+  // Reduce probability based on nearest plant distance
+  const nearestDist = Math.sqrt(nearestPlantDistSq);
+  if (nearestDist < config.plantProximityRadius) {
+    // Linear interpolation from minProximityMultiplier (at 0) to 1.0 (at radius)
+    const proximityFactor = nearestDist / config.plantProximityRadius;
+    const proximityMultiplier =
+      config.minProximityMultiplier + (1 - config.minProximityMultiplier) * proximityFactor;
+    multiplier *= proximityMultiplier;
+  }
+
+  // Reduce probability based on island crowding
+  if (plantsOnIsland >= config.maxPlantsPerIsland) {
+    multiplier *= config.crowdedIslandMultiplier;
+  } else if (plantsOnIsland > 0) {
+    // Gradual reduction as island fills up
+    const crowdingFactor = plantsOnIsland / config.maxPlantsPerIsland;
+    const crowdingMultiplier = 1 - crowdingFactor * (1 - config.crowdedIslandMultiplier);
+    multiplier *= crowdingMultiplier;
+  }
+
+  return multiplier;
+}
+
 /**
  * Handle particle lifecycle: rooting, cleanup, spawning.
  * Called at 1fps (1s interval) for game logic.
@@ -323,12 +398,20 @@ export function tickParticleLifecycle(world: World): World {
       continue;
     }
 
-    // Seeds can take root when landed (after ~2.5 seconds of being landed)
-    if (particle.particleKind === "seed" && particle.state === "landed") {
-      if (particle.age > 50 && Math.random() < 0.05) {
-        const landedEntity = particle.landedOn ? world.entities.get(particle.landedOn) : null;
+    // Seeds can take root when landed
+    if (particle.particleKind === "seed" && particle.state === "landed" && particle.age > 50) {
+      const landedEntity = particle.landedOn ? world.entities.get(particle.landedOn) : null;
 
-        if (landedEntity && (landedEntity.kind === "rock" || landedEntity.kind === "island")) {
+      if (landedEntity && (landedEntity.kind === "rock" || landedEntity.kind === "island")) {
+        // Determine the island ID
+        const islandId =
+          landedEntity.kind === "island" ? landedEntity.id : (landedEntity as Rock).islandId;
+
+        // Calculate proximity-adjusted rooting probability
+        const rootingMultiplier = calculateRootingProbability(particle.pos, islandId, world);
+        const rootingChance = SEED_ROOTING_CONFIG.baseRootProbability * rootingMultiplier;
+
+        if (Math.random() < rootingChance) {
           const newPlant = createPlantFromSeed(particle, landedEntity as Rock | Island, world);
           if (newPlant) {
             plantsToAdd.push(newPlant);
