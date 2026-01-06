@@ -17,6 +17,7 @@ import { PieMenu } from "./ui/PieMenu";
 import { TimeConfig } from "./ui/TimeConfig";
 import { useCamera } from "./hooks/useCamera";
 import { interpolateScheme, applySchemeToDOM } from "./theme/dayNightScheme";
+import { initAudioSystem, updateAudio, startAudio, setMasterVolume } from "./audio";
 
 const INITIAL_SEED = 42;
 const SIM_TICK_MS = 1000;
@@ -152,6 +153,26 @@ export default function App(): JSX.Element {
     applySchemeToDOM(scheme);
   }, [world.dayCycle.timeOfDay]);
 
+  // Initialize audio system
+  useEffect(() => {
+    const cleanup = initAudioSystem();
+    return cleanup;
+  }, []);
+
+  // Update audio system based on world state
+  useEffect(() => {
+    updateAudio(world.audio, world.dayCycle.timeOfDay, world.camera.zoom);
+    setMasterVolume(world.audio.masterVolume);
+  }, [world.audio, world.dayCycle.timeOfDay, world.camera.zoom]);
+
+  // Start audio on first user interaction
+  const handleStartAudio = useCallback(async () => {
+    if (!world.audio.started) {
+      await startAudio();
+      dispatch({ type: "audio/start" });
+    }
+  }, [dispatch, world.audio.started]);
+
   // Determine cursor style based on carrying state
   const isCarrying = world.carriedSubtree !== null;
   const cursorStyle = isCarrying ? "crosshair" : "grab";
@@ -179,7 +200,10 @@ export default function App(): JSX.Element {
         touchAction: "none",
         cursor: cursorStyle,
       }}
-      onPointerDown={camera.handlePointerDown}
+      onPointerDown={(e: React.PointerEvent): void => {
+        camera.handlePointerDown(e);
+        handleStartAudio();
+      }}
       onPointerMove={handlePointerMove}
       onPointerUp={camera.handlePointerUp}
     >

@@ -6,10 +6,27 @@
  */
 
 import { useState, memo, useCallback } from "react";
-import { Compass, Settings, X, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
-import { World, TutorialSection } from "../model";
+import {
+  Compass,
+  Settings,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { World, TutorialSection, AudioLayerKey } from "../model";
 import { Msg } from "../update";
 import "./HUD.css";
+
+// Human-readable labels for audio layers
+const AUDIO_LAYER_LABELS: Record<AudioLayerKey, string> = {
+  actionSounds: "Action Sounds",
+  voidDrone: "Void Drone",
+  dayNightShift: "Day/Night Shift",
+  zoomMixing: "Zoom Mixing",
+};
 
 const ICON_SIZE = 16;
 
@@ -244,6 +261,55 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
               <div>{world.entities.size} entities</div>
               <div>
                 {world.constellations.size} const / {world.clusters.size} clust
+              </div>
+            </div>
+
+            {/* Audio Section */}
+            <div className="hud-audio-section">
+              <div className="hud-section-header">
+                {world.audio.enabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                <span>Audio</span>
+                <span className="audio-status">{world.audio.started ? "▸" : "◦"}</span>
+              </div>
+
+              <label className="hud-toggle">
+                <input
+                  type="checkbox"
+                  checked={world.audio.enabled}
+                  onChange={() => dispatch({ type: "audio/toggleEnabled" })}
+                />
+                Master Enable
+              </label>
+
+              <div className="hud-row">
+                <span>Volume</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={world.audio.masterVolume}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>): void =>
+                    dispatch({ type: "audio/setVolume", volume: parseFloat(e.target.value) })
+                  }
+                  className="hud-slider"
+                />
+                <span className="hud-value">{Math.round(world.audio.masterVolume * 100)}%</span>
+              </div>
+
+              <div className="hud-layer-toggles">
+                {(Object.keys(AUDIO_LAYER_LABELS) as AudioLayerKey[]).map(
+                  (layer: AudioLayerKey) => (
+                    <label key={layer} className="hud-toggle">
+                      <input
+                        type="checkbox"
+                        checked={world.audio.layers[layer]}
+                        onChange={() => dispatch({ type: "audio/toggleLayer", layer })}
+                      />
+                      {AUDIO_LAYER_LABELS[layer]}
+                    </label>
+                  )
+                )}
               </div>
             </div>
           </div>

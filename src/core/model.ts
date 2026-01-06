@@ -230,6 +230,21 @@ export type ContextMenu = {
 
 export type PanelId = "tutorial" | "debug" | "inspector" | "time";
 
+// === Audio State ===
+
+export type AudioLayerKey = "actionSounds" | "voidDrone" | "dayNightShift" | "zoomMixing";
+
+export type AudioState = {
+  // Master audio enabled
+  enabled: boolean;
+  // Whether audio context has been started (user gesture received)
+  started: boolean;
+  // Master volume (0-1)
+  masterVolume: number;
+  // Per-layer toggles for evaluation
+  layers: Record<AudioLayerKey, boolean>;
+};
+
 // === World State ===
 
 export type World = {
@@ -268,6 +283,8 @@ export type World = {
   fps: number;
   // Smooth camera animation (null when not animating)
   cameraAnimation: CameraAnimation | null;
+  // Audio system state
+  audio: AudioState;
 };
 
 // === Vector Helpers ===
@@ -460,6 +477,18 @@ export function createInitialWorld(seed: number): World {
     // Performance monitoring
     fps: 60,
     cameraAnimation: null,
+    // Audio system
+    audio: {
+      enabled: true,
+      started: false,
+      masterVolume: 0.7,
+      layers: {
+        actionSounds: true,
+        voidDrone: true,
+        dayNightShift: true,
+        zoomMixing: true,
+      },
+    },
   };
 }
 

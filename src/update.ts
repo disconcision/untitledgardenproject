@@ -20,6 +20,7 @@ import {
   DriftingPiece,
   genId,
   CameraAnimation,
+  AudioLayerKey,
 } from "./model";
 import { sproutBud, branchFromNode, cutSubtree, graftSubtree } from "./core/actions";
 import {
@@ -91,7 +92,13 @@ export type Msg =
   | { type: "dayCycle/tick"; dtMs: number }
 
   // Particles (fast tick for smooth movement)
-  | { type: "particle/tick"; dtMs: number };
+  | { type: "particle/tick"; dtMs: number }
+
+  // Audio
+  | { type: "audio/toggleEnabled" }
+  | { type: "audio/setVolume"; volume: number }
+  | { type: "audio/toggleLayer"; layer: AudioLayerKey }
+  | { type: "audio/start" };
 
 // === Audio Event Hooks ===
 
@@ -270,6 +277,37 @@ export function update(msg: Msg, world: World): World {
 
     case "dayCycle/tick":
       return handleDayCycleTick(world, msg.dtMs);
+
+    // === Audio ===
+    case "audio/toggleEnabled":
+      return {
+        ...world,
+        audio: { ...world.audio, enabled: !world.audio.enabled },
+      };
+
+    case "audio/setVolume":
+      return {
+        ...world,
+        audio: { ...world.audio, masterVolume: msg.volume },
+      };
+
+    case "audio/toggleLayer":
+      return {
+        ...world,
+        audio: {
+          ...world.audio,
+          layers: {
+            ...world.audio.layers,
+            [msg.layer]: !world.audio.layers[msg.layer],
+          },
+        },
+      };
+
+    case "audio/start":
+      return {
+        ...world,
+        audio: { ...world.audio, started: true },
+      };
 
     default: {
       // Exhaustive check — will cause compile error if new Msg type is added

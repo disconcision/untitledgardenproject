@@ -57,13 +57,16 @@ _(none currently)_
 
 ## Available Tasks
 
-### 🔊 Audio System MVP
+### 🔊 Audio System MVP ✅ COMPLETE
 _Workstream: Audio | Dependency: None | Parallelizable: Yes_
 
-- [ ] **Audio engine scaffold**: Create `src/audio/` structure, install Tone.js + Howler.js, AudioEngine class with context lifecycle
-- [ ] **User gesture activation**: Start audio on first interaction (click/pan), add speaker toggle icon to HUD
-- [ ] **Action sounds (synthesized)**: Discrete sounds for sprout, branch, cut — hook into existing AudioEvent system
-- [ ] **Void drone**: Basic airy ambient pad using Tone.js oscillators/filters, always playing at low volume
+- [x] **Audio engine scaffold**: Create `src/audio/` structure, install Tone.js, AudioEngine class with context lifecycle
+- [x] **User gesture activation**: Start audio on first interaction (click/pan), speaker toggle in HUD debug panel
+- [x] **Action sounds (synthesized)**: Discrete sounds for sprout, branch, cut, graft, release — hook into existing AudioEvent system
+- [x] **Void drone**: Basic airy ambient pad using Tone.js oscillators/filters, zoom-responsive volume
+- [x] **Day/night ambient shift**: Drone harmonic palette crossfades based on `timeOfDay`
+- [x] **Zoom-level mixing**: Zoomed out = more void drone; zoomed in = brighter filter cutoff
+- [x] **Audio debug panel**: HUD section with master toggle, volume slider, and per-layer toggles
 
 ### ✨ Visual Polish (M2 Completion)
 _Workstream: Visual | Dependency: None | Parallelizable: Yes_
@@ -115,12 +118,12 @@ _Dependency: M3 and M4 patterns established_
 ### 🔊 Audio Phase 2 — Proximity & Layers
 _Dependency: Audio MVP complete_
 
-- [ ] **Day/night ambient shift**: Drone harmonic palette changes based on `timeOfDay`
+- [x] **Day/night ambient shift**: Drone harmonic palette changes based on `timeOfDay` (moved to MVP)
 - [ ] **Firefly sounds**: Subtle high-pitched tones when fireflies are visible
 - [ ] **Seed whispers**: Very soft "puff" sounds when seeds spawn or land
 - [ ] **Cluster voice system**: Each cluster gets deterministic (seed-based) harmonic voice
 - [ ] **Proximity mixer**: Fade cluster voices in/out based on camera distance
-- [ ] **Zoom-level mixing**: Zoomed out = broader ambient; zoomed in = more detail
+- [x] **Zoom-level mixing**: Zoomed out = broader ambient; zoomed in = more detail (moved to MVP)
 - [ ] **Stereo positioning**: Sounds pan left/right based on screen position
 
 ### 🔊 Audio Phase 3 — Generative & Polish
@@ -365,6 +368,21 @@ _Low priority, pick when inspired_
 ---
 
 ## Completed
+
+### 2026-01-06 (Session 3: Audio System MVP)
+
+- [x] Audio System MVP complete:
+  - Created `src/audio/` directory structure with Tone.js
+  - `state.ts`: AudioState type with layer toggles (actionSounds, voidDrone, dayNightShift, zoomMixing)
+  - `engine.ts`: AudioEngine class with lazy context start on user gesture
+  - `layers/actionSounds.ts`: Synthesized sounds for cut, graft, branch, sprout, release, select, menuOpen/Close
+  - `layers/voidDrone.ts`: Ambient pad with detuned sine oscillators + filtered pink noise
+  - `layers/ambientMixer.ts`: Day/night crossfade between E3 (day) and B2 (night) pads
+  - Zoom-level mixing: drone volume inversely proportional to zoom, filter opens when zoomed in
+  - Audio debug panel in HUD: master toggle, volume slider, per-layer checkboxes
+  - Audio state integrated into World model and update.ts message handlers
+  - User gesture activation via onPointerDown in App.tsx
+  - Fixed Tone.js timing issue with rapid sound triggers (MIN_TIME_BETWEEN_SOUNDS = 50ms)
 
 ### 2026-01-05 (Session 2)
 
