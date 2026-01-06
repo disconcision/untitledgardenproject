@@ -1,5 +1,7 @@
 # Hanging Garden — Documentation
 
+PLAY HERE: https://andrewblinn.com/untitledgardenproject/
+
 > **Agents: Start here.** This is your entry point.
 
 ---
