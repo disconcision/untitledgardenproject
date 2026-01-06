@@ -21,7 +21,7 @@ import {
   genId,
   CameraAnimation,
 } from "./model";
-import { sproutBud, pruneNode, branchFromNode, cutSubtree, graftSubtree } from "./core/actions";
+import { sproutBud, branchFromNode, cutSubtree, graftSubtree } from "./core/actions";
 import {
   tickParticlesFast,
   tickParticleLifecycle,
@@ -45,8 +45,6 @@ export type Msg =
 
   // Interaction
   | { type: "sprout"; budId: Id }
-  | { type: "prune"; nodeId: Id }
-  | { type: "trim"; nodeId: Id }
   | { type: "branch"; nodeId: Id }
 
   // Cut/Graft
@@ -99,9 +97,7 @@ export type Msg =
 
 export type AudioEvent =
   | { type: "sprout" }
-  | { type: "prune" }
   | { type: "branch" }
-  | { type: "trim" }
   | { type: "cut" }
   | { type: "graft" }
   | { type: "release" }
@@ -156,12 +152,6 @@ export function update(msg: Msg, world: World): World {
     // === Plant Interactions ===
     case "sprout":
       return handleSprout(world, msg.budId);
-
-    case "prune":
-      return handlePrune(world, msg.nodeId);
-
-    case "trim":
-      return handleTrim(world, msg.nodeId);
 
     case "branch":
       return handleBranch(world, msg.nodeId);
@@ -411,31 +401,6 @@ function handleSprout(world: World, budId: Id): World {
     };
   }
   return world;
-}
-
-function handlePrune(world: World, nodeId: Id): World {
-  const result = pruneNode(world, nodeId);
-  if (result) {
-    emitAudioEvent({ type: "prune" });
-    return {
-      ...result,
-      tutorial: completeTutorialStep(result.tutorial, "prune"),
-    };
-  }
-  return world;
-}
-
-function handleTrim(world: World, nodeId: Id): World {
-  const result = pruneNode(world, nodeId);
-  if (result) {
-    emitAudioEvent({ type: "trim" });
-    return {
-      ...result,
-      contextMenu: null,
-      tutorial: completeTutorialStep(result.tutorial, "context"),
-    };
-  }
-  return { ...world, contextMenu: null };
 }
 
 function handleBranch(world: World, nodeId: Id): World {

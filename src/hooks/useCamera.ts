@@ -14,7 +14,14 @@ type UseCameraOptions = {
   carriedSubtree: CarriedSubtree | null;
 };
 
-export function useCamera({ dispatch, containerRef, carriedSubtree }: UseCameraOptions) {
+type UseCameraReturn = {
+  handlePointerDown: (e: React.PointerEvent) => void;
+  handlePointerMove: (e: React.PointerEvent) => void;
+  handlePointerUp: (e: React.PointerEvent) => void;
+  isDragging: boolean;
+};
+
+export function useCamera({ dispatch, containerRef, carriedSubtree }: UseCameraOptions): UseCameraReturn {
   const isDragging = useRef(false);
   const lastPos = useRef<Vec2>(vec2(0, 0));
 

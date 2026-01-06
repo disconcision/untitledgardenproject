@@ -7,7 +7,7 @@
 
 import { World, Vec2, vec2, addVec2 } from "../model";
 
-export { createPathwayForce, samplePathwayForce } from "./pathway";
+export { createPathwayForce, samplePathwayForce, type PathwayForceConfig } from "./pathway";
 
 // === Core Types ===
 
