@@ -68,7 +68,9 @@ _Workstream: Audio | Dependency: None | Parallelizable: Yes_
 ### ✨ Visual Polish (M2 Completion)
 _Workstream: Visual | Dependency: None | Parallelizable: Yes_
 
-- [ ] **Smooth camera focus transition**: Animate pan/zoom when double-clicking to focus (currently instant)
+- [ ] **Smooth camera focus transition**: Animate pan/zoom when focusing on entities (currently instant)
+  - Applies to: double-click focus, WorldInspector selection, pie menu "center view"
+  - Add debug/settings toggle to enable/disable smooth animation
 - [ ] **Sprout animation**: Animate new branch appearing (scale up, unfurl)
 - [ ] **Prune animation**: Animate subtree removal (fade/collapse before removing)
 - [ ] **Animation timing audit**: Standardize durations (150ms hovers, 300ms growth) per SOURCE.md spec
@@ -134,11 +136,15 @@ _Dependency: None | Parallelizable: Yes_
 
 - [ ] **Rocks as node meshes**: Attachment points at corners, edges, interior Voronoi
 - [ ] **Particles selectable**: Seeds/fireflies clickable in world view
-- [ ] **Particles in hierarchy**: Seeds/fireflies appear in WorldInspector tree
+- [x] **Particles in hierarchy**: Seeds/fireflies appear in WorldInspector tree
+  - Context-dependent: floating particles under nearest cluster, landed particles under rock/island
 - [ ] **Containment transitions**: Landing = join new parent structure
-- [ ] **Selection sync**: WorldInspector ↔ world view (bidirectional)
+- [x] **Selection sync**: WorldInspector ↔ world view (bidirectional)
+  - Tree → World: clicking tree item focuses camera on entity (already worked)
+  - World → Tree: selecting entity in world auto-expands tree to reveal it
 - [ ] **Entity inspector panel**: Show properties of selected object
 - [ ] **Firefly-plant interaction**: Fireflies land on nodes, orbit features
+- [ ] **Vines in hierarchy**: Add edge-like entities (vines, pathways) to tree view
 
 ### 📐 Projective UI
 _Dependency: Basic UI stability | Parallelizable: Yes_
@@ -356,6 +362,20 @@ _Low priority, pick when inspired_
 ---
 
 ## Completed
+
+### 2026-01-05 (Session 2)
+
+- [x] WorldInspector Entity Sync & Type Safety:
+  - Added `assertNever` helper to `model.ts` for exhaustive switch checking
+  - Applied exhaustivity checks to all entity switch statements (compile error if new entity type not handled)
+  - Added Constellations as top-level in WorldInspector tree (above Clusters)
+  - Added Particles (seeds, fireflies) to tree with context-dependent placement:
+    - Floating particles appear under nearest cluster
+    - Landed particles appear under the rock/island they're on
+  - Implemented bidirectional selection sync:
+    - Tree → World: clicking tree item focuses camera (already worked)
+    - World → Tree: selecting entity auto-expands tree to reveal it
+  - Centralized expanded state management for tree nodes
 
 ### 2026-01-06
 

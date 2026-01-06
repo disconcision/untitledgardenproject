@@ -285,6 +285,16 @@ export function normalizeVec2(v: Vec2): Vec2 {
   return len > 0 ? scaleVec2(v, 1 / len) : { x: 0, y: 0 };
 }
 
+// === Type Safety Helpers ===
+
+/**
+ * Exhaustive switch helper - causes compile error if a case is not handled.
+ * Use in default case of switch statements over union types.
+ */
+export function assertNever(x: never, msg?: string): never {
+  throw new Error(msg ?? `Unexpected value: ${JSON.stringify(x)}`);
+}
+
 // === ID Generation ===
 
 let idCounter = 0;
@@ -473,6 +483,11 @@ export function summarizeWorld(world: World): {
       case "particle":
         particleCount++;
         break;
+      case "vine":
+        // Vines not counted separately for now
+        break;
+      default:
+        assertNever(entity, `Unknown entity kind in summarizeWorld`);
     }
   }
 
