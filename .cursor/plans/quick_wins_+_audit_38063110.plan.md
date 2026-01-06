@@ -17,7 +17,7 @@ todos:
       - pie-animation
   - id: pathway-direction
     content: Add experimental pathway direction indicator on hover
-    status: in_progress
+    status: completed
     dependencies:
       - camera-smooth
 ---
