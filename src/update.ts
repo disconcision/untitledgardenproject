@@ -609,7 +609,8 @@ function handleDayCycleSetTime(world: World, timeOfDay: number): World {
 }
 
 function handleDayCycleSetDayLength(world: World, dayLengthMs: number): World {
-  const clamped = Math.max(30000, Math.min(1800000, dayLengthMs));
+  // Allow short day lengths for testing (5s min), cap at 30 minutes
+  const clamped = Math.max(5000, Math.min(1800000, dayLengthMs));
   return {
     ...world,
     dayCycle: {
