@@ -20,6 +20,7 @@ import {
   Island,
   Rock,
 } from "../model";
+import { createPathwayForce } from "../forces";
 
 // === Types ===
 
@@ -36,6 +37,20 @@ export type LandingSpot = {
   pos: Vec2;
   kind: "rock" | "island";
 };
+
+// === Force Field Configuration ===
+
+// Create the pathway force field (applied to particles)
+const pathwayForce = createPathwayForce({
+  maxDistance: 400, // Range of pathway influence
+  baseStrength: 20, // Base force strength
+  attractionWeight: 0.2, // Pull toward pathway line
+  directionWeight: 0.8, // Push along pathway direction
+});
+
+// Force multipliers for different particle types
+const SEED_FORCE_MULTIPLIER = 1.0; // Seeds are strongly affected
+const FIREFLY_FORCE_MULTIPLIER = 0.3; // Fireflies are weakly affected
 
 // === Fast Tick (50ms) — Smooth Movement ===
 
@@ -62,9 +77,17 @@ export function tickParticlesFast(world: World, dtMs: number): World {
     let updated: Particle;
 
     if (particle.particleKind === "seed") {
-      updated = tickSeedFast(particle, dt, landingSpots);
+      updated = tickSeedFast(particle, dt, landingSpots, world);
     } else {
-      updated = tickFireflyFast(particle, dt, isNight, isDusk, glowingEntities, landingSpots);
+      updated = tickFireflyFast(
+        particle,
+        dt,
+        isNight,
+        isDusk,
+        glowingEntities,
+        landingSpots,
+        world
+      );
     }
 
     if (updated !== particle) {
@@ -78,9 +101,14 @@ export function tickParticlesFast(world: World, dtMs: number): World {
 }
 
 /**
- * Fast tick for seed particles — smooth floating movement with wind.
+ * Fast tick for seed particles — smooth floating movement with wind and pathway forces.
  */
-function tickSeedFast(particle: Particle, dt: number, landingSpots: LandingSpot[]): Particle {
+function tickSeedFast(
+  particle: Particle,
+  dt: number,
+  landingSpots: LandingSpot[],
+  world: World
+): Particle {
   const updated = { ...particle, age: particle.age + 1 };
 
   if (particle.state !== "floating") {
@@ -99,9 +127,14 @@ function tickSeedFast(particle: Particle, dt: number, landingSpots: LandingSpot[
 
   const gravity = 0.3;
 
+  // Pathway force field contribution
+  const pathwayContribution = pathwayForce(particle.pos, world);
+  const forceX = pathwayContribution.x * SEED_FORCE_MULTIPLIER;
+  const forceY = pathwayContribution.y * SEED_FORCE_MULTIPLIER;
+
   // Smooth velocity interpolation
-  const targetVelX = windX + brownianX;
-  const targetVelY = windY + brownianY + gravity;
+  const targetVelX = windX + brownianX + forceX;
+  const targetVelY = windY + brownianY + gravity + forceY;
   const velLerp = 0.02;
   const newVelX = particle.velocity.x + (targetVelX - particle.velocity.x) * velLerp;
   const newVelY = particle.velocity.y + (targetVelY - particle.velocity.y) * velLerp;
@@ -163,7 +196,8 @@ function tickFireflyFast(
   isNight: boolean,
   isDusk: boolean,
   glowingEntities: GlowingEntity[],
-  landingSpots: LandingSpot[]
+  landingSpots: LandingSpot[],
+  world: World
 ): Particle {
   const updated = { ...particle, age: particle.age + 1 };
 
@@ -236,6 +270,11 @@ function tickFireflyFast(
     const wanderPhase = particle.pos.x * 0.02 + particle.pos.y * 0.02;
     targetX += Math.sin(time * 3 + wanderPhase) * 8;
     targetY += Math.cos(time * 2.5 + wanderPhase) * 6;
+
+    // Pathway force field contribution (weaker for fireflies)
+    const pathwayContribution = pathwayForce(particle.pos, world);
+    targetX += pathwayContribution.x * FIREFLY_FORCE_MULTIPLIER;
+    targetY += pathwayContribution.y * FIREFLY_FORCE_MULTIPLIER;
 
     // Smooth velocity update
     const velLerp = 0.05;
