@@ -13,6 +13,7 @@ import {
   Boulder,
   PlantNode,
   Plant,
+  Pathway,
   Vec2,
   Id,
   vec2,
@@ -21,6 +22,8 @@ import {
   createInitialWorld,
   addVec2,
   scaleVec2,
+  subVec2,
+  lenVec2,
 } from "./model";
 
 // === Seeded Random ===
@@ -325,6 +328,85 @@ function generatePlantForRock(
   };
 }
 
+// === Pathway Generation ===
+// Creates constellation-like patterns between clusters using
+// a k-nearest neighbors approach with random pruning
+
+function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
+  if (clusters.length < 2) return [];
+
+  const pathways: Pathway[] = [];
+  const addedEdges = new Set<string>();
+
+  // Helper to create a canonical edge key (sorted by id to avoid duplicates)
+  const edgeKey = (a: Id, b: Id): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
+
+  // Calculate distances between all cluster pairs
+  const distances: { from: Cluster; to: Cluster; dist: number }[] = [];
+  for (let i = 0; i < clusters.length; i++) {
+    for (let j = i + 1; j < clusters.length; j++) {
+      const from = clusters[i];
+      const to = clusters[j];
+      const delta = subVec2(to.pos, from.pos);
+      distances.push({ from, to, dist: lenVec2(delta) });
+    }
+  }
+
+  // Sort by distance (shortest first)
+  distances.sort((a, b) => a.dist - b.dist);
+
+  // For each cluster, try to connect to 1-3 nearest neighbors
+  for (const cluster of clusters) {
+    const nearestCount = 1 + Math.floor(rng() * 2); // 1-2 connections per cluster
+    let connectionsAdded = 0;
+
+    for (const edge of distances) {
+      if (connectionsAdded >= nearestCount) break;
+
+      // Check if this edge involves our cluster
+      if (edge.from.id !== cluster.id && edge.to.id !== cluster.id) continue;
+
+      const key = edgeKey(edge.from.id, edge.to.id);
+      if (addedEdges.has(key)) continue;
+
+      // Random pruning: skip ~25% of potential edges
+      // But always include edges from the main cluster (index 0)
+      const isMainCluster = cluster === clusters[0];
+      if (!isMainCluster && rng() < 0.25) continue;
+
+      addedEdges.add(key);
+      pathways.push({
+        id: genId("pathway"),
+        fromClusterId: edge.from.id,
+        toClusterId: edge.to.id,
+      });
+      connectionsAdded++;
+    }
+  }
+
+  // Ensure main cluster has at least one connection
+  const mainCluster = clusters[0];
+  const mainHasConnection = pathways.some(
+    (p: Pathway): boolean => p.fromClusterId === mainCluster.id || p.toClusterId === mainCluster.id
+  );
+
+  if (!mainHasConnection && clusters.length > 1) {
+    // Connect to nearest cluster
+    const nearest = distances.find(
+      (d) => d.from.id === mainCluster.id || d.to.id === mainCluster.id
+    );
+    if (nearest) {
+      pathways.push({
+        id: genId("pathway"),
+        fromClusterId: nearest.from.id,
+        toClusterId: nearest.to.id,
+      });
+    }
+  }
+
+  return pathways;
+}
+
 // === World Generation ===
 
 export function generateWorld(seed: number): World {
@@ -340,6 +422,12 @@ export function generateWorld(seed: number): World {
     const cluster = generateCluster(rng, c, clusterCount);
     clusters.push(cluster);
     world.clusters.set(cluster.id, cluster);
+  }
+
+  // Generate pathways between clusters (constellation pattern)
+  const pathways = generatePathways(rng, clusters);
+  for (const pathway of pathways) {
+    world.pathways.set(pathway.id, pathway);
   }
 
   // Generate islands within each cluster

@@ -14,6 +14,7 @@ import {
   PlantNode,
   Plant,
   Particle,
+  Pathway,
   Vec2,
   addVec2,
   DriftingPiece,
@@ -25,6 +26,7 @@ import { IslandRenderer } from "./Island";
 import { RockRenderer } from "./Rock";
 import { PlantRenderer } from "./Plant";
 import { ParticleRenderer } from "./Particle";
+import { PathwayLayer } from "./Pathway";
 import "./Garden.css";
 
 // === Helpers ===
@@ -73,6 +75,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
   const {
     camera,
     clusters,
+    pathways,
     entities,
     plants,
     hover,
@@ -144,6 +147,9 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
     return result;
   }, [entities]);
 
+  // Collect all pathways for constellation rendering
+  const pathwayList = useMemo((): Pathway[] => Array.from(pathways.values()), [pathways]);
+
   const transform = `translate(${camera.pan.x}, ${camera.pan.y}) scale(${camera.zoom})`;
 
   return (
@@ -156,6 +162,15 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
       </defs>
 
       <g transform={transform}>
+        {/* Render pathways first (behind everything) */}
+        <PathwayLayer
+          pathways={pathwayList}
+          clusters={clusters}
+          zoom={camera.zoom}
+          hoveredPathwayId={world.hoveredPathway}
+          dispatch={dispatch}
+        />
+
         {/* Render clusters from far to near (painters algorithm) */}
         {clusterData.map(
           ({
@@ -489,6 +504,15 @@ function SvgFilters(): JSX.Element {
       {/* Seed shimmer */}
       <filter id="seed-shimmer" x="-50%" y="-50%" width="200%" height="200%">
         <feGaussianBlur stdDeviation="1" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Pathway glow — ethereal constellation lines */}
+      <filter id="pathway-glow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
         <feMerge>
           <feMergeNode in="blur" />
           <feMergeNode in="SourceGraphic" />

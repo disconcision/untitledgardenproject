@@ -215,13 +215,17 @@ _Dependency: None | Parallelizable: Yes_
 ### ✨ Constellations & Inter-Cluster Pathways
 _Dependency: Multi-Cluster Focus | Parallelizable: Partially_
 
-**MVP:**
-- [ ] **Inter-cluster pathway lines**: Faint lines of light connecting cluster glyphs
+**MVP: ✅ COMPLETE (Jan 2026)**
+- [x] **Inter-cluster pathway lines**: Faint lines of light connecting cluster glyphs
   - Thin, subtle lines (not heavy connectors)
   - Visible when zoomed out — creates constellation-like appearance
   - Zoomed-out view should vaguely resemble star constellations
-- [ ] **Pathway rendering**: Lines should feel luminous/ethereal, not mechanical
-  - Perhaps animated shimmer or subtle pulse
+- [x] **Pathway rendering**: Lines should feel luminous/ethereal, not mechanical
+  - Animated shimmer with staggered delays
+  - Time-based color: cool starlight at night, warm gold by day
+- [x] **Pathway data model**: Pathways stored in World for future force effects
+- [x] **Hover interaction**: Pathways highlight when hovered
+- [x] **Zoom-responsive visibility**: More visible when zoomed out
 
 **Future / Exploratory:**
 - [ ] **Constellation groupings**: Constellations as higher-order construct
@@ -340,6 +344,17 @@ _Low priority, pick when inspired_
 ---
 
 ## Completed
+
+### 2026-01-06
+
+- [x] Constellation Pathways MVP:
+  - Inter-cluster pathway lines connecting cluster glyphs in constellation patterns
+  - Pathway type added to data model (future: force effects on seeds)
+  - Delaunay-like generation algorithm with random pruning for organic variety
+  - Time-based color: cool starlight at night, warm gold by day (OKLCH interpolation)
+  - Animated shimmer with staggered delays for ethereal feel
+  - Zoom-responsive visibility: more visible when zoomed out
+  - Hover detection and highlighting
 
 ### 2026-01-05
 

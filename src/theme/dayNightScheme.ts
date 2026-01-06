@@ -57,6 +57,10 @@ export type ColorScheme = {
   hover: string;
   selection: string;
   selectionGlow: string;
+
+  // Pathways (inter-cluster constellation lines)
+  pathwayStroke: string;
+  pathwayGlow: string;
 };
 
 // === Day Scheme (Light Mode) ===
@@ -110,6 +114,10 @@ export const dayScheme: ColorScheme = {
   hover: "#6fb075",
   selection: "#5a9062",
   selectionGlow: "rgba(111, 176, 117, 0.4)",
+
+  // Pathways - warm gold during day
+  pathwayStroke: "#e8d4a8",
+  pathwayGlow: "#f0e8d0",
 };
 
 // === Night Scheme (Dark Mode) ===
@@ -163,6 +171,10 @@ export const nightScheme: ColorScheme = {
   hover: "#5a8c5e",
   selection: "#3c6242",
   selectionGlow: "rgba(90, 140, 94, 0.4)",
+
+  // Pathways - cool starlight at night
+  pathwayStroke: "#a0c4e0",
+  pathwayGlow: "#c8e0f0",
 };
 
 // === Golden Hour Colors ===
@@ -238,6 +250,9 @@ export function interpolateScheme(timeOfDay: number): ColorScheme {
     hover: lerp("hover"),
     selection: lerp("selection"),
     selectionGlow: dayNightBlend >= 0.5 ? dayScheme.selectionGlow : nightScheme.selectionGlow,
+
+    pathwayStroke: lerp("pathwayStroke"),
+    pathwayGlow: lerp("pathwayGlow"),
   };
 
   // Apply golden hour warmth to sky colors
@@ -349,4 +364,8 @@ export function applySchemeToDOM(scheme: ColorScheme): void {
     `${scheme.accentCoral}4d` // 30% opacity
   );
   root.style.setProperty("--color-vine", scheme.greenMoss);
+
+  // Pathways
+  root.style.setProperty("--color-pathway-stroke", scheme.pathwayStroke);
+  root.style.setProperty("--color-pathway-glow", scheme.pathwayGlow);
 }

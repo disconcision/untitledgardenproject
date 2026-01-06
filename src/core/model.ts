@@ -114,6 +114,16 @@ export type Vine = {
   tension: number;
 };
 
+// === Pathways ===
+// Inter-cluster connections that form constellation patterns
+
+export type Pathway = {
+  id: Id;
+  fromClusterId: Id;
+  toClusterId: Id;
+  // Future: strength, directionality, force effects
+};
+
 export type Entity = Island | Rock | PlantNode | Vine | Particle;
 
 // === Plant Structure ===
@@ -199,6 +209,7 @@ export type PanelId = "tutorial" | "debug" | "inspector" | "time";
 
 export type World = {
   clusters: Map<Id, Cluster>;
+  pathways: Map<Id, Pathway>;
   entities: Map<Id, Entity>;
   plants: Map<Id, Plant>;
   camera: Camera;
@@ -209,6 +220,7 @@ export type World = {
   dayCycle: DayCycle;
   selection: Id | null;
   hover: Id | null;
+  hoveredPathway: Id | null;
   contextMenu: ContextMenu;
   tutorial: {
     visible: boolean;
@@ -272,6 +284,7 @@ export function resetIdCounter(value: number = 0): void {
 export function createInitialWorld(seed: number): World {
   return {
     clusters: new Map(),
+    pathways: new Map(),
     entities: new Map(),
     plants: new Map(),
     camera: {
@@ -284,6 +297,7 @@ export function createInitialWorld(seed: number): World {
     },
     selection: null,
     hover: null,
+    hoveredPathway: null,
     contextMenu: null,
     tutorial: {
       visible: true,
@@ -410,6 +424,7 @@ export function createInitialWorld(seed: number): World {
 export function summarizeWorld(world: World): {
   seed: number;
   clusterCount: number;
+  pathwayCount: number;
   entityCount: number;
   islandCount: number;
   plantCount: number;
@@ -442,6 +457,7 @@ export function summarizeWorld(world: World): {
   return {
     seed: world.seed,
     clusterCount: world.clusters.size,
+    pathwayCount: world.pathways.size,
     entityCount: world.entities.size,
     islandCount,
     plantCount: world.plants.size,

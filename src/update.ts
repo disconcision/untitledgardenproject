@@ -31,6 +31,7 @@ export type Msg =
   // Selection
   | { type: "select"; id: Id | null }
   | { type: "hover"; id: Id | null }
+  | { type: "pathway/hover"; id: Id | null }
 
   // Interaction
   | { type: "sprout"; budId: Id }
@@ -129,6 +130,9 @@ export function update(msg: Msg, world: World): World {
 
     case "hover":
       return handleHover(world, msg.id);
+
+    case "pathway/hover":
+      return { ...world, hoveredPathway: msg.id };
 
     // === Plant Interactions ===
     case "sprout":

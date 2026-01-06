@@ -131,6 +131,46 @@
   }
 }
 
+/* === Pathways (Constellation Lines) === */
+
+.pathway-line {
+  transition:
+    opacity 200ms ease-out,
+    stroke-width 200ms ease-out;
+}
+
+.pathway-line.pathway-hovered {
+  stroke-width: 2.5px !important;
+}
+
+/* Subtle shimmer animation for pathways */
+@keyframes pathway-shimmer {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.pathway-layer .pathway-line {
+  animation: pathway-shimmer 4s ease-in-out infinite;
+}
+
+/* Stagger animations for organic feel */
+.pathway-layer .pathway-line:nth-child(2n) {
+  animation-delay: 1s;
+}
+
+.pathway-layer .pathway-line:nth-child(3n) {
+  animation-delay: 2s;
+}
+
+.pathway-layer .pathway-line:nth-child(5n) {
+  animation-delay: 0.5s;
+}
+
 /* === Debug === */
 
 .debug-label {
