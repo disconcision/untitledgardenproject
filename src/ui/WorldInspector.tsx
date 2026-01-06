@@ -629,33 +629,41 @@ export const WorldInspector = memo(function WorldInspector({
 
   const [expandedNodes, setExpandedNodes] = useState<Set<Id>>(defaultExpanded);
 
+  // Track previous selection to only auto-expand/scroll on actual changes
+  const prevSelectionRef = useRef<Id | null>(null);
+
   // Auto-expand ancestors and scroll to selection when it changes (from world view)
   useEffect(() => {
-    if (world.selection) {
-      const ancestors = getEntityAncestorPath(world.selection, world);
-      if (ancestors.length > 0) {
-        setExpandedNodes((prev: Set<Id>): Set<Id> => {
-          const next = new Set(prev);
-          for (const ancestorId of ancestors) {
-            next.add(ancestorId);
+    // Only act if selection actually changed
+    if (world.selection !== prevSelectionRef.current) {
+      prevSelectionRef.current = world.selection;
+
+      if (world.selection) {
+        const ancestors = getEntityAncestorPath(world.selection, world);
+        if (ancestors.length > 0) {
+          setExpandedNodes((prev: Set<Id>): Set<Id> => {
+            const next = new Set(prev);
+            for (const ancestorId of ancestors) {
+              next.add(ancestorId);
+            }
+            return next;
+          });
+        }
+
+        // Scroll to the selected element after DOM updates
+        requestAnimationFrame(() => {
+          const container = treeContainerRef.current;
+          if (container) {
+            const selectedEl = container.querySelector(`[data-node-id="${world.selection}"]`);
+            if (selectedEl) {
+              selectedEl.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+              });
+            }
           }
-          return next;
         });
       }
-
-      // Scroll to the selected element after DOM updates
-      requestAnimationFrame(() => {
-        const container = treeContainerRef.current;
-        if (container) {
-          const selectedEl = container.querySelector(`[data-node-id="${world.selection}"]`);
-          if (selectedEl) {
-            selectedEl.scrollIntoView({
-              behavior: "smooth",
-              block: "nearest",
-            });
-          }
-        }
-      });
     }
   }, [world.selection, world]);
 
