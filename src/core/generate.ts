@@ -438,11 +438,7 @@ function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
   // Sort by distance (shortest first) for priority
   edges.sort((a, b) => a.dist - b.dist);
 
-  // Track inter-constellation bridges per constellation pair
-  const constellationBridges = new Map<string, number>();
-  const bridgeKey = (a: Id, b: Id): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
-
-  // Try to add each edge, with different rules for intra vs inter constellation
+  // Try to add each edge (only intra-constellation edges)
   for (const edge of edges) {
     const key = edgeKey(edge.from.id, edge.to.id);
     if (addedEdges.has(key)) continue;
@@ -458,22 +454,14 @@ function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
       if (rng() > 0.05) continue;
     }
 
-    if (edge.sameConstellation) {
-      // Intra-constellation: denser connections (only ~15% pruning)
-      if (rng() < 0.15) continue;
-    } else {
-      // Inter-constellation: very sparse (1-2 bridges per constellation pair)
-      const bKey = bridgeKey(edge.from.constellationId, edge.to.constellationId);
-      const currentBridges = constellationBridges.get(bKey) || 0;
-
-      // Allow max 2 bridges between any two constellations
-      if (currentBridges >= 2) continue;
-
-      // 70% chance to skip even if we could add one
-      if (currentBridges >= 1 && rng() < 0.7) continue;
-
-      constellationBridges.set(bKey, currentBridges + 1);
+    // Only create pathways within the same constellation
+    // No inter-constellation pathways - each constellation is a separate network
+    if (!edge.sameConstellation) {
+      continue;
     }
+
+    // Intra-constellation: denser connections (only ~15% pruning)
+    if (rng() < 0.15) continue;
 
     // Accept this edge
     addedEdges.add(key);
