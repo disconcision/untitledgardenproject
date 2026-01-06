@@ -13,7 +13,7 @@
  * can be viewed as either outliner or rendered representation.
  */
 
-import { useState, useCallback, memo, useEffect, useMemo } from "react";
+import { useState, useCallback, memo, useEffect, useMemo, useRef } from "react";
 import {
   TreeDeciduous,
   X,
@@ -393,6 +393,7 @@ const TreeNode = memo(function TreeNode({
         className={`inspector-node-row ${isSelected ? "selected" : ""} ${
           isHovered ? "hovered" : ""
         }`}
+        data-node-id={id}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -607,6 +608,7 @@ export const WorldInspector = memo(function WorldInspector({
 }: WorldInspectorProps) {
   const [open, setOpen] = useState(false);
   const tree = useWorldTree(world);
+  const treeContainerRef = useRef<HTMLDivElement>(null);
 
   // Centralized expanded state for all tree nodes
   // Initialize with all constellations and clusters expanded (computed once on mount)
@@ -627,7 +629,7 @@ export const WorldInspector = memo(function WorldInspector({
 
   const [expandedNodes, setExpandedNodes] = useState<Set<Id>>(defaultExpanded);
 
-  // Auto-expand ancestors when selection changes (from world view)
+  // Auto-expand ancestors and scroll to selection when it changes (from world view)
   useEffect(() => {
     if (world.selection) {
       const ancestors = getEntityAncestorPath(world.selection, world);
@@ -640,6 +642,20 @@ export const WorldInspector = memo(function WorldInspector({
           return next;
         });
       }
+
+      // Scroll to the selected element after DOM updates
+      requestAnimationFrame(() => {
+        const container = treeContainerRef.current;
+        if (container) {
+          const selectedEl = container.querySelector(`[data-node-id="${world.selection}"]`);
+          if (selectedEl) {
+            selectedEl.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+            });
+          }
+        }
+      });
     }
   }, [world.selection, world]);
 
@@ -705,7 +721,7 @@ export const WorldInspector = memo(function WorldInspector({
           className="hud-panel-content inspector-content"
           onWheel={(e: React.WheelEvent<HTMLDivElement>): void => e.stopPropagation()}
         >
-          <div className="inspector-tree">
+          <div className="inspector-tree" ref={treeContainerRef}>
             {Array.from(tree.constellations.values()).map((constellation: Constellation) => (
               <TreeNode
                 key={constellation.id}
