@@ -106,11 +106,17 @@ export const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
       transform={`translate(${pos.x}, ${pos.y}) scale(${scale})`}
       className={`cluster-glyph ${isHovered ? "hovered" : ""}`}
       filter="url(#glyph-glow)"
+      style={{ cursor: dispatch ? "pointer" : undefined }}
       data-entity-id={cluster.id}
       onPointerEnter={
         dispatch ? (): void => dispatch({ type: "hover", id: cluster.id }) : undefined
       }
       onPointerLeave={dispatch ? (): void => dispatch({ type: "hover", id: null }) : undefined}
+      onClick={
+        dispatch
+          ? (): void => dispatch({ type: "camera/focus", target: pos, zoom: 1.0 })
+          : undefined
+      }
     >
       {/* Hover indicator ring */}
       {isHovered && (

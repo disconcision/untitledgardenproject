@@ -39,18 +39,23 @@ function getIslandWorldPos(island: Island, clusters: Map<string, Cluster>): Vec2
   return addVec2(cluster.pos, island.localPos);
 }
 
-/** Compute cluster distance from origin for fog effect */
+/** Compute cluster distance from origin (used for render ordering) */
 function getClusterDistance(cluster: Cluster): number {
   return Math.sqrt(cluster.pos.x ** 2 + cluster.pos.y ** 2);
 }
 
-/** Compute fog opacity based on distance (0 = clear, 1 = invisible) */
-function getFogOpacity(distance: number): number {
-  const fogStart = 200;
-  const fogEnd = 1200;
-  if (distance <= fogStart) return 0;
-  if (distance >= fogEnd) return 0.85;
-  return ((distance - fogStart) / (fogEnd - fogStart)) * 0.85;
+/**
+ * Compute zoom-based opacity for rocks/islands.
+ * When zoomed out, rocks and islands fade slightly to emphasize constellation lines.
+ * Returns opacity multiplier (0.3 = very faded, 1 = full)
+ */
+function getZoomFadeOpacity(zoom: number): number {
+  // At zoom 1.0+: full opacity
+  // At zoom 0.3: ~60% opacity
+  // At zoom 0.1: ~40% opacity (minimum)
+  if (zoom >= 0.8) return 1;
+  const t = Math.max(0, Math.min(1, (zoom - 0.1) / 0.7)); // 0 at zoom 0.1, 1 at zoom 0.8
+  return 0.4 + t * 0.6; // Range: 0.4 to 1.0
 }
 
 // === Types ===
@@ -63,8 +68,6 @@ type GardenProps = {
 type ClusterRenderData = {
   cluster: Cluster;
   distance: number;
-  fogOpacity: number;
-  isDistant: boolean;
   islands: Island[];
   rocks: Rock[];
   plants: Plant[];
@@ -87,7 +90,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
     driftingPieces,
   } = world;
 
-  // Group entities by cluster for fog rendering
+  // Group entities by cluster for rendering
   const clusterData = useMemo((): ClusterRenderData[] => {
     // Sort clusters by distance (render far ones first, near ones on top)
     const sortedClusters = Array.from(clusters.values()).sort(
@@ -96,8 +99,6 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
 
     return sortedClusters.map((cluster: Cluster): ClusterRenderData => {
       const distance = getClusterDistance(cluster);
-      const fogOpacity = getFogOpacity(distance);
-      const isDistant = distance > 200;
 
       // Get islands for this cluster
       const clusterIslands: Island[] = [];
@@ -128,8 +129,6 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
       return {
         cluster,
         distance,
-        fogOpacity,
-        isDistant,
         islands: clusterIslands,
         rocks: clusterRocks,
         plants: clusterPlants,
@@ -150,6 +149,9 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
 
   // Collect all pathways for constellation rendering
   const pathwayList = useMemo((): Pathway[] => Array.from(pathways.values()), [pathways]);
+
+  // Zoom-based opacity for rocks/islands (fade when zoomed out to emphasize pathways)
+  const zoomFadeOpacity = getZoomFadeOpacity(camera.zoom);
 
   const transform = `translate(${camera.pan.x}, ${camera.pan.y}) scale(${camera.zoom})`;
 
@@ -177,29 +179,22 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
 
         {/* Render clusters from far to near (painters algorithm) */}
         {clusterData.map(
-          ({
-            cluster,
-            fogOpacity,
-            isDistant,
-            islands,
-            rocks,
-            plants: clusterPlants,
-          }: ClusterRenderData) => (
+          ({ cluster, islands, rocks, plants: clusterPlants }: ClusterRenderData) => (
             <g
               key={cluster.id}
-              className={isDistant ? "distant-cluster" : "main-cluster"}
+              className="cluster"
               style={{
-                opacity: 1 - fogOpacity,
-                filter: isDistant ? `blur(${fogOpacity * 2}px)` : undefined,
+                // When zoomed out, rocks/islands fade slightly to emphasize constellation lines
+                opacity: zoomFadeOpacity,
               }}
             >
               {/* Cluster glyph */}
               <ClusterGlyphRenderer
                 cluster={cluster}
                 showId={debug.showIds}
-                isDistant={isDistant}
+                isDistant={false}
                 isHovered={hover === cluster.id}
-                dispatch={isDistant ? undefined : dispatch}
+                dispatch={dispatch}
               />
 
               {/* Islands */}
@@ -214,7 +209,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
                     isSelected={selection === island.id}
                     showId={debug.showIds}
                     showHitTarget={debug.showHitTargets}
-                    dispatch={isDistant ? undefined : dispatch}
+                    dispatch={dispatch}
                   />
                 );
               })}
@@ -232,7 +227,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
                     isHovered={hover === rock.id}
                     showId={debug.showIds}
                     showHitTarget={debug.showHitTargets}
-                    dispatch={isDistant ? undefined : dispatch}
+                    dispatch={dispatch}
                   />
                 );
               })}
@@ -256,7 +251,7 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
                     hover={hover}
                     showIds={debug.showIds}
                     showHitTargets={debug.showHitTargets}
-                    dispatch={isDistant ? undefined : dispatch}
+                    dispatch={dispatch}
                   />
                 );
               })}

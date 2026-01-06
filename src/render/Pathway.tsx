@@ -21,16 +21,17 @@ export type PathwayLayerProps = {
 /**
  * Compute pathway opacity based on zoom level and hover state.
  * - Subtle during day, more visible at night (handled by color scheme)
- * - More visible when zoomed out
+ * - More visible when zoomed out (emphasizes constellation structure)
  * - Highlighted when hovered
  */
 function computePathwayOpacity(zoom: number, isHovered: boolean): number {
-  // Lower base opacity - pathways should be subtle
-  const baseOpacity = 0.08;
+  // Base opacity - pathways are subtle at normal zoom
+  const baseOpacity = 0.12;
 
-  // Zoom boost: more visible when zoomed out (zoom < 1)
-  // At zoom 1.0: no boost. At zoom 0.3: moderate boost (~0.25)
-  const zoomBoost = Math.max(0, (1 - zoom) * 0.3);
+  // Zoom boost: more visible when zoomed out (zoom < 0.8)
+  // At zoom 1.0: no boost. At zoom 0.3: significant boost (~0.5)
+  // At zoom 0.1: strong boost (~0.7)
+  const zoomBoost = Math.max(0, (0.8 - zoom) * 0.8);
 
   // Hover boost
   const hoverBoost = isHovered ? 0.4 : 0;

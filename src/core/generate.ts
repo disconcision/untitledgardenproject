@@ -90,8 +90,8 @@ function generateCluster(
   index: number,
   totalClusters: number
 ): Cluster {
-  // Inter-cluster distance within constellation: 600-900 units
-  const spreadRadius = index === 0 ? 0 : 600 + rng() * 300;
+  // Inter-cluster distance within constellation: 1200-1800 units (2x previous)
+  const spreadRadius = index === 0 ? 0 : 1200 + rng() * 600;
   const angle = index === 0 ? 0 : (index / totalClusters) * Math.PI * 2 + (rng() - 0.5) * 0.5;
   const distance = spreadRadius * (0.85 + rng() * 0.3);
 

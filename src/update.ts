@@ -290,7 +290,7 @@ function handleCameraPan(world: World, delta: Vec2): World {
 
 function handleCameraZoom(world: World, delta: number, center: Vec2): World {
   emitAudioEvent({ type: "zoom" });
-  const minZoom = 0.25;
+  const minZoom = 0.05; // Allow zooming out to see all constellations
   const maxZoom = 4;
   const newZoom = Math.max(minZoom, Math.min(maxZoom, world.camera.zoom * (1 + delta)));
 
