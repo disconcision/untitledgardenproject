@@ -7,7 +7,7 @@ todos:
     status: completed
   - id: pie-animation
     content: Fix pie menu contract animation flicker
-    status: in_progress
+    status: completed
     dependencies:
       - todo-audit
   - id: camera-smooth

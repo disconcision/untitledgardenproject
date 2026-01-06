@@ -177,6 +177,16 @@ export type Camera = {
   zoom: number;
 };
 
+// Animation state for smooth camera transitions
+export type CameraAnimation = {
+  startPan: Vec2;
+  startZoom: number;
+  targetPan: Vec2;
+  targetZoom: number;
+  startTime: number; // performance.now() timestamp
+  duration: number; // ms
+};
+
 // === Day Cycle ===
 
 export type DayCycle = {
@@ -256,6 +266,8 @@ export type World = {
   driftingPieces: DriftingPiece[];
   // Performance monitoring
   fps: number;
+  // Smooth camera animation (null when not animating)
+  cameraAnimation: CameraAnimation | null;
 };
 
 // === Vector Helpers ===
@@ -447,6 +459,7 @@ export function createInitialWorld(seed: number): World {
     driftingPieces: [],
     // Performance monitoring
     fps: 60,
+    cameraAnimation: null,
   };
 }
 

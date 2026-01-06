@@ -90,7 +90,7 @@ export default function App(): JSX.Element {
     return () => clearInterval(interval);
   }, [dispatch, world.driftingPieces.length]);
 
-  // FPS measurement using requestAnimationFrame
+  // FPS measurement + camera animation using requestAnimationFrame
   useEffect(() => {
     let animationId: number;
     let lastFpsUpdate = performance.now();
@@ -115,6 +115,9 @@ export default function App(): JSX.Element {
         const fps = avgFrameTime > 0 ? Math.round(1000 / avgFrameTime) : 60;
         dispatch({ type: "fps/update", fps });
       }
+
+      // Tick camera animation if one is running
+      dispatch({ type: "camera/animationTick", now });
 
       animationId = requestAnimationFrame(measureFrame);
     };

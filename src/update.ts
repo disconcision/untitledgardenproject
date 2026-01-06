@@ -10,7 +10,17 @@
  * - core/tutorial.ts — tutorial step completion
  */
 
-import { World, Id, Vec2, vec2, addVec2, scaleVec2, DriftingPiece, genId } from "./model";
+import {
+  World,
+  Id,
+  Vec2,
+  vec2,
+  addVec2,
+  scaleVec2,
+  DriftingPiece,
+  genId,
+  CameraAnimation,
+} from "./model";
 import { sproutBud, pruneNode, branchFromNode, cutSubtree, graftSubtree } from "./core/actions";
 import {
   tickParticlesFast,
@@ -66,6 +76,9 @@ export type Msg =
 
   // Performance
   | { type: "fps/update"; fps: number }
+
+  // Camera Animation
+  | { type: "camera/animationTick"; now: number }
 
   // Panels
   | { type: "panel/openInspector" }
@@ -126,6 +139,9 @@ export function update(msg: Msg, world: World): World {
 
     case "camera/focus":
       return handleCameraFocus(world, msg.target, msg.zoom);
+
+    case "camera/animationTick":
+      return handleCameraAnimationTick(world, msg.now);
 
     // === Selection ===
     case "select":
@@ -313,14 +329,57 @@ function handleCameraZoom(world: World, delta: number, center: Vec2): World {
   };
 }
 
+// Camera animation duration in ms
+const CAMERA_FOCUS_DURATION = 300;
+
 function handleCameraFocus(world: World, target: Vec2, zoom?: number): World {
+  const targetPan = vec2(-target.x, -target.y);
+  const targetZoom = zoom ?? world.camera.zoom;
+
+  // Start a smooth animation to the target
+  const animation: CameraAnimation = {
+    startPan: world.camera.pan,
+    startZoom: world.camera.zoom,
+    targetPan,
+    targetZoom,
+    startTime: performance.now(),
+    duration: CAMERA_FOCUS_DURATION,
+  };
+
   return {
     ...world,
-    camera: {
-      pan: vec2(-target.x, -target.y),
-      zoom: zoom ?? world.camera.zoom,
-    },
+    cameraAnimation: animation,
     tutorial: completeTutorialStep(world.tutorial, "focus"),
+  };
+}
+
+// Easing function: ease-out cubic
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function handleCameraAnimationTick(world: World, now: number): World {
+  const anim = world.cameraAnimation;
+  if (!anim) return world;
+
+  const elapsed = now - anim.startTime;
+  const rawProgress = Math.min(1, elapsed / anim.duration);
+  const progress = easeOutCubic(rawProgress);
+
+  // Interpolate camera position
+  const pan = vec2(
+    anim.startPan.x + (anim.targetPan.x - anim.startPan.x) * progress,
+    anim.startPan.y + (anim.targetPan.y - anim.startPan.y) * progress
+  );
+  const zoom = anim.startZoom + (anim.targetZoom - anim.startZoom) * progress;
+
+  // Check if animation is complete
+  const isComplete = rawProgress >= 1;
+
+  return {
+    ...world,
+    camera: { pan, zoom },
+    cameraAnimation: isComplete ? null : anim,
   };
 }
 
