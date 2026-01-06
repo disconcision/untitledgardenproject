@@ -5,18 +5,14 @@
  * Delegates to seeds.ts and fireflies.ts for type-specific logic.
  */
 
+import { World, Id, Vec2, addVec2, Particle, PlantNode, Plant, Island, Rock } from "../model";
 import {
-  World,
-  Id,
-  Vec2,
-  addVec2,
-  Particle,
-  PlantNode,
-  Plant,
-  Island,
-  Rock,
-} from "../model";
-import { tickSeedFast, tickFlowerSeeds, calculateRootingProbability, createPlantFromSeed, SEED_ROOTING_CONFIG } from "./seeds";
+  tickSeedFast,
+  tickFlowerSeeds,
+  calculateRootingProbability,
+  createPlantFromSeed,
+  SEED_ROOTING_CONFIG,
+} from "./seeds";
 import { tickFireflyFast, tickFireflySpawning } from "./fireflies";
 
 // === Shared Types ===

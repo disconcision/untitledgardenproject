@@ -332,4 +332,3 @@ function getPlantNodeWorldPos(node: PlantNode, world: World): Vec2 | null {
   const islandWorldPos = addVec2(cluster.pos, island.localPos);
   return addVec2(islandWorldPos, node.localPos);
 }
-

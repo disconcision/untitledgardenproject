@@ -5,16 +5,7 @@
  * Fireflies spawn at dusk, glow at night, and are attracted to lights.
  */
 
-import {
-  World,
-  Vec2,
-  vec2,
-  addVec2,
-  genId,
-  Particle,
-  Island,
-  Rock,
-} from "../model";
+import { World, Vec2, vec2, addVec2, genId, Particle, Island, Rock } from "../model";
 import { createPathwayForce } from "../forces";
 import { LandingSpot, GlowingEntity } from "./particles";
 
@@ -229,4 +220,3 @@ function findNearestGlow(
 
   return nearest;
 }
-

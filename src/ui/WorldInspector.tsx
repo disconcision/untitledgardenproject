@@ -32,12 +32,7 @@ import {
   assertNever,
 } from "../core/model";
 import { Msg } from "../update";
-import {
-  TreeNode,
-  PlantNodeTree,
-  getClusterGlyph,
-  getParticleIcon,
-} from "./InspectorTreeNodes";
+import { TreeNode, PlantNodeTree, getClusterGlyph, getParticleIcon } from "./InspectorTreeNodes";
 import "./WorldInspector.css";
 
 // Helper: compute entity world position from ID

@@ -22,16 +22,15 @@ function createMinimalWorld(): World {
   };
 
   const world: World = {
-    constellations: new Map([
-      [constellationId, { id: constellationId, pos: vec2(0, 0) }],
-    ]),
+    constellations: new Map([[constellationId, { id: constellationId, pos: vec2(0, 0) }]]),
     clusters: new Map([
-      [clusterId, { id: clusterId, constellationId, pos: vec2(0, 0), glyphKind: "seed", rotation: 0 }],
+      [
+        clusterId,
+        { id: clusterId, constellationId, pos: vec2(0, 0), glyphKind: "seed", rotation: 0 },
+      ],
     ]),
     pathways: new Map(),
-    entities: new Map([
-      [islandId, island],
-    ]),
+    entities: new Map([[islandId, island]]),
     plants: new Map(),
     camera: { pan: vec2(0, 0), zoom: 1 },
     time: { t: 0, dt: 0 },
@@ -54,7 +53,11 @@ function createMinimalWorld(): World {
   return world;
 }
 
-function addPlantToWorld(world: World, islandId: string, plantPos: { x: number; y: number }): World {
+function addPlantToWorld(
+  world: World,
+  islandId: string,
+  plantPos: { x: number; y: number }
+): World {
   const plantId = `plant-${world.plants.size + 1}`;
   const rootId = `root-${world.plants.size + 1}`;
 
@@ -200,4 +203,3 @@ describe("seed distribution behavior", () => {
     expect(SEED_ROOTING_CONFIG.crowdedIslandMultiplier).toBeLessThan(1);
   });
 });
-

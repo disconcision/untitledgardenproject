@@ -4,7 +4,11 @@
 
 import { describe, it, expect } from "vitest";
 import { vec2, World } from "../../src/core";
-import { createPathwayForce, samplePathwayForce, PathwayForceConfig } from "../../src/core/forces/pathway";
+import {
+  createPathwayForce,
+  samplePathwayForce,
+  PathwayForceConfig,
+} from "../../src/core/forces/pathway";
 
 // === Test Fixtures ===
 
@@ -14,15 +18,27 @@ function createMinimalWorld(): World {
   const clusterId2 = "cluster-2";
 
   const world: World = {
-    constellations: new Map([
-      [constellationId, { id: constellationId, pos: vec2(0, 0) }],
-    ]),
+    constellations: new Map([[constellationId, { id: constellationId, pos: vec2(0, 0) }]]),
     clusters: new Map([
-      [clusterId1, { id: clusterId1, constellationId, pos: vec2(0, 0), glyphKind: "seed", rotation: 0 }],
-      [clusterId2, { id: clusterId2, constellationId, pos: vec2(1000, 0), glyphKind: "node", rotation: 0 }],
+      [
+        clusterId1,
+        { id: clusterId1, constellationId, pos: vec2(0, 0), glyphKind: "seed", rotation: 0 },
+      ],
+      [
+        clusterId2,
+        { id: clusterId2, constellationId, pos: vec2(1000, 0), glyphKind: "node", rotation: 0 },
+      ],
     ]),
     pathways: new Map([
-      ["pathway-1", { id: "pathway-1", fromClusterId: clusterId1, toClusterId: clusterId2, direction: "forward" }],
+      [
+        "pathway-1",
+        {
+          id: "pathway-1",
+          fromClusterId: clusterId1,
+          toClusterId: clusterId2,
+          direction: "forward",
+        },
+      ],
     ]),
     entities: new Map(),
     plants: new Map(),
@@ -179,4 +195,3 @@ describe("force field falloff", () => {
     expect(closeMagnitude).toBeGreaterThan(farMagnitude);
   });
 });
-
