@@ -158,14 +158,15 @@ function tickSeedFast(
   const wobble = Math.sin(time * 4 + noisePhase * 2) * 0.02;
   const newAngularVel = particle.angularVelocity * 0.95 + wobble;
 
-  // Check for landing
+  // Check for landing - seeds should land within a few seconds of being near a surface
   for (const spot of landingSpots) {
     const dx = newPos.x - spot.pos.x;
     const dy = newPos.y - spot.pos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     const landingRadius = spot.kind === "rock" ? 30 : 45;
 
-    if (distance < landingRadius && Math.random() < 0.0002) {
+    // Increased probability from 0.0002 to 0.02 (1 in 50 per tick)
+    if (distance < landingRadius && Math.random() < 0.02) {
       return {
         ...updated,
         state: "landed",
@@ -322,9 +323,9 @@ export function tickParticleLifecycle(world: World): World {
       continue;
     }
 
-    // Seeds can take root when landed
+    // Seeds can take root when landed (after ~2.5 seconds of being landed)
     if (particle.particleKind === "seed" && particle.state === "landed") {
-      if (particle.age > 500 && Math.random() < 0.02) {
+      if (particle.age > 50 && Math.random() < 0.05) {
         const landedEntity = particle.landedOn ? world.entities.get(particle.landedOn) : null;
 
         if (landedEntity && (landedEntity.kind === "rock" || landedEntity.kind === "island")) {
