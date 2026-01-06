@@ -14,13 +14,19 @@ See docs/README.md for more basic workflow context.
 
 - [ ] On feature branch (not main)
 - [ ] Atomic commits with conventional prefixes (feat/fix/refactor/docs/chore)
-- [ ] Branch merged to main when complete
-- [ ] Feature branch deleted
 
-## Docs ⚠️
+## Before Merging to Main ⚠️
 
-- [ ] **docs/TODO.md updated** (claim task → mark complete when done)
+**Do these BEFORE your merge commit:**
+
+- [ ] **Update docs/TODO.md** — mark `[x]` for every completed item
 - [ ] SOURCE.md updated if architectural change
+- [ ] Commit the docs update (can be part of final feature commit or separate `docs:` commit)
+
+**Then:**
+
+- [ ] Branch merged to main
+- [ ] Feature branch deleted
 
 ## Tutorial ⚠️
 
