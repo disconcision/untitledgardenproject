@@ -7,6 +7,7 @@
 
 import {
   World,
+  Constellation,
   Cluster,
   Island,
   Rock,
@@ -14,6 +15,7 @@ import {
   PlantNode,
   Plant,
   Pathway,
+  PathwayDirection,
   Vec2,
   Id,
   vec2,
@@ -54,20 +56,53 @@ function generateBlobShape(
   return shape;
 }
 
+// === Constellation Generation ===
+// A constellation is a higher-order grouping of clusters
+
+function generateConstellation(
+  rng: () => number,
+  index: number,
+  totalConstellations: number
+): Constellation {
+  // First constellation at center, others positioned far away
+  // Inter-constellation distance: 3000-5000 units (order of magnitude larger than inter-cluster)
+  const spreadRadius = index === 0 ? 0 : 3500 + rng() * 1500;
+  const angle =
+    index === 0 ? 0 : ((index - 1) / (totalConstellations - 1)) * Math.PI * 2 + (rng() - 0.5) * 0.4;
+  const distance = spreadRadius;
+
+  return {
+    id: genId("constellation"),
+    pos: vec2(Math.cos(angle) * distance, Math.sin(angle) * distance),
+  };
+}
+
 // === Cluster Generation ===
 // Central glyph with orbiting islands/rocks
 
-function generateCluster(rng: () => number, index: number, totalClusters: number): Cluster {
-  // For now, main cluster at center, others positioned outward
-  const spreadRadius = index === 0 ? 0 : 600 + totalClusters * 100;
-  const angle = index === 0 ? 0 : (index / totalClusters) * Math.PI * 2 + (rng() - 0.5) * 0.3;
-  const distance = spreadRadius * (0.7 + rng() * 0.3);
+function generateCluster(
+  rng: () => number,
+  constellation: Constellation,
+  index: number,
+  totalClusters: number
+): Cluster {
+  // Inter-cluster distance within constellation: 400-600 units
+  const spreadRadius = index === 0 ? 0 : 400 + rng() * 200;
+  const angle = index === 0 ? 0 : (index / totalClusters) * Math.PI * 2 + (rng() - 0.5) * 0.4;
+  const distance = spreadRadius * (0.8 + rng() * 0.4);
 
   const glyphKinds: Array<"seed" | "node" | "sigil"> = ["seed", "node", "sigil"];
 
+  // Cluster position is relative to constellation center
+  const clusterPos = addVec2(
+    constellation.pos,
+    vec2(Math.cos(angle) * distance, Math.sin(angle) * distance)
+  );
+
   return {
     id: genId("cluster"),
-    pos: vec2(Math.cos(angle) * distance, Math.sin(angle) * distance),
+    constellationId: constellation.id,
+    pos: clusterPos,
     glyphKind: glyphKinds[Math.floor(rng() * glyphKinds.length)],
     rotation: rng() * Math.PI * 2,
   };
@@ -331,6 +366,7 @@ function generatePlantForRock(
 // === Pathway Generation ===
 // Creates constellation-like patterns between clusters using
 // angle-aware connection algorithm to avoid parallel/near-parallel lines
+// Denser within constellations, sparse between constellations
 
 function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
   if (clusters.length < 2) return [];
@@ -354,40 +390,59 @@ function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
   };
 
   // Check if a new angle would be too close to existing angles from this cluster
-  // Returns the minimum angle difference from existing pathways
   const getMinAngleDiff = (clusterId: Id, newAngle: number): number => {
     const existingAngles = clusterAngles.get(clusterId) || [];
-    if (existingAngles.length === 0) return Math.PI; // No constraint
+    if (existingAngles.length === 0) return Math.PI;
 
     let minDiff = Math.PI;
     for (const existing of existingAngles) {
       let diff = Math.abs(newAngle - existing);
-      // Normalize to [0, PI]
       if (diff > Math.PI) diff = 2 * Math.PI - diff;
       minDiff = Math.min(minDiff, diff);
     }
     return minDiff;
   };
 
-  // Minimum angle between pathways from same cluster (radians)
-  // ~30 degrees minimum separation
+  // Random direction assignment
+  const randomDirection = (): PathwayDirection => {
+    const roll = rng();
+    if (roll < 0.4) return "forward";
+    if (roll < 0.8) return "backward";
+    return "bidirectional";
+  };
+
+  // Minimum angle between pathways from same cluster (~30 degrees)
   const MIN_ANGLE_SEPARATION = Math.PI / 6;
 
-  // Calculate all possible edges with distances
-  const edges: { from: Cluster; to: Cluster; dist: number }[] = [];
+  // Calculate all possible edges with distances and constellation info
+  const edges: {
+    from: Cluster;
+    to: Cluster;
+    dist: number;
+    sameConstellation: boolean;
+  }[] = [];
   for (let i = 0; i < clusters.length; i++) {
     for (let j = i + 1; j < clusters.length; j++) {
       const from = clusters[i];
       const to = clusters[j];
       const delta = subVec2(to.pos, from.pos);
-      edges.push({ from, to, dist: lenVec2(delta) });
+      edges.push({
+        from,
+        to,
+        dist: lenVec2(delta),
+        sameConstellation: from.constellationId === to.constellationId,
+      });
     }
   }
 
   // Sort by distance (shortest first) for priority
   edges.sort((a, b) => a.dist - b.dist);
 
-  // Try to add each edge, with angle and probability checks
+  // Track inter-constellation bridges per constellation pair
+  const constellationBridges = new Map<string, number>();
+  const bridgeKey = (a: Id, b: Id): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
+
+  // Try to add each edge, with different rules for intra vs inter constellation
   for (const edge of edges) {
     const key = edgeKey(edge.from.id, edge.to.id);
     if (addedEdges.has(key)) continue;
@@ -400,15 +455,25 @@ function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
 
     // Skip if angle is too close to existing pathway from either cluster
     if (minDiffA < MIN_ANGLE_SEPARATION || minDiffB < MIN_ANGLE_SEPARATION) {
-      // Small chance to override for variety (5%)
       if (rng() > 0.05) continue;
     }
 
-    // Base pruning: skip ~30% of edges for sparser constellations
-    // Shorter edges are more likely to be kept
-    const distanceFactor = Math.min(1, edge.dist / 1000);
-    const pruneChance = 0.2 + distanceFactor * 0.2; // 20-40% pruning
-    if (rng() < pruneChance) continue;
+    if (edge.sameConstellation) {
+      // Intra-constellation: denser connections (only ~15% pruning)
+      if (rng() < 0.15) continue;
+    } else {
+      // Inter-constellation: very sparse (1-2 bridges per constellation pair)
+      const bKey = bridgeKey(edge.from.constellationId, edge.to.constellationId);
+      const currentBridges = constellationBridges.get(bKey) || 0;
+
+      // Allow max 2 bridges between any two constellations
+      if (currentBridges >= 2) continue;
+
+      // 70% chance to skip even if we could add one
+      if (currentBridges >= 1 && rng() < 0.7) continue;
+
+      constellationBridges.set(bKey, currentBridges + 1);
+    }
 
     // Accept this edge
     addedEdges.add(key);
@@ -416,6 +481,7 @@ function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
       id: genId("pathway"),
       fromClusterId: edge.from.id,
       toClusterId: edge.to.id,
+      direction: randomDirection(),
     });
 
     // Record angles for both endpoints
@@ -430,13 +496,13 @@ function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
   );
 
   if (!mainHasConnection && clusters.length > 1) {
-    // Connect to nearest cluster
     const nearest = edges.find((d) => d.from.id === mainCluster.id || d.to.id === mainCluster.id);
     if (nearest) {
       pathways.push({
         id: genId("pathway"),
         fromClusterId: nearest.from.id,
         toClusterId: nearest.to.id,
+        direction: randomDirection(),
       });
     }
   }
@@ -451,14 +517,29 @@ export function generateWorld(seed: number): World {
   const rng = createRng(seed);
   const world = createInitialWorld(seed);
 
-  // Multiple clusters: 1 main + 2-4 distant
-  const clusterCount = 3 + Math.floor(rng() * 3); // 3-5 clusters total
+  // Generate 3 constellations
+  const constellationCount = 3;
+  const constellations: Constellation[] = [];
+
+  for (let c = 0; c < constellationCount; c++) {
+    const constellation = generateConstellation(rng, c, constellationCount);
+    constellations.push(constellation);
+    world.constellations.set(constellation.id, constellation);
+  }
+
+  // Generate clusters within each constellation
   const clusters: Cluster[] = [];
 
-  for (let c = 0; c < clusterCount; c++) {
-    const cluster = generateCluster(rng, c, clusterCount);
-    clusters.push(cluster);
-    world.clusters.set(cluster.id, cluster);
+  for (let ci = 0; ci < constellations.length; ci++) {
+    const constellation = constellations[ci];
+    // First constellation gets 4 clusters, others get 3-4
+    const clusterCount = ci === 0 ? 4 : 3 + Math.floor(rng() * 2);
+
+    for (let c = 0; c < clusterCount; c++) {
+      const cluster = generateCluster(rng, constellation, c, clusterCount);
+      clusters.push(cluster);
+      world.clusters.set(cluster.id, cluster);
+    }
   }
 
   // Generate pathways between clusters (constellation pattern)
@@ -471,20 +552,18 @@ export function generateWorld(seed: number): World {
   const allRocks: { rock: Rock; island: Island; cluster: Cluster }[] = [];
 
   for (const cluster of clusters) {
-    // Main cluster (index 0) gets more islands, distant ones get fewer
-    const isMain = clusters.indexOf(cluster) === 0;
-    const islandCount = isMain
+    // First cluster of first constellation gets more islands
+    const isMainCluster = cluster === clusters[0];
+    const islandCount = isMainCluster
       ? 4 + Math.floor(rng() * 3) // 4-6 islands for main
-      : 2 + Math.floor(rng() * 2); // 2-3 islands for distant
+      : 2 + Math.floor(rng() * 2); // 2-3 islands for others
 
     for (let i = 0; i < islandCount; i++) {
       const island = generateIsland(rng, cluster.id, i, islandCount);
       world.entities.set(island.id, island);
 
       // Main cluster gets more rocks, distant ones fewer
-      const rockCount = isMain
-        ? 1 + Math.floor(rng() * 2) // 1-2 rocks
-        : 1; // Just 1 rock for distant
+      const rockCount = isMainCluster ? 1 + Math.floor(rng() * 2) : 1;
 
       for (let j = 0; j < rockCount; j++) {
         const rock = generateRockFormation(rng, island, j, rockCount);
@@ -496,8 +575,8 @@ export function generateWorld(seed: number): World {
 
   // Plants: main cluster gets 70%, distant get 50%
   for (const { rock, island, cluster } of allRocks) {
-    const isMain = clusters.indexOf(cluster) === 0;
-    const plantChance = isMain ? 0.7 : 0.5;
+    const isMainCluster = cluster === clusters[0];
+    const plantChance = isMainCluster ? 0.7 : 0.5;
 
     if (rng() < plantChance) {
       const { nodes, plant } = generatePlantForRock(rng, rock, island);
