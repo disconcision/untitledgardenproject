@@ -67,7 +67,7 @@ export const ForceFieldOverlay = memo(function ForceFieldOverlay({
     }
 
     return result;
-  }, [world.pathways, world.clusters, camera.pan.x, camera.pan.y, camera.zoom]);
+  }, [world, camera.pan.x, camera.pan.y, camera.zoom]);
 
   return (
     <g className="force-field-overlay" opacity={0.6}>

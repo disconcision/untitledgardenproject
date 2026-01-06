@@ -143,7 +143,7 @@ export const CanvasBackground = memo(function CanvasBackground({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const handleResize = () => {
+    const handleResize = (): void => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
@@ -158,7 +158,7 @@ export const CanvasBackground = memo(function CanvasBackground({
 
   // Animation loop - runs independently of React
   useEffect(() => {
-    const animate = () => {
+    const animate = (): void => {
       render();
       frameRef.current = requestAnimationFrame(animate);
     };
