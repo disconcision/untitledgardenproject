@@ -29,7 +29,10 @@ export function useCamera({ dispatch, containerRef, carriedSubtree }: UseCameraO
       // If carrying a subtree, handle graft or release
       if (carriedSubtree) {
         // Check if clicking on a plant node (potential graft target)
-        const entityId = (target as HTMLElement).dataset?.entityId;
+        // Use closest() because click target may be a child element (circle, path)
+        // but the data-entity-id is on the parent <g> group
+        const nodeElement = target.closest("[data-entity-id]") as HTMLElement | null;
+        const entityId = nodeElement?.dataset?.entityId;
         if (entityId) {
           // Graft to the clicked entity (handler will validate it's a stem)
           dispatch({ type: "graft", targetNodeId: entityId });

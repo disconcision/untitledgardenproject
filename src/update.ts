@@ -387,11 +387,13 @@ function handleCut(world: World, nodeId: Id, islandWorldPos: Vec2): World {
   const result = cutSubtree(world, nodeId, islandWorldPos);
   if (result) {
     emitAudioEvent({ type: "cut" });
+    let tutorial = completeTutorialStep(result.world.tutorial, "context");
+    tutorial = completeTutorialStep(tutorial, "cut");
     return {
       ...result.world,
       carriedSubtree: result.subtree,
       contextMenu: null,
-      tutorial: completeTutorialStep(result.world.tutorial, "context"),
+      tutorial,
     };
   }
   return { ...world, contextMenu: null };
@@ -406,6 +408,7 @@ function handleGraft(world: World, targetNodeId: Id): World {
     return {
       ...result,
       carriedSubtree: null,
+      tutorial: completeTutorialStep(result.tutorial, "graft"),
     };
   }
   return world;
@@ -415,6 +418,9 @@ function handleRelease(world: World): World {
   if (!world.carriedSubtree) return world;
 
   emitAudioEvent({ type: "release" });
+
+  // Complete tutorial step
+  const tutorial = completeTutorialStep(world.tutorial, "release");
 
   // Convert carried subtree nodes into drifting pieces
   const driftingPieces: DriftingPiece[] = world.carriedSubtree.nodes.map((node) => {
@@ -451,6 +457,7 @@ function handleRelease(world: World): World {
     ...world,
     carriedSubtree: null,
     driftingPieces: [...world.driftingPieces, ...driftingPieces],
+    tutorial,
   };
 }
 

@@ -322,8 +322,26 @@ export function createInitialWorld(seed: number): World {
             },
             {
               id: "context",
-              instruction: "Right-click a stem to branch or trim",
+              instruction: "Right-click a stem to branch or cut",
               completed: false,
+            },
+            {
+              id: "cut",
+              instruction: "Cut a branch — it follows your cursor",
+              completed: false,
+              isNew: true,
+            },
+            {
+              id: "graft",
+              instruction: "Click another stem to graft the cut branch",
+              completed: false,
+              isNew: true,
+            },
+            {
+              id: "release",
+              instruction: "Click empty space to release and scatter pieces",
+              completed: false,
+              isNew: true,
             },
           ],
         },
