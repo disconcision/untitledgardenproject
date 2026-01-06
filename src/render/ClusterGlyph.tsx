@@ -114,7 +114,10 @@ export const ClusterGlyphRenderer = memo(function ClusterGlyphRenderer({
       onPointerLeave={dispatch ? (): void => dispatch({ type: "hover", id: null }) : undefined}
       onClick={
         dispatch
-          ? (): void => dispatch({ type: "camera/focus", target: pos, zoom: 1.0 })
+          ? (): void => {
+              dispatch({ type: "select", id: cluster.id });
+              dispatch({ type: "camera/focus", target: pos, zoom: 1.0 });
+            }
           : undefined
       }
     >

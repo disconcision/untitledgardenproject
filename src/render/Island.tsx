@@ -41,6 +41,7 @@ export const IslandRenderer = memo(function IslandRenderer({
       data-entity-id={island.id}
       onPointerEnter={dispatch ? (): void => dispatch({ type: "hover", id: island.id }) : undefined}
       onPointerLeave={dispatch ? (): void => dispatch({ type: "hover", id: null }) : undefined}
+      onClick={dispatch ? (): void => dispatch({ type: "select", id: island.id }) : undefined}
       onDoubleClick={
         dispatch
           ? (): void => dispatch({ type: "camera/focus", target: worldPos, zoom: 1.5 })

@@ -109,6 +109,9 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
 
   const handleClick = (): void => {
     if (!dispatch) return;
+    // Always select on click
+    dispatch({ type: "select", id: node.id });
+    // Additionally, sprout if it's a charged bud
     if (node.nodeKind === "bud" && isCharged) {
       dispatch({ type: "sprout", budId: node.id });
     }
@@ -139,7 +142,7 @@ const PlantNodeRenderer = memo(function PlantNodeRenderer({
       data-entity-id={node.id}
       onPointerEnter={dispatch ? (): void => dispatch({ type: "hover", id: node.id }) : undefined}
       onPointerLeave={dispatch ? (): void => dispatch({ type: "hover", id: null }) : undefined}
-      onClick={hasPrimaryAction ? handleClick : undefined}
+      onClick={isInteractive ? handleClick : undefined}
       onContextMenu={isInteractive ? handleContextMenu : undefined}
     >
       {/* Invisible hit target for buds and stems */}

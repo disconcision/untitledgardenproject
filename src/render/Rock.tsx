@@ -149,6 +149,7 @@ export const RockRenderer = memo(function RockRenderer({
       data-entity-id={rock.id}
       onPointerEnter={dispatch ? (): void => dispatch({ type: "hover", id: rock.id }) : undefined}
       onPointerLeave={dispatch ? (): void => dispatch({ type: "hover", id: null }) : undefined}
+      onClick={dispatch ? (): void => dispatch({ type: "select", id: rock.id }) : undefined}
     >
       {/* Render each boulder in the formation */}
       {rock.boulders.map((boulder, idx) => {
