@@ -40,13 +40,14 @@ function computePathwayOpacity(zoom: number, isHovered: boolean): number {
 
 /**
  * Compute stroke width based on zoom and hover.
+ * Scales inversely with zoom to maintain consistent screen appearance.
  */
 function computeStrokeWidth(zoom: number, isHovered: boolean): number {
-  // Thinner when zoomed in, thicker when zoomed out
-  const baseWidth = 1.2;
-  const zoomAdjust = Math.max(0.8, 1.5 - zoom * 0.5);
-  const hoverBoost = isHovered ? 0.8 : 0;
-  return baseWidth * zoomAdjust + hoverBoost;
+  // Target ~2px on screen, so we need to scale by 1/zoom
+  // But cap it to avoid extremely thick lines when zoomed way out
+  const targetScreenWidth = isHovered ? 3 : 2;
+  const invZoom = Math.min(1 / zoom, 6); // Cap at 6x (for zoom ~0.16)
+  return targetScreenWidth * invZoom;
 }
 
 export type PathwayRendererProps = {
@@ -99,7 +100,6 @@ export const PathwayRenderer = memo(function PathwayRenderer({
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         opacity={opacity}
-        filter="url(#pathway-glow)"
         style={{ pointerEvents: "none" }}
       />
     </g>

@@ -134,41 +134,49 @@
 /* === Pathways (Constellation Lines) === */
 
 .pathway-line {
-  transition:
-    opacity 200ms ease-out,
-    stroke-width 200ms ease-out;
+  transition: stroke-width 200ms ease-out;
+  filter: url(#pathway-glow);
 }
 
 .pathway-line.pathway-hovered {
   stroke-width: 2.5px !important;
 }
 
-/* Subtle shimmer animation for pathways */
+/* Subtle shimmer via filter brightness 
+   (opacity is controlled dynamically by zoom level) */
 @keyframes pathway-shimmer {
   0%,
   100% {
-    opacity: 1;
+    filter: url(#pathway-glow) brightness(1);
   }
   50% {
-    opacity: 0.7;
+    filter: url(#pathway-glow) brightness(1.25);
   }
 }
 
-.pathway-layer .pathway-line {
-  animation: pathway-shimmer 4s ease-in-out infinite;
+.pathway-group .pathway-line {
+  animation: pathway-shimmer 6s ease-in-out infinite;
 }
 
-/* Stagger animations for organic feel */
-.pathway-layer .pathway-line:nth-child(2n) {
-  animation-delay: 1s;
+/* Stagger animations by group index for organic feel */
+.pathway-group:nth-child(2) .pathway-line {
+  animation-delay: 1.5s;
 }
 
-.pathway-layer .pathway-line:nth-child(3n) {
+.pathway-group:nth-child(3) .pathway-line {
+  animation-delay: 3s;
+}
+
+.pathway-group:nth-child(4) .pathway-line {
+  animation-delay: 0.8s;
+}
+
+.pathway-group:nth-child(5) .pathway-line {
+  animation-delay: 4s;
+}
+
+.pathway-group:nth-child(6) .pathway-line {
   animation-delay: 2s;
-}
-
-.pathway-layer .pathway-line:nth-child(5n) {
-  animation-delay: 0.5s;
 }
 
 /* === Debug === */

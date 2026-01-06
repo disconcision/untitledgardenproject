@@ -330,7 +330,7 @@ function generatePlantForRock(
 
 // === Pathway Generation ===
 // Creates constellation-like patterns between clusters using
-// a k-nearest neighbors approach with random pruning
+// angle-aware connection algorithm to avoid parallel/near-parallel lines
 
 function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
   if (clusters.length < 2) return [];
@@ -338,50 +338,89 @@ function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
   const pathways: Pathway[] = [];
   const addedEdges = new Set<string>();
 
-  // Helper to create a canonical edge key (sorted by id to avoid duplicates)
+  // Track outgoing angles per cluster to avoid small-angle pairs
+  const clusterAngles = new Map<Id, number[]>();
+  for (const c of clusters) {
+    clusterAngles.set(c.id, []);
+  }
+
+  // Helper to create a canonical edge key
   const edgeKey = (a: Id, b: Id): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
 
-  // Calculate distances between all cluster pairs
-  const distances: { from: Cluster; to: Cluster; dist: number }[] = [];
+  // Calculate angle from cluster a to cluster b
+  const getAngle = (a: Cluster, b: Cluster): number => {
+    const delta = subVec2(b.pos, a.pos);
+    return Math.atan2(delta.y, delta.x);
+  };
+
+  // Check if a new angle would be too close to existing angles from this cluster
+  // Returns the minimum angle difference from existing pathways
+  const getMinAngleDiff = (clusterId: Id, newAngle: number): number => {
+    const existingAngles = clusterAngles.get(clusterId) || [];
+    if (existingAngles.length === 0) return Math.PI; // No constraint
+
+    let minDiff = Math.PI;
+    for (const existing of existingAngles) {
+      let diff = Math.abs(newAngle - existing);
+      // Normalize to [0, PI]
+      if (diff > Math.PI) diff = 2 * Math.PI - diff;
+      minDiff = Math.min(minDiff, diff);
+    }
+    return minDiff;
+  };
+
+  // Minimum angle between pathways from same cluster (radians)
+  // ~30 degrees minimum separation
+  const MIN_ANGLE_SEPARATION = Math.PI / 6;
+
+  // Calculate all possible edges with distances
+  const edges: { from: Cluster; to: Cluster; dist: number }[] = [];
   for (let i = 0; i < clusters.length; i++) {
     for (let j = i + 1; j < clusters.length; j++) {
       const from = clusters[i];
       const to = clusters[j];
       const delta = subVec2(to.pos, from.pos);
-      distances.push({ from, to, dist: lenVec2(delta) });
+      edges.push({ from, to, dist: lenVec2(delta) });
     }
   }
 
-  // Sort by distance (shortest first)
-  distances.sort((a, b) => a.dist - b.dist);
+  // Sort by distance (shortest first) for priority
+  edges.sort((a, b) => a.dist - b.dist);
 
-  // For each cluster, try to connect to 1-3 nearest neighbors
-  for (const cluster of clusters) {
-    const nearestCount = 1 + Math.floor(rng() * 2); // 1-2 connections per cluster
-    let connectionsAdded = 0;
+  // Try to add each edge, with angle and probability checks
+  for (const edge of edges) {
+    const key = edgeKey(edge.from.id, edge.to.id);
+    if (addedEdges.has(key)) continue;
 
-    for (const edge of distances) {
-      if (connectionsAdded >= nearestCount) break;
+    const angleFromA = getAngle(edge.from, edge.to);
+    const angleFromB = getAngle(edge.to, edge.from);
 
-      // Check if this edge involves our cluster
-      if (edge.from.id !== cluster.id && edge.to.id !== cluster.id) continue;
+    const minDiffA = getMinAngleDiff(edge.from.id, angleFromA);
+    const minDiffB = getMinAngleDiff(edge.to.id, angleFromB);
 
-      const key = edgeKey(edge.from.id, edge.to.id);
-      if (addedEdges.has(key)) continue;
-
-      // Random pruning: skip ~25% of potential edges
-      // But always include edges from the main cluster (index 0)
-      const isMainCluster = cluster === clusters[0];
-      if (!isMainCluster && rng() < 0.25) continue;
-
-      addedEdges.add(key);
-      pathways.push({
-        id: genId("pathway"),
-        fromClusterId: edge.from.id,
-        toClusterId: edge.to.id,
-      });
-      connectionsAdded++;
+    // Skip if angle is too close to existing pathway from either cluster
+    if (minDiffA < MIN_ANGLE_SEPARATION || minDiffB < MIN_ANGLE_SEPARATION) {
+      // Small chance to override for variety (5%)
+      if (rng() > 0.05) continue;
     }
+
+    // Base pruning: skip ~30% of edges for sparser constellations
+    // Shorter edges are more likely to be kept
+    const distanceFactor = Math.min(1, edge.dist / 1000);
+    const pruneChance = 0.2 + distanceFactor * 0.2; // 20-40% pruning
+    if (rng() < pruneChance) continue;
+
+    // Accept this edge
+    addedEdges.add(key);
+    pathways.push({
+      id: genId("pathway"),
+      fromClusterId: edge.from.id,
+      toClusterId: edge.to.id,
+    });
+
+    // Record angles for both endpoints
+    clusterAngles.get(edge.from.id)!.push(angleFromA);
+    clusterAngles.get(edge.to.id)!.push(angleFromB);
   }
 
   // Ensure main cluster has at least one connection
@@ -392,9 +431,7 @@ function generatePathways(rng: () => number, clusters: Cluster[]): Pathway[] {
 
   if (!mainHasConnection && clusters.length > 1) {
     // Connect to nearest cluster
-    const nearest = distances.find(
-      (d) => d.from.id === mainCluster.id || d.to.id === mainCluster.id
-    );
+    const nearest = edges.find((d) => d.from.id === mainCluster.id || d.to.id === mainCluster.id);
     if (nearest) {
       pathways.push({
         id: genId("pathway"),
