@@ -20,6 +20,9 @@ let nightGain: Tone.Gain | null = null;
 // Current time of day for smooth transitions
 let currentTimeOfDay = 0.5;
 
+// Track if we've started the pads (after audio context starts)
+let ambientStarted = false;
+
 /**
  * Initialize ambient mixer layer.
  * Returns cleanup function.
@@ -54,9 +57,8 @@ export function initAmbientMixer(engine: AudioEngine): () => void {
     },
   }).connect(nightGain);
 
-  // Start sustained notes
-  dayPad.triggerAttack("E3", Tone.now());
-  nightPad.triggerAttack("B2", Tone.now());
+  // Don't start notes yet - wait for audio context to be running
+  ambientStarted = false;
 
   return (): void => {
     dayPad?.triggerRelease();
@@ -75,8 +77,22 @@ export function initAmbientMixer(engine: AudioEngine): () => void {
       dayGain = null;
       nightGain = null;
       ambientGain = null;
+      ambientStarted = false;
     }, 3000);
   };
+}
+
+/**
+ * Start the ambient pads (called once after audio context starts).
+ */
+function startAmbientPads(): void {
+  if (ambientStarted) return;
+  if (!dayPad || !nightPad) return;
+
+  dayPad.triggerAttack("E3", Tone.now());
+  nightPad.triggerAttack("B2", Tone.now());
+  ambientStarted = true;
+  console.log("[Audio] Ambient mixer started");
 }
 
 /**
@@ -89,6 +105,11 @@ export function initAmbientMixer(engine: AudioEngine): () => void {
  */
 export function updateAmbientMixer(state: AudioState, timeOfDay: number, zoomLevel: number): void {
   if (!ambientGain || !dayGain || !nightGain) return;
+
+  // Start pads when audio context is running for the first time
+  if (state.started && !ambientStarted) {
+    startAmbientPads();
+  }
 
   currentTimeOfDay = timeOfDay;
 

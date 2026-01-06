@@ -21,6 +21,9 @@ let droneLFO: Tone.LFO | null = null;
 // Current target volume for smooth transitions
 let targetVolume = 0;
 
+// Track if we've started the oscillators (after audio context starts)
+let droneStarted = false;
+
 /**
  * Initialize void drone layer.
  * Returns cleanup function.
@@ -40,7 +43,7 @@ export function initVoidDrone(engine: AudioEngine): () => void {
   droneNoise = new Tone.Noise("pink");
   droneNoise.volume.value = -30;
   droneNoise.connect(droneFilter);
-  droneNoise.start();
+  // Don't start yet - wait for audio context to be running
 
   // Two detuned sine oscillators for pad
   droneOsc1 = new Tone.Oscillator({
@@ -48,14 +51,14 @@ export function initVoidDrone(engine: AudioEngine): () => void {
     frequency: 80,
     volume: -20,
   }).connect(droneGain);
-  droneOsc1.start();
+  // Don't start yet
 
   droneOsc2 = new Tone.Oscillator({
     type: "sine",
     frequency: 120.5, // Slightly detuned
     volume: -24,
   }).connect(droneGain);
-  droneOsc2.start();
+  // Don't start yet
 
   // Slow LFO for subtle filter modulation
   droneLFO = new Tone.LFO({
@@ -65,7 +68,9 @@ export function initVoidDrone(engine: AudioEngine): () => void {
     max: 500,
   });
   droneLFO.connect(droneFilter.frequency);
-  droneLFO.start();
+  // Don't start yet
+
+  droneStarted = false;
 
   return (): void => {
     droneNoise?.stop();
@@ -86,7 +91,23 @@ export function initVoidDrone(engine: AudioEngine): () => void {
     droneFilter = null;
     droneGain = null;
     droneLFO = null;
+    droneStarted = false;
   };
+}
+
+/**
+ * Start the drone oscillators (called once after audio context starts).
+ */
+function startDrone(): void {
+  if (droneStarted) return;
+  if (!droneNoise || !droneOsc1 || !droneOsc2 || !droneLFO) return;
+
+  droneNoise.start();
+  droneOsc1.start();
+  droneOsc2.start();
+  droneLFO.start();
+  droneStarted = true;
+  console.log("[Audio] Void drone started");
 }
 
 /**
@@ -98,6 +119,11 @@ export function initVoidDrone(engine: AudioEngine): () => void {
  */
 export function updateVoidDrone(state: AudioState, zoomLevel: number): void {
   if (!droneGain) return;
+
+  // Start the drone when audio context is running for the first time
+  if (state.started && !droneStarted) {
+    startDrone();
+  }
 
   // Calculate target volume based on zoom
   // Zoomed out (low zoom) = more void = louder drone
