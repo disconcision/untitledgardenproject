@@ -970,4 +970,79 @@ For MVP, synthesize all sounds. Samples can be added later for richer texture.
 
 ---
 
+## 26. Performance Considerations
+
+The garden is designed to scale gracefully. This section documents current characteristics and future optimization strategies.
+
+### Current Architecture
+
+**Rendering**: All entities render as SVG elements via React. Distant clusters are blurred/dimmed but still in DOM.
+
+**Simulation**: Two tick rates:
+- **Fast tick (50ms/20fps)**: Particle movement, force field sampling
+- **Slow tick (1s)**: Plant growth, particle lifecycle, spawning
+
+**Entity processing**: All entities are simulated regardless of camera position. No culling or sleep yet.
+
+### Entity Count Projections
+
+| Scenario | Constellations | Clusters | Islands | Plant Nodes | Particles | Total |
+|----------|----------------|----------|---------|-------------|-----------|-------|
+| Current (3 const) | 3 | ~10-12 | ~30-40 | ~300-500 | ~40 | ~400-600 |
+| Moderate (5 const) | 5 | ~20 | ~60 | ~600 | ~40 | ~700-900 |
+| Stress test | 10 | ~40 | ~160 | ~1400 | ~40 | ~1600+ |
+
+### Performance Limits
+
+| System | Comfortable | Warning | Critical |
+|--------|-------------|---------|----------|
+| SVG DOM nodes | <1000 | 1000-3000 | >5000 |
+| Entities per tick | <500 | 500-1000 | >2000 |
+| Force field samples/tick | <100 | 100-500 | >1000 |
+
+### Current Mitigations
+
+- **Particle caps**: Seeds capped at 20, fireflies at 20
+- **Force field on-demand**: Sampled at particle positions only, no grid
+- **React memo**: All render components use `memo()` for efficient reconciliation
+- **FPS monitoring**: Debug panel shows real-time FPS for performance awareness
+
+### Optimization Tiers
+
+**Tier 1: Easy wins (implement when needed)**
+- **Frustum culling**: Skip rendering entities outside camera viewport
+- **LOD for distant clusters**: Simplified shapes, fewer details
+- **Spatial partitioning**: Grid or quadtree for O(1) proximity queries
+
+**Tier 2: Medium effort**
+- **Sleep off-screen**: Reduce tick rate for entities far from camera
+- **Force field caching**: Pre-compute grid, update only when pathways change
+- **Batch DOM updates**: Group SVG attribute changes
+
+**Tier 3: Architectural changes**
+- **Canvas for particles**: Much faster than SVG for 1000+ moving elements
+- **WebGL for atmosphere**: GPU-rendered background layers
+- **Web Workers**: Offload simulation from main thread
+- **Virtual scrolling**: Only mount visible entities in React tree
+
+### Force Field Performance
+
+The force field system is designed for efficiency:
+
+- **On-demand sampling**: Forces computed at particle positions, not on a grid
+- **Early exit**: Skip pathways beyond `maxDistance` threshold
+- **Per-tick cost**: O(particles × pathways) — currently ~40 × ~15 = ~600 samples/tick
+- **Future**: Could cache nearest pathway per particle, update infrequently
+
+### Monitoring
+
+The debug panel displays:
+- **FPS**: Rolling 60-frame average
+- **Entity count**: Total entities in world
+- **Constellation/cluster count**: Hierarchy size
+
+Use these metrics to identify performance regressions before they become problems.
+
+---
+
 _This document is the shared whiteboard. Agents read it, act on it, update it. Humans steer via feedback. The garden grows._
