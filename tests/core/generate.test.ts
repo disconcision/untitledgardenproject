@@ -42,17 +42,19 @@ describe("generateWorld", () => {
     expect(summary.nodeCount).toBeGreaterThan(0);
   });
 
-  it("creates 3-5 clusters with multiple islands", () => {
+  it("creates 3 constellations with 10-12 clusters and multiple islands", () => {
     // Test across several seeds
     for (let seed = 1; seed <= 20; seed++) {
       const world = generateWorld(seed);
       const summary = summarizeWorld(world);
-      // 3-5 clusters, each with 2-6 islands
-      expect(summary.clusterCount).toBeGreaterThanOrEqual(3);
-      expect(summary.clusterCount).toBeLessThanOrEqual(5);
-      // Total islands: min 3 clusters * 2 islands = 6, max 5 clusters * 6 islands = 30
-      expect(summary.islandCount).toBeGreaterThanOrEqual(6);
-      expect(summary.islandCount).toBeLessThanOrEqual(30);
+      // 3 constellations
+      expect(summary.constellationCount).toBe(3);
+      // 10-12 clusters (3 constellations × 3-4 clusters each)
+      expect(summary.clusterCount).toBeGreaterThanOrEqual(10);
+      expect(summary.clusterCount).toBeLessThanOrEqual(12);
+      // Total islands: min 10 clusters * 2 islands = 20, max 12 clusters * 6 islands = 72
+      expect(summary.islandCount).toBeGreaterThanOrEqual(20);
+      expect(summary.islandCount).toBeLessThanOrEqual(72);
     }
   });
 });

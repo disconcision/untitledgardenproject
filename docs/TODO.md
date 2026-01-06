@@ -227,32 +227,40 @@ _Dependency: Multi-Cluster Focus | Parallelizable: Partially_
 - [x] **Hover interaction**: Pathways highlight when hovered
 - [x] **Zoom-responsive visibility**: More visible when zoomed out
 
-**Future / Exploratory:**
-- [ ] **Constellation groupings**: Constellations as higher-order construct
-  - One constellation = 1 to ~12+ clusters connected by pathways
-  - Multiple constellations possible in the world
-  - Clusters within a constellation are more connected than between constellations
-- [ ] **Pathway force effects**: The thin lines have a pulling force
+**Phase 2: ✅ COMPLETE (Jan 2026)**
+- [x] **Constellation groupings**: Constellations as higher-order construct
+  - 3 constellations with 3-4 clusters each (~10-12 total)
+  - Inter-constellation distance ~3500-5000 units (order of magnitude larger than inter-cluster)
+  - Explicit `Constellation` type in data model
+- [x] **Pathway force effects**: Force field system pulling particles along pathways
   - Seeds/fireflies near pathways get pulled along
-  - Forms "tunnels" or travel corridors between clusters
-  - Force strength may vary by pathway
-- [ ] **Pathway directionality**: Whether pathways are unidirectional or bidirectional
-  - TBD based on what feels right
-  - Could be some of each — major vs minor pathways
-  - Visual indication if directional (arrow, gradient, flow animation)
+  - Composable `ForceField` type in `src/core/forces/`
+  - Force strength falls off with distance from pathway
+- [x] **Pathway directionality**: Pathways have direction property
+  - "forward" / "backward" / "bidirectional" options
+  - Direction affects force field flow
+  - Randomly assigned during generation
+
+**Future / Exploratory:**
+- [ ] **Pathway direction visual indicator**: Animated flow, subtle arrow, or gradient
+  - Show direction on hover or always faintly visible
+- [ ] **Force field debug visualization**: Toggle to show force vectors on grid
+  - Debug panel checkbox for `showForceField`
+  - Render sample vectors across visible area
+- [ ] **Constellation focus/selection**: Switch which constellation is focused
+  - Click distant constellation glyph to refocus camera
+  - Smooth transition between constellations
 
 ### 🌱 Panspermia & Seed Lifecycle
 _Dependency: Pathways for inter-cluster travel | Parallelizable: Partially_
 
-**BUGS:**
-- [ ] **BUG: Seeds not taking root**: Seeds used to take root and become plants, but this seems broken
-  - Investigate particle lifecycle in `simulation/particles.ts`
-  - Seeds should land on islands/rocks and eventually sprout into new plants
+**BUGS: ✅ FIXED**
+- [x] **BUG: Seeds not taking root**: Fixed landing probability (0.0002 → 0.02) and rooting delay (500 → 50 ticks)
 
 **MVP:**
-- [ ] **Inter-cluster seed travel**: Seeds can travel between clusters via pathway forces
-  - When seeds drift near a pathway line, they get pulled along
-  - Seeds arrive at new clusters and can root there
+- [x] **Inter-cluster seed travel**: Seeds can travel between clusters via pathway forces
+  - Pathway force field pulls seeds along pathway direction
+  - Seeds drift between clusters following pathway "tunnels"
 - [ ] **Seed rooting on arrival**: Seeds that travel to a new cluster can take root on islands there
   - Creates new plants in previously empty clusters
   - Life spreads from central cluster outward
@@ -279,17 +287,21 @@ _Dependency: Pathways for inter-cluster travel | Parallelizable: Partially_
 ### ⚡ Unified Force & Physics Model
 _Dependency: Orbital Dynamics, Constellations | Parallelizable: No (integrative work)_
 
-**Conceptual Vision (to be fleshed out in future sessions):**
-- [ ] **Force model architecture**: Different entities/nodes affected by different forces
-  - Define which forces affect which entity types
-  - Create composable force system
+**MVP: ✅ COMPLETE (Jan 2026)**
+- [x] **Force model architecture**: Composable `ForceField` type system
+  - `ForceField = (pos: Vec2, world: World) => Vec2`
+  - `combineForces()` to sum multiple force fields
+  - Forces sampled on-demand at particle positions
+- [x] **Pathway pulling force**: Particles near pathway lines get pulled along
+  - Direction-aware: follows pathway `direction` property
+  - Quadratic falloff with distance from line
+  - Seeds strongly affected, fireflies weakly affected
+
+**Future / Exploratory:**
 - [ ] **Static vs dynamic positioning**: Forces affect entities differently based on type
   - Plants: mostly static, positioned under glyph gravitation
   - Particles (seeds, fireflies): dynamic movement, affected by multiple forces
   - Islands: slow orbital movement around glyphs
-- [ ] **Pathway pulling force**: Particles near pathway lines get pulled along
-  - Creates directed movement between clusters
-  - Force may be stronger at pathway center, weaker at edges
 - [ ] **Glyph gravitation**: Glyphs exert gravitational pull on nearby entities
   - Islands orbit at their natural inclinations
   - Particles may orbit briefly or get captured
@@ -297,9 +309,9 @@ _Dependency: Orbital Dynamics, Constellations | Parallelizable: No (integrative 
   - Tune parameters for visual appeal
   - Rich parameter space to explore
   - Prioritize integrated, consistent feel over strict mechanics
-- [ ] **Force visualization (optional)**: Subtle visual indicators of force fields
-  - Could help user understand dynamics
-  - Should not clutter the aesthetic
+- [ ] **Force visualization (debug)**: Debug toggle to show force field vectors
+  - Grid of sample vectors when `debug.showForceField` is true
+  - Helps tune parameters and understand dynamics
 
 ### ✂️ Cut/Graft Mechanic Redesign
 _Dependency: None | Parallelizable: Yes_
@@ -346,6 +358,19 @@ _Low priority, pick when inspired_
 ## Completed
 
 ### 2026-01-06
+
+- [x] Constellations Phase 2 + Force Field System:
+  - Multi-constellation architecture: 3 constellations with 3-4 clusters each
+  - Explicit `Constellation` type in data model with proper spacing
+  - Inter-constellation distance ~3500-5000 units (order of magnitude > inter-cluster)
+  - Pathway directionality: forward/backward/bidirectional property
+  - Force field module (`src/core/forces/`) with composable ForceField type
+  - Pathway force pulls particles along pathway direction with quadratic falloff
+  - Seeds/fireflies affected by force field (seeds stronger, fireflies weaker)
+  - Fixed seed landing bug: probability 0.0002 → 0.02, rooting delay 500 → 50 ticks
+  - FPS counter in debug panel for performance monitoring
+  - Removed freezeTime (consolidated with dayCycle.running)
+  - Performance documentation section in SOURCE.md
 
 - [x] Constellation Pathways MVP:
   - Inter-cluster pathway lines connecting cluster glyphs in constellation patterns
