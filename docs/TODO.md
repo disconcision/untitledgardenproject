@@ -62,7 +62,7 @@ _Workstream: Audio | Dependency: None | Parallelizable: Yes_
 
 - [ ] **Audio engine scaffold**: Create `src/audio/` structure, install Tone.js + Howler.js, AudioEngine class with context lifecycle
 - [ ] **User gesture activation**: Start audio on first interaction (click/pan), add speaker toggle icon to HUD
-- [ ] **Action sounds (synthesized)**: Discrete sounds for sprout, prune, branch, trim — hook into existing AudioEvent system
+- [ ] **Action sounds (synthesized)**: Discrete sounds for sprout, branch, cut — hook into existing AudioEvent system
 - [ ] **Void drone**: Basic airy ambient pad using Tone.js oscillators/filters, always playing at low volume
 
 ### ✨ Visual Polish (M2 Completion)
@@ -379,6 +379,21 @@ _Low priority, pick when inspired_
     - Tree → World: clicking tree item focuses camera (already worked)
     - World → Tree: selecting entity auto-expands tree to reveal it
   - Centralized expanded state management for tree nodes
+
+### 2026-01-06 (Session 2: Codebase Review & Cleanup)
+
+- [x] Code cleanup and lint fixes:
+  - Removed unused `prune` and `trim` message types from update.ts (replaced by pie menu actions)
+  - Fixed lint warnings in useCamera.ts, Canvas.tsx, ForceFieldOverlay.tsx (return types, deps)
+  - Deleted stale branch `feat/quick-wins-batch`
+  - Removed `docs/sessions/` folder (plans now go to `.cursor/plans/`)
+- [x] Code organization refactors:
+  - Split `particles.ts` into `seeds.ts` and `fireflies.ts` for better maintainability
+  - Extracted `InspectorTreeNodes.tsx` from `WorldInspector.tsx` (tree node components)
+- [x] Test coverage improvements:
+  - Added 7 tests for force field system (`tests/core/forces.test.ts`)
+  - Added 8 tests for seed rooting probability (`tests/core/seeds.test.ts`)
+  - Total tests: 47 → 62
 
 ### 2026-01-06
 
