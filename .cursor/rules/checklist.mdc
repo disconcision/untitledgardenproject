@@ -17,9 +17,9 @@ See docs/README.md for more basic workflow context.
 - [ ] Branch merged to main when complete
 - [ ] Feature branch deleted
 
-## Docs
+## Docs ⚠️
 
-- [ ] docs/TODO.md updated (claimed → complete)
+- [ ] **docs/TODO.md updated** (claim task → mark complete when done)
 - [ ] SOURCE.md updated if architectural change
 
 ## Tutorial ⚠️

@@ -62,6 +62,10 @@ _(none currently)_
 - [x] **Cut attaches to cursor**: Subtree follows cursor, rendered ghostly
 - [x] **Release in void**: Clicking empty space releases subtree, pieces drift and fade
 - [x] **Graft to existing stem**: Clicking another stem grafts subtree with smart angle
+- [x] **Bug fix: Graft positioning**: Added offset so grafted subtree doesn't overlap target node
+- [x] **Bug fix: Graft click detection**: Use `closest()` for `data-entity-id` (SVG child elements)
+- [x] **Tutorial updated**: Added cut/graft/release steps with `isNew: true`
+- [x] **Regression tests**: Added tests for `cutSubtree` and `graftSubtree`
 
 ---
 
