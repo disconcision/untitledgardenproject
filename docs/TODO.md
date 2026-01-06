@@ -250,7 +250,7 @@ _Dependency: Multi-Cluster Focus | Parallelizable: Partially_
 **Future / Exploratory:**
 - [ ] **Pathway direction visual indicator**: Animated flow, subtle arrow, or gradient
   - Show direction on hover or always faintly visible
-- [ ] **Force field debug visualization**: Toggle to show force vectors on grid
+- [x] **Force field debug visualization**: Toggle to show force vectors on grid
   - Debug panel checkbox for `showForceField`
   - Render sample vectors across visible area
 - [ ] **Constellation focus/selection**: Switch which constellation is focused
@@ -267,7 +267,7 @@ _Dependency: Pathways for inter-cluster travel | Parallelizable: Partially_
 - [x] **Inter-cluster seed travel**: Seeds can travel between clusters via pathway forces
   - Pathway force field pulls seeds along pathway direction
   - Seeds drift between clusters following pathway "tunnels"
-- [ ] **Seed rooting on arrival**: Seeds that travel to a new cluster can take root on islands there
+- [x] **Seed rooting on arrival**: Seeds that travel to a new cluster can take root on islands there
   - Creates new plants in previously empty clusters
   - Life spreads from central cluster outward
 
@@ -276,9 +276,9 @@ _Dependency: Pathways for inter-cluster travel | Parallelizable: Partially_
   - Initial state: only central cluster has plants
   - Over time, seeds travel and colonize other clusters
   - Creates emergent "spread of life" across the constellation
-- [ ] **Overcrowding prevention**: Mechanisms to prevent islands from being completely covered in plants
+- [x] **Overcrowding prevention**: Mechanisms to prevent islands from being completely covered in plants
   - Minimum distance from existing plant roots for new seeds to take hold
-  - Some randomness allowed — some areas can be overgrown, that's cool
+  - Proximity-based rooting probability in `SEED_ROOTING_CONFIG`
   - Goal: sparse/volcanic aesthetic, not everything covered
 - [ ] **Nutrient/fertility model**: Islands have varying fertility levels
   - Some islands more fertile → denser plant growth
@@ -315,9 +315,8 @@ _Dependency: Orbital Dynamics, Constellations | Parallelizable: No (integrative 
   - Tune parameters for visual appeal
   - Rich parameter space to explore
   - Prioritize integrated, consistent feel over strict mechanics
-- [ ] **Force visualization (debug)**: Debug toggle to show force field vectors
-  - Grid of sample vectors when `debug.showForceField` is true
-  - Helps tune parameters and understand dynamics
+- [x] **Force visualization (debug)**: Debug toggle to show force field vectors
+  - (Consolidated with "Force field debug visualization" above — same feature)
 
 ### ✂️ Cut/Graft Mechanic Redesign
 _Dependency: None | Parallelizable: Yes_
