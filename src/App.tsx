@@ -23,10 +23,14 @@ const SIM_TICK_MS = 1000;
 const DAY_CYCLE_TICK_MS = 100; // Update colors every 100ms for smooth transitions
 const PARTICLE_TICK_MS = 50; // Smooth particle movement at 20fps
 const DRIFT_TICK_MS = 50; // Drifting pieces animation at 20fps
+const FPS_SAMPLE_SIZE = 60; // Rolling average over 60 frames
+const FPS_UPDATE_MS = 500; // Update FPS display every 500ms
 
 export default function App(): JSX.Element {
   const [world, setWorld] = useState<World>(() => generateWorld(INITIAL_SEED));
   const containerRef = useRef<HTMLDivElement>(null);
+  const frameTimesRef = useRef<number[]>([]);
+  const lastFrameTimeRef = useRef<number>(performance.now());
 
   const dispatch = useCallback((msg: Msg): void => {
     setWorld((w: World): World => update(msg, w));
@@ -39,9 +43,8 @@ export default function App(): JSX.Element {
   const camera = useCamera({ dispatch, containerRef, carriedSubtree: world.carriedSubtree });
 
   // Unified simulation control:
-  // - dayCycle.running is the master "simulation running" toggle
-  // - debug.freezeTime freezes everything (for debugging)
-  const simulationRunning = world.dayCycle.running && !world.debug.freezeTime;
+  // - dayCycle.running is the master "simulation running" toggle (controlled via TimeConfig)
+  const simulationRunning = world.dayCycle.running;
 
   // Simulation tick - slow rate for game logic (plant growth)
   useEffect(() => {
@@ -86,6 +89,39 @@ export default function App(): JSX.Element {
 
     return () => clearInterval(interval);
   }, [dispatch, world.driftingPieces.length]);
+
+  // FPS measurement using requestAnimationFrame
+  useEffect(() => {
+    let animationId: number;
+    let lastFpsUpdate = performance.now();
+
+    const measureFrame = (): void => {
+      const now = performance.now();
+      const frameDuration = now - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = now;
+
+      // Add to rolling buffer
+      frameTimesRef.current.push(frameDuration);
+      if (frameTimesRef.current.length > FPS_SAMPLE_SIZE) {
+        frameTimesRef.current.shift();
+      }
+
+      // Update FPS display periodically
+      if (now - lastFpsUpdate >= FPS_UPDATE_MS) {
+        lastFpsUpdate = now;
+        const avgFrameTime =
+          frameTimesRef.current.reduce((a: number, b: number): number => a + b, 0) /
+          frameTimesRef.current.length;
+        const fps = avgFrameTime > 0 ? Math.round(1000 / avgFrameTime) : 60;
+        dispatch({ type: "fps/update", fps });
+      }
+
+      animationId = requestAnimationFrame(measureFrame);
+    };
+
+    animationId = requestAnimationFrame(measureFrame);
+    return () => cancelAnimationFrame(animationId);
+  }, [dispatch]);
 
   // Track cursor position in world coordinates
   const handleCursorMove = useCallback(

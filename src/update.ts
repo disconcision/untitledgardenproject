@@ -61,8 +61,11 @@ export type Msg =
   // Debug
   | { type: "debug/toggleIds" }
   | { type: "debug/toggleHitTargets" }
-  | { type: "debug/toggleFreeze" }
+  | { type: "debug/toggleForceField" }
   | { type: "debug/regenerate"; seed: number }
+
+  // Performance
+  | { type: "fps/update"; fps: number }
 
   // Panels
   | { type: "panel/openInspector" }
@@ -209,14 +212,18 @@ export function update(msg: Msg, world: World): World {
         debug: { ...world.debug, showHitTargets: !world.debug.showHitTargets },
       };
 
-    case "debug/toggleFreeze":
+    case "debug/toggleForceField":
       return {
         ...world,
-        debug: { ...world.debug, freezeTime: !world.debug.freezeTime },
+        debug: { ...world.debug, showForceField: !world.debug.showForceField },
       };
 
     case "debug/regenerate":
       return world;
+
+    // === Performance ===
+    case "fps/update":
+      return { ...world, fps: msg.fps };
 
     // === Panels ===
     case "panel/openInspector":

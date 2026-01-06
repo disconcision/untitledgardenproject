@@ -14,11 +14,21 @@ export type Vec2 = {
   y: number;
 };
 
+// === Constellation ===
+// A constellation is a higher-order grouping of clusters
+
+export type Constellation = {
+  id: Id;
+  pos: Vec2; // World position of constellation center
+  // Future: personality, theme, etc.
+};
+
 // === Cluster ===
 // A cluster is a grouping of islands/rocks/plants with a central glyph
 
 export type Cluster = {
   id: Id;
+  constellationId: Id; // Which constellation this belongs to
   pos: Vec2; // World position of cluster center
   glyphKind: "seed" | "node" | "sigil"; // Visual representation
   // Optional: rotation for slow orbital drift
@@ -117,11 +127,16 @@ export type Vine = {
 // === Pathways ===
 // Inter-cluster connections that form constellation patterns
 
+export type PathwayDirection = "forward" | "backward" | "bidirectional";
+// forward = force flows from → to
+// backward = force flows to → from
+// bidirectional = force pulls toward line center only
+
 export type Pathway = {
   id: Id;
   fromClusterId: Id;
   toClusterId: Id;
-  // Future: strength, directionality, force effects
+  direction: PathwayDirection;
 };
 
 export type Entity = Island | Rock | PlantNode | Vine | Particle;
@@ -208,6 +223,7 @@ export type PanelId = "tutorial" | "debug" | "inspector" | "time";
 // === World State ===
 
 export type World = {
+  constellations: Map<Id, Constellation>;
   clusters: Map<Id, Cluster>;
   pathways: Map<Id, Pathway>;
   entities: Map<Id, Entity>;
@@ -229,7 +245,7 @@ export type World = {
   debug: {
     showIds: boolean;
     showHitTargets: boolean;
-    freezeTime: boolean;
+    showForceField: boolean;
   };
   // Track which panel is on top (last focused)
   focusedPanel: PanelId | null;
@@ -238,6 +254,8 @@ export type World = {
   carriedSubtree: CarriedSubtree | null;
   cursorWorldPos: Vec2;
   driftingPieces: DriftingPiece[];
+  // Performance monitoring
+  fps: number;
 };
 
 // === Vector Helpers ===
@@ -283,6 +301,7 @@ export function resetIdCounter(value: number = 0): void {
 
 export function createInitialWorld(seed: number): World {
   return {
+    constellations: new Map(),
     clusters: new Map(),
     pathways: new Map(),
     entities: new Map(),
@@ -408,7 +427,7 @@ export function createInitialWorld(seed: number): World {
     debug: {
       showIds: false,
       showHitTargets: false,
-      freezeTime: false,
+      showForceField: false,
     },
     focusedPanel: null,
     seed,
@@ -416,6 +435,8 @@ export function createInitialWorld(seed: number): World {
     carriedSubtree: null,
     cursorWorldPos: vec2(0, 0),
     driftingPieces: [],
+    // Performance monitoring
+    fps: 60,
   };
 }
 
@@ -423,6 +444,7 @@ export function createInitialWorld(seed: number): World {
 
 export function summarizeWorld(world: World): {
   seed: number;
+  constellationCount: number;
   clusterCount: number;
   pathwayCount: number;
   entityCount: number;
@@ -456,6 +478,7 @@ export function summarizeWorld(world: World): {
 
   return {
     seed: world.seed,
+    constellationCount: world.constellations.size,
     clusterCount: world.clusters.size,
     pathwayCount: world.pathways.size,
     entityCount: world.entities.size,

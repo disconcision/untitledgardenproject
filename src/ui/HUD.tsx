@@ -215,10 +215,10 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
             <label className="hud-toggle">
               <input
                 type="checkbox"
-                checked={debug.freezeTime}
-                onChange={() => dispatch({ type: "debug/toggleFreeze" })}
+                checked={debug.showForceField}
+                onChange={() => dispatch({ type: "debug/toggleForceField" })}
               />
-              Freeze
+              Force field
             </label>
 
             <div className="hud-row">
@@ -239,8 +239,12 @@ export const HUD = memo(function HUD({ world, dispatch, onRegenerate }: HUDProps
             </button>
 
             <div className="hud-stats">
+              <div>{world.fps} FPS</div>
               <div>{camera.zoom.toFixed(2)}×</div>
               <div>{world.entities.size} entities</div>
+              <div>
+                {world.constellations.size} const / {world.clusters.size} clust
+              </div>
             </div>
           </div>
         </div>
