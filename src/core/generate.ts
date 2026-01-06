@@ -67,8 +67,12 @@ function generateConstellation(
   // First constellation at center, others positioned far away
   // Inter-constellation distance: 3000-5000 units (order of magnitude larger than inter-cluster)
   const spreadRadius = index === 0 ? 0 : 3500 + rng() * 1500;
-  const angle =
-    index === 0 ? 0 : ((index - 1) / (totalConstellations - 1)) * Math.PI * 2 + (rng() - 0.5) * 0.4;
+
+  // Spread constellations evenly around the center with randomness
+  // Use index directly (not index-1) and divide by total non-center constellations
+  const baseAngle = index === 0 ? 0 : (index / totalConstellations) * Math.PI * 2;
+  // Add significant randomness to avoid perfectly regular placement
+  const angle = baseAngle + (rng() - 0.5) * 1.2;
   const distance = spreadRadius;
 
   return {
@@ -86,10 +90,10 @@ function generateCluster(
   index: number,
   totalClusters: number
 ): Cluster {
-  // Inter-cluster distance within constellation: 400-600 units
-  const spreadRadius = index === 0 ? 0 : 400 + rng() * 200;
-  const angle = index === 0 ? 0 : (index / totalClusters) * Math.PI * 2 + (rng() - 0.5) * 0.4;
-  const distance = spreadRadius * (0.8 + rng() * 0.4);
+  // Inter-cluster distance within constellation: 600-900 units
+  const spreadRadius = index === 0 ? 0 : 600 + rng() * 300;
+  const angle = index === 0 ? 0 : (index / totalClusters) * Math.PI * 2 + (rng() - 0.5) * 0.5;
+  const distance = spreadRadius * (0.85 + rng() * 0.3);
 
   const glyphKinds: Array<"seed" | "node" | "sigil"> = ["seed", "node", "sigil"];
 
@@ -542,16 +546,29 @@ export function generateWorld(seed: number): World {
   for (const cluster of clusters) {
     // First cluster of first constellation gets more islands
     const isMainCluster = cluster === clusters[0];
-    const islandCount = isMainCluster
-      ? 4 + Math.floor(rng() * 3) // 4-6 islands for main
-      : 2 + Math.floor(rng() * 2); // 2-3 islands for others
+
+    // Island count distribution: 3-7, with 4-5 being most common
+    // Main cluster: 5-7 islands
+    // Other clusters: weighted toward 4-5 (3 rare, 6-7 rare)
+    let islandCount: number;
+    if (isMainCluster) {
+      islandCount = 5 + Math.floor(rng() * 3); // 5-7 islands for main
+    } else {
+      // Weighted distribution: 3(10%), 4(35%), 5(35%), 6(15%), 7(5%)
+      const roll = rng();
+      if (roll < 0.1) islandCount = 3;
+      else if (roll < 0.45) islandCount = 4;
+      else if (roll < 0.8) islandCount = 5;
+      else if (roll < 0.95) islandCount = 6;
+      else islandCount = 7;
+    }
 
     for (let i = 0; i < islandCount; i++) {
       const island = generateIsland(rng, cluster.id, i, islandCount);
       world.entities.set(island.id, island);
 
-      // Main cluster gets more rocks, distant ones fewer
-      const rockCount = isMainCluster ? 1 + Math.floor(rng() * 2) : 1;
+      // More islands = more rocks, but still reasonable (1-2 per island)
+      const rockCount = 1 + (rng() < 0.4 ? 1 : 0);
 
       for (let j = 0; j < rockCount; j++) {
         const rock = generateRockFormation(rng, island, j, rockCount);

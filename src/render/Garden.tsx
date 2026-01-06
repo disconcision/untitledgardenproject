@@ -27,6 +27,7 @@ import { RockRenderer } from "./Rock";
 import { PlantRenderer } from "./Plant";
 import { ParticleRenderer } from "./Particle";
 import { PathwayLayer } from "./Pathway";
+import { ForceFieldOverlay } from "./ForceFieldOverlay";
 import "./Garden.css";
 
 // === Helpers ===
@@ -170,6 +171,9 @@ export const Garden = memo(function Garden({ world, dispatch }: GardenProps): JS
           hoveredPathwayId={world.hoveredPathway}
           dispatch={dispatch}
         />
+
+        {/* Force field debug visualization */}
+        {debug.showForceField && <ForceFieldOverlay world={world} camera={camera} />}
 
         {/* Render clusters from far to near (painters algorithm) */}
         {clusterData.map(
