@@ -179,6 +179,38 @@
   animation-delay: 2s;
 }
 
+/* === Pathway Direction Indicator === */
+
+/* Flow animation: dashes move along the line */
+@keyframes pathway-flow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    /* Move by dash+gap length to create seamless loop */
+    stroke-dashoffset: -20;
+  }
+}
+
+/* Pulse animation for bidirectional pathways */
+@keyframes pathway-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    stroke-width: inherit;
+  }
+  50% {
+    opacity: 1;
+    stroke-width: calc(var(--stroke-width, 2px) * 1.3);
+  }
+}
+
+.pathway-direction {
+  /* Scale dashoffset value with line length via CSS calc */
+  /* The actual offset is computed in JS and applied via dashoffset */
+  pointer-events: none;
+}
+
 /* === Debug === */
 
 .debug-label {

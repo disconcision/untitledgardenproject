@@ -59,6 +59,28 @@ export type PathwayRendererProps = {
   dispatch: (msg: Msg) => void;
 };
 
+/**
+ * Compute the dash pattern for direction indicator.
+ * Returns [dashLength, gapLength] in world units.
+ */
+function computeDirectionDash(zoom: number): [number, number] {
+  // Scale dash to maintain consistent screen appearance
+  const invZoom = 1 / zoom;
+  return [8 * invZoom, 12 * invZoom];
+}
+
+/**
+ * Compute the animation duration based on pathway length.
+ * Longer pathways animate slower to maintain consistent perceived speed.
+ */
+function computeAnimationDuration(fromPos: Vec2, toPos: Vec2): number {
+  const dx = toPos.x - fromPos.x;
+  const dy = toPos.y - fromPos.y;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  // Base speed: ~100 world units per second
+  return Math.max(1, length / 100);
+}
+
 export const PathwayRenderer = memo(function PathwayRenderer({
   pathway,
   fromPos,
@@ -72,6 +94,27 @@ export const PathwayRenderer = memo(function PathwayRenderer({
 
   // Use a slightly thicker invisible stroke for easier hover detection
   const hitAreaWidth = Math.max(strokeWidth * 3, 8);
+
+  // Direction indicator settings
+  const [dashLength, gapLength] = computeDirectionDash(zoom);
+  const dashArray = `${dashLength} ${gapLength}`;
+  const animDuration = computeAnimationDuration(fromPos, toPos);
+
+  // Determine animation direction based on pathway direction
+  // "forward" = from → to, "backward" = to → from, "bidirectional" = pulse
+  const direction = pathway.direction;
+
+  // CSS animation for flowing dashes
+  const flowStyle: React.CSSProperties = {
+    pointerEvents: "none",
+    // Animation: offset decreases for forward flow, increases for backward
+    animation:
+      direction === "bidirectional"
+        ? `pathway-pulse ${animDuration * 2}s ease-in-out infinite`
+        : `pathway-flow ${animDuration}s linear infinite`,
+    // Reverse animation direction for backward flow
+    animationDirection: direction === "backward" ? "reverse" : "normal",
+  };
 
   return (
     <g className="pathway-group">
@@ -88,7 +131,7 @@ export const PathwayRenderer = memo(function PathwayRenderer({
         onPointerEnter={(): void => dispatch({ type: "pathway/hover", id: pathway.id })}
         onPointerLeave={(): void => dispatch({ type: "pathway/hover", id: null })}
       />
-      {/* Visible pathway line */}
+      {/* Base pathway line */}
       <line
         data-pathway-id={pathway.id}
         x1={fromPos.x}
@@ -102,6 +145,22 @@ export const PathwayRenderer = memo(function PathwayRenderer({
         opacity={opacity}
         style={{ pointerEvents: "none" }}
       />
+      {/* Direction indicator overlay (visible on hover) */}
+      {isHovered && (
+        <line
+          x1={fromPos.x}
+          y1={fromPos.y}
+          x2={toPos.x}
+          y2={toPos.y}
+          className="pathway-direction"
+          stroke="var(--color-pathway-stroke)"
+          strokeWidth={strokeWidth * 1.5}
+          strokeLinecap="round"
+          strokeDasharray={dashArray}
+          opacity={0.8}
+          style={flowStyle}
+        />
+      )}
     </g>
   );
 });

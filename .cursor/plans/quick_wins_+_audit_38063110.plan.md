@@ -12,12 +12,12 @@ todos:
       - todo-audit
   - id: camera-smooth
     content: Add smooth camera focus transitions with lerping
-    status: in_progress
+    status: completed
     dependencies:
       - pie-animation
   - id: pathway-direction
     content: Add experimental pathway direction indicator on hover
-    status: pending
+    status: in_progress
     dependencies:
       - camera-smooth
 ---
