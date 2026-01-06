@@ -306,6 +306,11 @@ export function graftSubtree(
   const newEntities = new Map(world.entities);
   const parentDepth = targetNode.depth ?? 0;
 
+  // Calculate graft offset - distance from target node to subtree root
+  // Similar to branchFromNode, but slightly shorter since we're attaching existing structure
+  const graftDistance = Math.max(8, 14 - parentDepth * 1.2);
+  const graftOffset = scaleVec2(vec2(Math.cos(graftAngle), Math.sin(graftAngle)), graftDistance);
+
   for (const node of subtree.nodes) {
     const newId = idMap.get(node.id)!;
 
@@ -322,8 +327,8 @@ export function graftSubtree(
       y: relativePos.x * sin + relativePos.y * cos,
     };
 
-    // Position relative to target node
-    const newLocalPos = addVec2(targetNode.localPos, rotatedRelativePos);
+    // Position relative to target node with graft offset
+    const newLocalPos = addVec2(addVec2(targetNode.localPos, graftOffset), rotatedRelativePos);
 
     const newNode: PlantNode = {
       ...node,
