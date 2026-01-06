@@ -68,13 +68,15 @@ _Workstream: Audio | Dependency: None | Parallelizable: Yes_
 ### ✨ Visual Polish (M2 Completion)
 _Workstream: Visual | Dependency: None | Parallelizable: Yes_
 
-- [ ] **Smooth camera focus transition**: Animate pan/zoom when focusing on entities (currently instant)
+- [x] **Smooth camera focus transition**: Animate pan/zoom when focusing on entities
   - Applies to: double-click focus, WorldInspector selection, pie menu "center view"
-  - Add debug/settings toggle to enable/disable smooth animation
+  - 300ms ease-out cubic easing via `CameraAnimation` state
 - [ ] **Sprout animation**: Animate new branch appearing (scale up, unfurl)
 - [ ] **Prune animation**: Animate subtree removal (fade/collapse before removing)
 - [ ] **Animation timing audit**: Standardize durations (150ms hovers, 300ms growth) per SOURCE.md spec
-- [ ] **Pie menu contract animation fix**: Close animation has flickering/flash instead of smooth inward motion — likely CSS animation conflict or timing issue
+- [x] **Pie menu contract animation fix**: Fixed close animation flicker
+  - Used `animation-fill-mode: both` to prevent flash during staggered delay
+  - Disabled hover/active effects during closing
 
 
 ### 🎨 Scene Depth & Atmosphere
@@ -248,8 +250,10 @@ _Dependency: Multi-Cluster Focus | Parallelizable: Partially_
   - Randomly assigned during generation
 
 **Future / Exploratory:**
-- [ ] **Pathway direction visual indicator**: Animated flow, subtle arrow, or gradient
-  - Show direction on hover or always faintly visible
+- [x] **Pathway direction visual indicator**: Flowing dashes on hover
+  - Forward/backward pathways show directional flow animation
+  - Bidirectional pathways pulse with brightness
+  - Hover effect uses brightness (not thickness) for ethereal feel
 - [x] **Force field debug visualization**: Toggle to show force vectors on grid
   - Debug panel checkbox for `showForceField`
   - Render sample vectors across visible area
