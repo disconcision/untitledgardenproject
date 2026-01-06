@@ -65,9 +65,15 @@ export function initActionSounds(engine: AudioEngine): () => void {
 
   // Subscribe to audio events
   const unsubscribe = onAudioEvent((event: AudioEvent): void => {
-    // Check if action sounds should play
-    if (currentAudioState && shouldPlayActionSounds(currentAudioState)) {
-      playActionSound(event);
+    // Wrap in try-catch at the top level to prevent any audio errors from crashing React
+    try {
+      // Check if action sounds should play
+      if (currentAudioState && shouldPlayActionSounds(currentAudioState)) {
+        playActionSound(event);
+      }
+    } catch (e) {
+      // Silently ignore audio errors - they shouldn't crash the app
+      console.debug("[Audio] Event handler error:", (e as Error).message);
     }
   });
 
@@ -89,6 +95,11 @@ export function initActionSounds(engine: AudioEngine): () => void {
 function playActionSound(event: AudioEvent): void {
   if (!actionSynth || !noiseSynth) return;
 
+  // Don't try to play if the audio context isn't running
+  if (Tone.context.state !== "running") {
+    return;
+  }
+
   // Debounce: don't play same sound type too rapidly
   const nowMs = performance.now();
   const lastTrigger = lastTriggerByType.get(event.type) ?? 0;
@@ -99,7 +110,7 @@ function playActionSound(event: AudioEvent): void {
 
   // Use monotonically increasing time for scheduling to avoid Tone.js timing errors
   const currentTime = Tone.now();
-  const now = Math.max(currentTime + 0.01, lastSynthTime + MIN_TIME_OFFSET);
+  const now = Math.max(currentTime + 0.05, lastSynthTime + MIN_TIME_OFFSET);
   lastSynthTime = now;
 
   try {
