@@ -22,10 +22,16 @@ See docs/README.md for more basic workflow context.
 - [ ] docs/TODO.md updated (claimed → complete)
 - [ ] SOURCE.md updated if architectural change
 
-## Tutorial
+## Tutorial ⚠️
 
-- [ ] If user-facing change: Added/updated tutorial step
+- [ ] **If user-facing change: Added/updated tutorial step** (in `createInitialWorld()`)
 - [ ] New steps marked `isNew: true`
+- [ ] Added `completeTutorialStep()` calls in `update.ts` handlers
+
+## Tests
+
+- [ ] For new actions/logic: Consider adding regression tests
+- [ ] Run tests before finishing (`npm test`)
 
 ## Quality
 
