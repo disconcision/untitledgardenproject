@@ -1,5 +1,9 @@
 # Hanging Garden — Documentation
 
+> **Humans: Start here.** This is your entry point.
+
+PLAY HERE: https://andrewblinn.com/untitledgardenproject/
+
 > **Agents: Start here.** A checklist is auto-loaded from `.cursor/rules/checklist.mdc`.
 
 ---
