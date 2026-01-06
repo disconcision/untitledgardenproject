@@ -34,15 +34,11 @@ See docs/README.md for more basic workflow context.
 - [ ] New steps marked `isNew: true`
 - [ ] Added `completeTutorialStep()` calls in `update.ts` handlers
 
-## Tests
-
-- [ ] For new actions/logic: Consider adding regression tests
-- [ ] Run tests before finishing (`npm test`)
-
 ## Quality
 
 - [ ] Tested in browser (use browser tools)
 - [ ] No lint errors (run `read_lints`)
+- [ ] Run full check before merge: `npm run check` (types, lint, format, tests)
 
 ---
 
