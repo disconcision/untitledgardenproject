@@ -40,12 +40,13 @@ function computePathwayOpacity(zoom: number, isHovered: boolean): number {
 }
 
 /**
- * Compute stroke width based on zoom and hover.
+ * Compute stroke width based on zoom.
  * Always thin (~1px on screen) - pathways are conceptual, not physical.
+ * Hover effect uses brightness, not thickness.
  */
-function computeStrokeWidth(zoom: number, isHovered: boolean): number {
+function computeStrokeWidth(zoom: number): number {
   // Always thin, scale by 1/zoom to maintain consistent screen appearance
-  const targetScreenWidth = isHovered ? 1.5 : 1;
+  const targetScreenWidth = 1;
   const invZoom = 1 / zoom;
   return targetScreenWidth * invZoom;
 }
@@ -90,7 +91,7 @@ export const PathwayRenderer = memo(function PathwayRenderer({
   dispatch,
 }: PathwayRendererProps): JSX.Element {
   const opacity = computePathwayOpacity(zoom, isHovered);
-  const strokeWidth = computeStrokeWidth(zoom, isHovered);
+  const strokeWidth = computeStrokeWidth(zoom);
 
   // Use a slightly thicker invisible stroke for easier hover detection
   const hitAreaWidth = Math.max(strokeWidth * 3, 8);
@@ -145,7 +146,7 @@ export const PathwayRenderer = memo(function PathwayRenderer({
         opacity={opacity}
         style={{ pointerEvents: "none" }}
       />
-      {/* Direction indicator overlay (visible on hover) */}
+      {/* Direction indicator overlay (visible on hover) - thin flowing dashes */}
       {isHovered && (
         <line
           x1={fromPos.x}
@@ -154,10 +155,10 @@ export const PathwayRenderer = memo(function PathwayRenderer({
           y2={toPos.y}
           className="pathway-direction"
           stroke="var(--color-pathway-stroke)"
-          strokeWidth={strokeWidth * 1.5}
+          strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={dashArray}
-          opacity={0.8}
+          opacity={0.9}
           style={flowStyle}
         />
       )}
